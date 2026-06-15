@@ -1,0 +1,515 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Marathi (`mr`).
+class AppLocalizationsMr extends AppLocalizations {
+  AppLocalizationsMr([String locale = 'mr']) : super(locale);
+
+  @override
+  String get appTitle => 'SafeOne';
+
+  @override
+  String get settingsTitle => 'सेटिंग्ज';
+
+  @override
+  String get language => 'भाषा';
+
+  @override
+  String get languageSubtitle => 'तुमची आवडती भाषा निवडा';
+
+  @override
+  String get fakeCallTitle => 'बनावट कॉल';
+
+  @override
+  String get fakeCallHeader =>
+      'असुरक्षित परिस्थितीतून बाहेर पडण्यासाठी मदत म्हणून एक बनावट येणारा कॉल तयार करा. हा कॉल खरा वाटतो आणि तिथून निघण्याचे कारण देतो.';
+
+  @override
+  String get chooseScenario => 'परिस्थिती निवडा';
+
+  @override
+  String get chooseCaller => 'कॉल करणारा निवडा';
+
+  @override
+  String get phoneNumberOptional => 'फोन नंबर (पर्यायी)';
+
+  @override
+  String get phoneHint => 'e.g. +91 98765 43210';
+
+  @override
+  String get phoneHelper => 'खरेपणासाठी बनावट कॉल स्क्रीनवर दाखवले जाते';
+
+  @override
+  String get whatToSay => 'काय बोलावे (त्यांनी उचलल्यास)';
+
+  @override
+  String get whatToSayHint =>
+      'उदा. मी एका महत्त्वाच्या कॉलवर आहे, थोडा वेळ द्या.';
+
+  @override
+  String get whatToSayHelper =>
+      'चुकून कॉल उचलला गेल्यास बोलण्यासाठी छोटा संदेश';
+
+  @override
+  String get callDelay => 'कॉल विलंब';
+
+  @override
+  String get quickPresets => 'त्वरित प्रीसेट';
+
+  @override
+  String get orCustomTime => 'किंवा सानुकूल वेळ प्रविष्ट करा';
+
+  @override
+  String get hours => 'तास';
+
+  @override
+  String get minutes => 'मिनिटे';
+
+  @override
+  String get seconds => 'सेकंद';
+
+  @override
+  String get advancedOptions => 'प्रगत पर्याय';
+
+  @override
+  String get repeatCall => 'कॉल पुन्हा करा';
+
+  @override
+  String get repeatCallSubtitle => 'तुम्ही नाकारल्यास कॉल वाजत राहतो';
+
+  @override
+  String get autoEndCall => 'कॉल आपोआप संपवा';
+
+  @override
+  String get autoEndCallSubtitle => 'ठरलेल्या वेळेनंतर कॉल आपोआप संपतो';
+
+  @override
+  String get endAfter => 'यानंतर संपवा:';
+
+  @override
+  String get ringSound => 'रिंग आवाज';
+
+  @override
+  String get ringSoundPhone => 'फोन रिंग';
+
+  @override
+  String get ringSoundSiren => 'पोलिस सायरन';
+
+  @override
+  String get startFakeCall => 'बनावट कॉल सुरू करा';
+
+  @override
+  String get now => 'आता';
+
+  @override
+  String callInCountdown(int seconds) {
+    return '$seconds मध्ये कॉल';
+  }
+
+  @override
+  String get keepScreenOpen =>
+      'ही स्क्रीन उघडी ठेवा. टायमर संपल्यावर बनावट कॉल दिसेल. तुम्ही फोन कानाजवळ ठेवू शकता.';
+
+  @override
+  String get fakeCallScheduledTitle => 'Call scheduled';
+
+  @override
+  String fakeCallScheduledHint(String time) {
+    return 'The call will ring in $time, even if you lock your phone or close the app. Grant the notification and full-screen permissions if asked.';
+  }
+
+  @override
+  String get cancel => 'रद्द करा';
+
+  @override
+  String get incomingCall => 'येणारा कॉल…';
+
+  @override
+  String get callEnded => 'कॉल संपला';
+
+  @override
+  String get decline => 'नाकारा';
+
+  @override
+  String get accept => 'स्वीकारा';
+
+  @override
+  String get close => 'बंद करा';
+
+  @override
+  String get callWillRepeat => 'नाकारल्यास कॉल पुन्हा येईल';
+
+  @override
+  String autoEndsIn(int seconds) {
+    return '$seconds सेकंदात आपोआप संपेल';
+  }
+
+  @override
+  String get mute => 'म्यूट';
+
+  @override
+  String get speaker => 'स्पीकर';
+
+  @override
+  String get keypad => 'कीपॅड';
+
+  @override
+  String get endCall => 'कॉल संपवा';
+
+  @override
+  String secondsShort(int count) {
+    return '$count सेकंद';
+  }
+
+  @override
+  String minutesShort(int count) {
+    return '$count मिनिटे';
+  }
+
+  @override
+  String hoursShort(int count) {
+    return '$count तास';
+  }
+
+  @override
+  String hoursMinutesShort(int hours, int minutes) {
+    return '$hoursता $minutesमि';
+  }
+
+  @override
+  String get homeNoContacts => 'सुरू करण्यासाठी आणीबाणी संपर्क जोडा.';
+
+  @override
+  String get sos => 'SOS';
+
+  @override
+  String get homeSosHint => 'तुमचे स्थान पाठवण्यासाठी SOS दाबा.';
+
+  @override
+  String get tileSiren => 'सायरन';
+
+  @override
+  String get tileStopSiren => 'सायरन थांबवा';
+
+  @override
+  String get tilePoliceSiren => 'पोलिस सायरन';
+
+  @override
+  String get tileStopPolice => 'पोलिस थांबवा';
+
+  @override
+  String get tileFlashlight => 'बॅटरी';
+
+  @override
+  String get tileStopLight => 'लाइट थांबवा';
+
+  @override
+  String get tileSosBlink => 'SOS ब्लिंक';
+
+  @override
+  String get tileStopBlink => 'ब्लिंक थांबवा';
+
+  @override
+  String get tileRecord => 'रेकॉर्ड';
+
+  @override
+  String get tileStopRec => 'रेकॉर्ड थांबवा';
+
+  @override
+  String get tileImSafe => 'मी सुरक्षित आहे';
+
+  @override
+  String get tileSafetyTimer => 'सुरक्षा टायमर';
+
+  @override
+  String get tileHelplines => 'हेल्पलाइन';
+
+  @override
+  String get tileShareLocation => 'स्थान शेअर';
+
+  @override
+  String get tileNearbyHelp => 'जवळची मदत';
+
+  @override
+  String get tileFakeCall => 'बनावट कॉल';
+
+  @override
+  String get tileFollowMe => 'मला फॉलो करा';
+
+  @override
+  String get tileSafetyTips => 'सुरक्षा टिप्स';
+
+  @override
+  String get tileIncidentLog => 'घटना नोंद';
+
+  @override
+  String get tileMedicalInfo => 'वैद्यकीय माहिती';
+
+  @override
+  String get tileContacts => 'संपर्क';
+
+  @override
+  String get tileQuickContacts => 'त्वरित संपर्क';
+
+  @override
+  String get tileBuddyCheckin => 'बडी चेक-इन';
+
+  @override
+  String get tileSafetyLog => 'सुरक्षा नोंद';
+
+  @override
+  String get tileEmergencyId => 'आणीबाणी ID';
+
+  @override
+  String get tilePoliceSos => 'पोलिस SOS';
+
+  @override
+  String get tileWhatToDo => 'काय करावे';
+
+  @override
+  String get tileIndiaHelp => 'भारत मदत';
+
+  @override
+  String get tileJourneySafe => 'सुरक्षित प्रवास';
+
+  @override
+  String get tileQrCard => 'QR कार्ड';
+
+  @override
+  String get tileLocationPing => 'लोकेशन पिंग';
+
+  @override
+  String get tileDangerZones => 'धोक्याचे क्षेत्र';
+
+  @override
+  String get sectionGetHelp => 'Get help';
+
+  @override
+  String get sectionShareTrack => 'Share & track';
+
+  @override
+  String get sectionMyInfo => 'My info';
+
+  @override
+  String get sectionLearn => 'Learn';
+
+  @override
+  String get tileLiveTracking => 'Live tracking';
+
+  @override
+  String get tileEmergencyProfile => 'Emergency profile';
+
+  @override
+  String get tileRecords => 'Records';
+
+  @override
+  String get tileSafetyCheckin => 'Safety check-in';
+
+  @override
+  String get quickActions => 'Quick actions';
+
+  @override
+  String get homeSilentSosHint =>
+      'Long-press SOS to send silently (no sound or buzz).';
+
+  @override
+  String silentSosSent(int count) {
+    return 'Silent alert sent to $count contact(s).';
+  }
+
+  @override
+  String get sosLiveBannerActive => 'Sharing your live location with contacts';
+
+  @override
+  String get sosLiveStop => 'Stop sharing';
+
+  @override
+  String get sosLiveStarted =>
+      'Live location sharing started. Tap \"I\'m safe\" to stop.';
+
+  @override
+  String get sosLiveStopped => 'Live location sharing stopped.';
+
+  @override
+  String get lockTitle => 'Enter PIN';
+
+  @override
+  String get lockSubtitle => 'Enter your PIN to unlock';
+
+  @override
+  String get lockWrongPin => 'Wrong PIN. Try again.';
+
+  @override
+  String lockTooManyAttempts(int seconds) {
+    return 'Too many attempts. Wait ${seconds}s.';
+  }
+
+  @override
+  String get lockUseBiometric => 'Use fingerprint / face';
+
+  @override
+  String get lockBiometricReason => 'Unlock Women Safety';
+
+  @override
+  String get pinSetTitle => 'Set a PIN';
+
+  @override
+  String get pinSetSubtitle =>
+      'This PIN protects your contacts, medical info and records.';
+
+  @override
+  String get pinCreateStep => 'Create a 6-digit PIN';
+
+  @override
+  String get pinConfirmStep => 'Re-enter your PIN to confirm';
+
+  @override
+  String get pinMismatch => 'PINs do not match. Start again.';
+
+  @override
+  String get pinTooShort => 'PIN must be 6 digits.';
+
+  @override
+  String get pinSaved => 'PIN saved.';
+
+  @override
+  String get pinChangeTitle => 'Change PIN';
+
+  @override
+  String get pinCurrentStep => 'Enter your current PIN';
+
+  @override
+  String get securitySection => 'Security';
+
+  @override
+  String get securityChangePin => 'Change PIN';
+
+  @override
+  String get securityBiometric => 'Unlock with fingerprint / face';
+
+  @override
+  String get securityBiometricSubtitle =>
+      'Use biometrics instead of typing the PIN.';
+
+  @override
+  String get securityAutoLock => 'Auto-lock';
+
+  @override
+  String get securityAutoLockImmediate => 'Immediately';
+
+  @override
+  String securityAutoLockGrace(int seconds) {
+    return 'After ${seconds}s in background';
+  }
+
+  @override
+  String get securitySilentSos => 'Silent SOS';
+
+  @override
+  String get securitySilentSosSubtitle =>
+      'No vibration confirmation when sending SOS.';
+
+  @override
+  String get securityLiveUpdates => 'Repeat location after SOS';
+
+  @override
+  String get securityLiveUpdatesSubtitle =>
+      'Keep sending your location to contacts until you tap \"I\'m safe\".';
+
+  @override
+  String get securityVolumeTrigger => 'Triple-press volume to send SOS';
+
+  @override
+  String get securityVolumeTriggerSubtitle =>
+      'Press a volume button 3 times quickly to start the SOS.';
+
+  @override
+  String get checkinScheduleTitle => 'Auto-alert if I don\'t check in';
+
+  @override
+  String get checkinScheduleSubtitle =>
+      'If you don\'t tap \"I\'m safe\" before the deadline, your contacts are alerted automatically.';
+
+  @override
+  String get checkinSetDeadline => 'Alert my contacts in';
+
+  @override
+  String checkinActive(String time) {
+    return 'Active — alert at $time';
+  }
+
+  @override
+  String get checkinStart => 'Start check-in';
+
+  @override
+  String get checkinImSafe => 'I\'m safe — cancel';
+
+  @override
+  String get checkinCancelled => 'Check-in cancelled.';
+
+  @override
+  String get checkinFired => 'You didn\'t check in. Alerting your contacts.';
+
+  @override
+  String get checkinReminderTitle => 'Safety check-in due';
+
+  @override
+  String get checkinReminderBody =>
+      'Tap \"I\'m safe\" or your contacts will be alerted.';
+
+  @override
+  String get tabFollowMe => 'Follow me';
+
+  @override
+  String get tabJourney => 'Journey';
+
+  @override
+  String get tabBuddy => 'Buddy';
+
+  @override
+  String get tabPing => 'Ping';
+
+  @override
+  String get tabEmergencyId => 'ID';
+
+  @override
+  String get tabMedical => 'Medical';
+
+  @override
+  String get tabQr => 'QR card';
+
+  @override
+  String get tabIncidents => 'Incidents';
+
+  @override
+  String get tabSafetyLog => 'Activity';
+
+  @override
+  String get tabHelplines => 'Helplines';
+
+  @override
+  String get tabIndia => 'India';
+
+  @override
+  String get tabPolice => 'Police';
+
+  @override
+  String get tabTips => 'Tips';
+
+  @override
+  String get tabWhatToDo => 'What to do';
+
+  @override
+  String get tabAllContacts => 'All';
+
+  @override
+  String get tabQuick => 'Quick';
+
+  @override
+  String homeContactsSaved(int count) {
+    return '$count आणीबाणी संपर्क जतन केले.';
+  }
+}

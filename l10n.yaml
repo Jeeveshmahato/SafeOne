@@ -1,0 +1,9 @@
+# Configuration for Flutter's gen-l10n localization tool.
+# ARB translation files live in lib/l10n and the generated Dart class
+# (AppLocalizations) is written next to them so we can import it directly.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+output-dir: lib/l10n
+nullable-getter: false

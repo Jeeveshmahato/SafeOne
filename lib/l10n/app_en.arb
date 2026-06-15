@@ -1,0 +1,232 @@
+{
+  "@@locale": "en",
+  "appTitle": "SafeOne",
+  "settingsTitle": "Settings",
+  "language": "Language",
+  "languageSubtitle": "Choose your preferred language",
+  "fakeCallTitle": "Fake Call",
+  "fakeCallHeader": "Create a fake incoming call to help you leave an unsafe situation. The call looks realistic and gives you a reason to step away.",
+  "chooseScenario": "Choose a Scenario",
+  "chooseCaller": "Choose a Caller",
+  "phoneNumberOptional": "Phone Number (Optional)",
+  "phoneHint": "e.g. +91 98765 43210",
+  "phoneHelper": "Shows on the fake call screen for realism",
+  "whatToSay": "What to Say (If They Pick Up)",
+  "whatToSayHint": "e.g. I'm on an important call, give me a moment.",
+  "whatToSayHelper": "Quick message to say if caller picks up by accident",
+  "callDelay": "Call Delay",
+  "quickPresets": "Quick Presets",
+  "orCustomTime": "Or Enter Custom Time",
+  "hours": "Hours",
+  "minutes": "Minutes",
+  "seconds": "Seconds",
+  "advancedOptions": "Advanced Options",
+  "repeatCall": "Repeat Call",
+  "repeatCallSubtitle": "Call keeps \"ringing\" if you decline it",
+  "autoEndCall": "Auto-End Call",
+  "autoEndCallSubtitle": "Call ends automatically after a set time",
+  "endAfter": "End after:",
+  "ringSound": "Ring Sound",
+  "ringSoundPhone": "Phone ring",
+  "ringSoundSiren": "Police siren",
+  "startFakeCall": "Start Fake Call",
+  "now": "Now",
+  "callInCountdown": "Call in {seconds}",
+  "@callInCountdown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "keepScreenOpen": "Keep this screen open. The fake call will appear when the timer ends. You can put the phone to your ear.",
+  "fakeCallScheduledTitle": "Call scheduled",
+  "fakeCallScheduledHint": "The call will ring in {time}, even if you lock your phone or close the app. Grant the notification and full-screen permissions if asked.",
+  "@fakeCallScheduledHint": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "cancel": "Cancel",
+  "incomingCall": "Incoming call…",
+  "callEnded": "Call Ended",
+  "decline": "Decline",
+  "accept": "Accept",
+  "close": "Close",
+  "callWillRepeat": "Call will repeat if declined",
+  "autoEndsIn": "Auto-ends in {seconds}s",
+  "@autoEndsIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "mute": "Mute",
+  "speaker": "Speaker",
+  "keypad": "Keypad",
+  "endCall": "End Call",
+  "secondsShort": "{count} sec",
+  "@secondsShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "minutesShort": "{count} min",
+  "@minutesShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursShort": "{count} h",
+  "@hoursShort": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "hoursMinutesShort": "{hours}h {minutes}m",
+  "@hoursMinutesShort": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "homeNoContacts": "Add emergency contacts to get started.",
+  "sos": "SOS",
+  "homeSosHint": "Tap SOS to send your location to your contacts.",
+  "tileSiren": "Siren",
+  "tileStopSiren": "Stop siren",
+  "tilePoliceSiren": "Police siren",
+  "tileStopPolice": "Stop police",
+  "tileFlashlight": "Flashlight",
+  "tileStopLight": "Stop light",
+  "tileSosBlink": "SOS blink",
+  "tileStopBlink": "Stop blink",
+  "tileRecord": "Record",
+  "tileStopRec": "Stop rec",
+  "tileImSafe": "I'm safe",
+  "tileSafetyTimer": "Safety timer",
+  "tileHelplines": "Helplines",
+  "tileShareLocation": "Share location",
+  "tileNearbyHelp": "Nearby help",
+  "tileFakeCall": "Fake call",
+  "tileFollowMe": "Follow Me",
+  "tileSafetyTips": "Safety tips",
+  "tileIncidentLog": "Incident log",
+  "tileMedicalInfo": "Medical info",
+  "tileContacts": "Contacts",
+  "tileQuickContacts": "Quick contacts",
+  "tileBuddyCheckin": "Buddy check-in",
+  "tileSafetyLog": "Safety log",
+  "tileEmergencyId": "Emergency ID",
+  "tilePoliceSos": "Police SOS",
+  "tileWhatToDo": "What To Do",
+  "tileIndiaHelp": "India Help",
+  "tileJourneySafe": "Journey Safe",
+  "tileQrCard": "QR Card",
+  "tileLocationPing": "Location Ping",
+  "tileDangerZones": "Danger Zones",
+
+  "sectionGetHelp": "Get help",
+  "sectionShareTrack": "Share & track",
+  "sectionMyInfo": "My info",
+  "sectionLearn": "Learn",
+  "tileLiveTracking": "Live tracking",
+  "tileEmergencyProfile": "Emergency profile",
+  "tileRecords": "Records",
+  "tileSafetyCheckin": "Safety check-in",
+  "quickActions": "Quick actions",
+  "homeSilentSosHint": "Long-press SOS to send silently (no sound or buzz).",
+  "silentSosSent": "Silent alert sent to {count} contact(s).",
+  "@silentSosSent": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "sosLiveBannerActive": "Sharing your live location with contacts",
+  "sosLiveStop": "Stop sharing",
+  "sosLiveStarted": "Live location sharing started. Tap \"I'm safe\" to stop.",
+  "sosLiveStopped": "Live location sharing stopped.",
+
+  "lockTitle": "Enter PIN",
+  "lockSubtitle": "Enter your PIN to unlock",
+  "lockWrongPin": "Wrong PIN. Try again.",
+  "lockTooManyAttempts": "Too many attempts. Wait {seconds}s.",
+  "@lockTooManyAttempts": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "lockUseBiometric": "Use fingerprint / face",
+  "lockBiometricReason": "Unlock Women Safety",
+  "pinSetTitle": "Set a PIN",
+  "pinSetSubtitle": "This PIN protects your contacts, medical info and records.",
+  "pinCreateStep": "Create a 6-digit PIN",
+  "pinConfirmStep": "Re-enter your PIN to confirm",
+  "pinMismatch": "PINs do not match. Start again.",
+  "pinTooShort": "PIN must be 6 digits.",
+  "pinSaved": "PIN saved.",
+  "pinChangeTitle": "Change PIN",
+  "pinCurrentStep": "Enter your current PIN",
+
+  "securitySection": "Security",
+  "securityChangePin": "Change PIN",
+  "securityBiometric": "Unlock with fingerprint / face",
+  "securityBiometricSubtitle": "Use biometrics instead of typing the PIN.",
+  "securityAutoLock": "Auto-lock",
+  "securityAutoLockImmediate": "Immediately",
+  "securityAutoLockGrace": "After {seconds}s in background",
+  "@securityAutoLockGrace": {
+    "placeholders": { "seconds": { "type": "int" } }
+  },
+  "securitySilentSos": "Silent SOS",
+  "securitySilentSosSubtitle": "No vibration confirmation when sending SOS.",
+  "securityLiveUpdates": "Repeat location after SOS",
+  "securityLiveUpdatesSubtitle": "Keep sending your location to contacts until you tap \"I'm safe\".",
+  "securityVolumeTrigger": "Triple-press volume to send SOS",
+  "securityVolumeTriggerSubtitle": "Press a volume button 3 times quickly to start the SOS.",
+
+  "checkinScheduleTitle": "Auto-alert if I don't check in",
+  "checkinScheduleSubtitle": "If you don't tap \"I'm safe\" before the deadline, your contacts are alerted automatically.",
+  "checkinSetDeadline": "Alert my contacts in",
+  "checkinActive": "Active — alert at {time}",
+  "@checkinActive": {
+    "placeholders": { "time": { "type": "String" } }
+  },
+  "checkinStart": "Start check-in",
+  "checkinImSafe": "I'm safe — cancel",
+  "checkinCancelled": "Check-in cancelled.",
+  "checkinFired": "You didn't check in. Alerting your contacts.",
+  "checkinReminderTitle": "Safety check-in due",
+  "checkinReminderBody": "Tap \"I'm safe\" or your contacts will be alerted.",
+
+  "tabFollowMe": "Follow me",
+  "tabJourney": "Journey",
+  "tabBuddy": "Buddy",
+  "tabPing": "Ping",
+  "tabEmergencyId": "ID",
+  "tabMedical": "Medical",
+  "tabQr": "QR card",
+  "tabIncidents": "Incidents",
+  "tabSafetyLog": "Activity",
+  "tabHelplines": "Helplines",
+  "tabIndia": "India",
+  "tabPolice": "Police",
+  "tabTips": "Tips",
+  "tabWhatToDo": "What to do",
+  "tabAllContacts": "All",
+  "tabQuick": "Quick",
+
+  "homeContactsSaved": "{count} emergency contact(s) saved.",
+  "@homeContactsSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

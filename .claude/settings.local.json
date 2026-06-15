@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter --version)",
+      "Bash(flutter pub *)",
+      "Bash(mkdir -p assets/sounds)",
+      "Bash(python3 -)",
+      "Bash(grep -A4 '^  __TRACKED_VAR__:' pubspec.lock)",
+      "Bash(flutter analyze *)",
+      "Bash(flutter test *)",
+      "Bash(flutter devices *)",
+      "Bash(flutter run *)",
+      "Bash(flutter build *)",
+      "Bash(cp ./build/app/outputs/flutter-apk/app-release.apk ~/Desktop/WomenSafetyApp.apk)",
+      "Read(//Users/jeevesh_main/Desktop/**)",
+      "Bash(adb install *)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb devices *)",
+      "Bash(~/Library/Android/sdk/platform-tools/adb install *)",
+      "Bash(open -g \"http://localhost:57113\")",
+      "Bash(open -g \"http://127.0.0.1:57113\")",
+      "Bash(osascript -e 'tell application \"Google Chrome\" to return window 1')",
+      "Bash(screencapture -x /tmp/app_home.png)",
+      "Bash(xargs basename -a)",
+      "Bash(pkill -f \"flutter run\")",
+      "Bash(rm -f /tmp/*.png)",
+      "Bash(osascript)",
+      "Bash(screencapture -x /tmp/app_screenshot.png)",
+      "Bash(screencapture -x /tmp/chrome_app.png)",
+      "Bash(cat)",
+      "Read(//tmp/**)"
+    ]
+  }
+}
