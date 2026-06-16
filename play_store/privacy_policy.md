@@ -2,9 +2,9 @@
 
 **Last updated: 15 June 2026**
 
-SafeOne ("the app", "we", "us") is a personal safety application published by
-Content Whale. This policy explains what data the app uses, how it is used, and
-your choices. Contact: **product@content-whale.com**.
+SafeOne ("the app", "we", "us") is a personal safety application published by its founder,
+Jeevesh Mahato. This policy explains what data the app uses, how it is used, and
+your choices. Contact: **jeeveshatwork@gmail.com**.
 
 ## Summary
 
@@ -80,4 +80,4 @@ We may update this policy; the "Last updated" date will change accordingly.
 
 ## Contact
 
-Questions about this policy: **product@content-whale.com**
+Questions about this policy: **jeeveshatwork@gmail.com**

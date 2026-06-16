@@ -60,5 +60,5 @@ App (free), no in-app purchases, no ads.
 - (Optional) 7" / 10" tablet screenshots.
 
 ## Contact details
-- Email: product@content-whale.com
+- Email: jeeveshatwork@gmail.com
 - Privacy policy URL: <host privacy_policy.html and paste URL>
