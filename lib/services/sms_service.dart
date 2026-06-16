@@ -1,54 +1,36 @@
-import 'dart:io' show Platform;
-
-import 'package:another_telephony/telephony.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Sends the emergency text message to the contacts.
+/// Opens the phone's Messages app with the emergency text pre-filled so the
+/// user can send it with one tap.
 ///
-/// IMPORTANT difference between phones:
-/// - On ANDROID we can send the SMS automatically in the background.
-/// - On iPHONE Apple does NOT allow this, so we instead open the Messages app
-///   with the text pre-filled, and the user taps "send" themselves.
+/// NOTE: this app intentionally does NOT use the restricted `SEND_SMS`
+/// permission (Google Play limits it to default SMS handler apps). Instead we
+/// launch the system SMS composer via an `sms:` intent on every platform. The
+/// trade-off is that the user taps "send" themselves — silent/background
+/// auto-sending is not possible without `SEND_SMS`.
 class SmsService {
-  final Telephony _telephony = Telephony.instance;
+  /// Kept for API compatibility with callers. No runtime SMS permission is
+  /// needed when sending via the system composer, so this is always true.
+  Future<bool> ensureSmsPermission() async => true;
 
-  /// Make sure we are allowed to send SMS (Android only). Returns true if OK.
-  Future<bool> ensureSmsPermission() async {
-    if (!Platform.isAndroid) {
-      // iOS doesn't use this permission; it opens the Messages app instead.
-      return true;
-    }
-    final PermissionStatus status = await Permission.sms.request();
-    return status.isGranted;
-  }
-
-  /// Send [message] to every number in [phoneNumbers].
-  ///
-  /// On Android each one is sent automatically. On iOS we can only open the
-  /// Messages app once (with the first contact) for the user to send manually.
+  /// Open the Messages app with [message] pre-filled, addressed to every number
+  /// in [phoneNumbers]. Returns silently if the list is empty or no SMS app is
+  /// available.
   Future<void> sendSos({
     required List<String> phoneNumbers,
     required String message,
   }) async {
     if (phoneNumbers.isEmpty) return;
 
-    if (Platform.isAndroid) {
-      // Send silently to each contact, one by one.
-      for (final number in phoneNumbers) {
-        await _telephony.sendSms(to: number, message: message);
-      }
-    } else {
-      // iOS / others: open the Messages app with the text ready to send.
-      final String recipients = phoneNumbers.join(',');
-      final Uri smsUri = Uri(
-        scheme: 'sms',
-        path: recipients,
-        queryParameters: {'body': message},
-      );
-      if (await canLaunchUrl(smsUri)) {
-        await launchUrl(smsUri);
-      }
+    // Most Android/iOS dialers accept comma-separated recipients in the path.
+    final String recipients = phoneNumbers.join(',');
+    final Uri smsUri = Uri(
+      scheme: 'sms',
+      path: recipients,
+      queryParameters: {'body': message},
+    );
+    if (await canLaunchUrl(smsUri)) {
+      await launchUrl(smsUri, mode: LaunchMode.externalApplication);
     }
   }
 }

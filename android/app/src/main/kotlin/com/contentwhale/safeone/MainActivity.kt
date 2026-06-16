@@ -1,4 +1,4 @@
-package com.example.women_safety_app
+package com.contentwhale.safeone
 
 import android.content.Context
 import android.content.Intent

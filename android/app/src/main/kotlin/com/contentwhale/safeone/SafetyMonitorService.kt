@@ -1,4 +1,4 @@
-package com.example.women_safety_app
+package com.contentwhale.safeone
 
 import android.app.Notification
 import android.app.NotificationChannel

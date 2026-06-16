@@ -66,6 +66,40 @@ class _BackgroundSetupScreenState extends State<BackgroundSetupScreen>
     await _refresh();
   }
 
+  /// Google Play requires a prominent disclosure shown BEFORE requesting
+  /// background ("Allow all the time") location. We explain what the data is
+  /// used for and that it is never uploaded, and only request the permission if
+  /// the user agrees.
+  Future<void> _requestBackgroundLocation() async {
+    final agreed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Background location'),
+        content: const Text(
+          'SafeOne uses your location in the background to include it in '
+          'emergency SOS and safety check-in alerts when the app is closed or '
+          'your screen is locked.\n\n'
+          'Your location is only added to messages you choose to send to your '
+          'emergency contacts. It is never uploaded to any server.\n\n'
+          'On the next screen, choose "Allow all the time" to enable this.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Not now'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    if (agreed == true) {
+      await Permission.locationAlways.request();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,8 +165,7 @@ class _BackgroundSetupScreenState extends State<BackgroundSetupScreen>
                       'So live sharing & check-in can read your location while '
                       'the app is closed.',
                   status: _bgLocation,
-                  onFix: () => _run(
-                      () => Permission.locationAlways.request().then((_) {})),
+                  onFix: () => _run(_requestBackgroundLocation),
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
