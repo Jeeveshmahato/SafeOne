@@ -1,4 +1,4 @@
-package com.contentwhale.safeone
+package com.safeone.app
 
 import android.content.Context
 import android.content.Intent

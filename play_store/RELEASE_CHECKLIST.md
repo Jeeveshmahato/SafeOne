@@ -1,7 +1,7 @@
 # SafeOne — Google Play release checklist
 
 ## ✅ Already done (in the code/repo)
-- [x] Application ID set to `com.contentwhale.safeone` (no more com.example).
+- [x] Application ID set to `com.safeone.app` (no more com.example).
 - [x] Upload keystore created: `android/upload-keystore.jks` (alias `upload`).
 - [x] `android/key.properties` wired into release signing (gitignored).
 - [x] SEND_SMS removed; SOS uses the system SMS composer (Play-compliant).

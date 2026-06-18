@@ -1,4 +1,4 @@
-package com.contentwhale.safeone
+package com.safeone.app
 
 import android.app.AlarmManager
 import android.app.PendingIntent

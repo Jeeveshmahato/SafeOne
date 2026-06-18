@@ -1,4 +1,4 @@
-package com.contentwhale.safeone
+package com.safeone.app
 
 import android.content.BroadcastReceiver
 import android.content.Context

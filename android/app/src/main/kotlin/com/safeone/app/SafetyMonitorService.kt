@@ -1,4 +1,4 @@
-package com.contentwhale.safeone
+package com.safeone.app
 
 import android.app.Notification
 import android.app.NotificationChannel

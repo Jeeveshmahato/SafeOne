@@ -29,7 +29,22 @@
       "Bash(cat)",
       "Read(//tmp/**)",
       "Bash(export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\")",
-      "Bash(dart run *)"
+      "Bash(dart run *)",
+      "Bash(grep -rEoh \"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\\\.[a-zA-Z]{2,}\" .)",
+      "Bash(git config *)",
+      "Read(//opt/homebrew/share/flutter/bin/cache/**)",
+      "Bash(touch /opt/homebrew/share/flutter/bin/cache/_writetest)",
+      "Bash(rm /opt/homebrew/share/flutter/bin/cache/_writetest)",
+      "Bash(touch /opt/homebrew/share/flutter/bin/cache/_t)",
+      "Bash(rm /opt/homebrew/share/flutter/bin/cache/_t)",
+      "Bash(sudo -n chown -R jeevesh_main:admin /opt/homebrew/share/flutter/bin/cache)",
+      "Bash(rm -rf ~/flutter-local)",
+      "Bash(cp -R /opt/homebrew/share/flutter ~/flutter-local)",
+      "Bash(~/flutter-local/bin/flutter --version)",
+      "Bash(touch ~/flutter-local/bin/cache/_t)",
+      "Bash(rm ~/flutter-local/bin/cache/_t)",
+      "Bash(~/flutter-local/bin/flutter build *)",
+      "Bash(git check-ignore *)"
     ]
   }
 }
