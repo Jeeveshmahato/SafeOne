@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../config/features.dart';
 import '../l10n/app_localizations.dart';
 import '../services/app_lock_service.dart';
 import '../services/locale_controller.dart';
@@ -115,12 +116,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await _syncMonitor();
   }
 
-  /// Start/stop the always-on safety service to match the enabled triggers.
-  Future<void> _syncMonitor() => SafetyMonitorService.sync(
-        shake: _shakeEnabled,
-        volume: _volumeTrigger,
-        power: _powerTrigger,
-      );
+  Future<void> _syncMonitor() {
+    if (!Features.backgroundTriggers) return Future.value();
+    return SafetyMonitorService.sync(
+      shake: _shakeEnabled,
+      volume: _volumeTrigger,
+      power: _powerTrigger,
+    );
+  }
 
   Future<void> _saveMessage(String message) async {
     await _settings.saveSosMessage(message);
@@ -269,56 +272,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 16),
                 const Divider(),
-                // Shake to send SOS toggle.
-                SwitchListTile(
-                  title: const Text('Shake to send SOS'),
-                  subtitle: const Text(
-                    'When on, shaking the phone starts the SOS countdown.',
-                  ),
-                  value: _shakeEnabled,
-                  onChanged: _setShake,
-                ),
-                SwitchListTile(
-                  title: Text(t.securityVolumeTrigger),
-                  subtitle: Text(t.securityVolumeTriggerSubtitle),
-                  value: _volumeTrigger,
-                  onChanged: _setVolumeTrigger,
-                ),
-                SwitchListTile(
-                  title: const Text('Power button SOS'),
-                  subtitle: const Text(
-                    'When on, rapidly pressing the power button (3×) starts '
-                    'the SOS.',
-                  ),
-                  value: _powerTrigger,
-                  onChanged: _setPowerTrigger,
-                ),
-                // These three triggers keep working while the screen is locked
-                // or the app is closed, via an always-on "Safety mode active"
-                // notification.
-                if (_shakeEnabled || _volumeTrigger || _powerTrigger)
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Text(
-                      'Safety mode runs in the background so shake / volume / '
-                      'power can send an SOS even when your phone is locked. '
-                      'You\'ll see a permanent "Safety mode active" '
-                      'notification while it\'s on.',
-                      style: TextStyle(fontSize: 12, color: Colors.black54),
+                // Background trigger toggles — hidden in v1.0 Play Store build.
+                if (Features.backgroundTriggers) ...[
+                  SwitchListTile(
+                    title: const Text('Shake to send SOS'),
+                    subtitle: const Text(
+                      'When on, shaking the phone starts the SOS countdown.',
                     ),
+                    value: _shakeEnabled,
+                    onChanged: _setShake,
                   ),
+                  SwitchListTile(
+                    title: Text(t.securityVolumeTrigger),
+                    subtitle: Text(t.securityVolumeTriggerSubtitle),
+                    value: _volumeTrigger,
+                    onChanged: _setVolumeTrigger,
+                  ),
+                  SwitchListTile(
+                    title: const Text('Power button SOS'),
+                    subtitle: const Text(
+                      'When on, rapidly pressing the power button (3×) starts '
+                      'the SOS.',
+                    ),
+                    value: _powerTrigger,
+                    onChanged: _setPowerTrigger,
+                  ),
+                  if (_shakeEnabled || _volumeTrigger || _powerTrigger)
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Text(
+                        'Safety mode runs in the background so shake / volume / '
+                        'power can send an SOS even when your phone is locked. '
+                        'You\'ll see a permanent "Safety mode active" '
+                        'notification while it\'s on.',
+                        style: TextStyle(fontSize: 12, color: Colors.black54),
+                      ),
+                    ),
+                ],
                 SwitchListTile(
                   title: Text(t.securitySilentSos),
                   subtitle: Text(t.securitySilentSosSubtitle),
                   value: _silentSos,
                   onChanged: _setSilentSos,
                 ),
-                SwitchListTile(
-                  title: Text(t.securityLiveUpdates),
-                  subtitle: Text(t.securityLiveUpdatesSubtitle),
-                  value: _liveUpdates,
-                  onChanged: _setLiveUpdates,
-                ),
+                if (Features.backgroundLocation)
+                  SwitchListTile(
+                    title: Text(t.securityLiveUpdates),
+                    subtitle: Text(t.securityLiveUpdatesSubtitle),
+                    value: _liveUpdates,
+                    onChanged: _setLiveUpdates,
+                  ),
                 const Divider(),
                 // Editable SOS message.
                 const Padding(

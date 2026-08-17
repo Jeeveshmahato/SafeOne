@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../config/features.dart';
 import '../l10n/app_localizations.dart';
 import '../models/emergency_contact.dart';
 import '../services/contacts_repository.dart';
@@ -113,20 +114,20 @@ class _HomeScreenState extends State<HomeScreen> {
       _liveSharing = sharingActive;
     });
 
-    // Hands-free triggers (shake / volume / power) are handled by the native
-    // always-on foreground service so they keep working when the screen is
-    // locked or the app is backgrounded — the in-app listeners only fire while
-    // the app is open on screen, which defeats the purpose. The service reads
-    // each trigger's on/off flag from shared_preferences itself; we just make
-    // sure it's running when at least one is enabled. We deliberately do NOT
-    // also start the in-app shake/volume listeners, to avoid a double SOS.
+    // Hands-free triggers are gated behind the backgroundTriggers flag.
+    // When the flag is off (v1.0 Play Store build) the foreground service is
+    // never started, avoiding the Special Use FGS permission declaration.
     _shakeService.stop();
     _volumeButtonService.stop();
-    await SafetyMonitorService.sync(
-      shake: shakeEnabled,
-      volume: volume,
-      power: power,
-    );
+    if (Features.backgroundTriggers) {
+      await SafetyMonitorService.sync(
+        shake: shakeEnabled,
+        volume: volume,
+        power: power,
+      );
+    } else {
+      await SafetyMonitorService.stop();
+    }
   }
 
   void _showMessage(String text, {bool isError = false}) {
@@ -208,6 +209,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _maybeStartLiveSharing() async {
+    if (!Features.backgroundLocation) return;
     if (!_liveUpdates || _liveSharing || _contacts.isEmpty) return;
     final t = AppLocalizations.of(context);
     // Runs inside the native foreground service, so it keeps sending the
@@ -449,8 +451,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Live location sharing banner (only while active).
-            if (_liveSharing)
+            // Live location sharing banner (only while active and feature is on).
+            if (Features.backgroundLocation && _liveSharing)
               Card(
                 color: Colors.orange.shade50,
                 child: ListTile(
@@ -462,7 +464,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-            if (_liveSharing) const SizedBox(height: 8),
+            if (Features.backgroundLocation && _liveSharing) const SizedBox(height: 8),
 
             // Quick actions: instant toggles.
             _SectionHeader(t.quickActions),
@@ -513,21 +515,28 @@ class _HomeScreenState extends State<HomeScreen> {
 
             _SectionHeader(t.sectionShareTrack),
             _grid([
-              _Tile(Icons.my_location, t.tileLiveTracking,
-                  () => _open(_liveTrackingHub(t))),
-              _Tile(Icons.share_location, t.tileShareLocation, _shareLocation),
-              _Tile(Icons.timer, t.tileSafetyCheckin,
-                  () => _open(const SafetyTimerScreen())),
-              _Tile(Icons.check_circle, t.tileImSafe, _checkIn),
+              if (Features.followMe)
+                _Tile(Icons.my_location, t.tileLiveTracking,
+                    () => _open(_liveTrackingHub(t))),
+              if (Features.shareLocation)
+                _Tile(Icons.share_location, t.tileShareLocation, _shareLocation),
+              if (Features.safetyCheckin)
+                _Tile(Icons.timer, t.tileSafetyCheckin,
+                    () => _open(const SafetyTimerScreen())),
+              if (Features.imSafe)
+                _Tile(Icons.check_circle, t.tileImSafe, _checkIn),
             ]),
 
             _SectionHeader(t.sectionMyInfo),
             _grid([
-              _Tile(Icons.badge, t.tileEmergencyProfile,
-                  () => _open(_profileHub(t))),
-              _Tile(Icons.contacts, t.tileContacts, () => _open(_contactsHub(t))),
-              _Tile(Icons.folder_shared, t.tileRecords,
-                  () => _open(const SafetyEventLogScreen())),
+              if (Features.emergencyProfile)
+                _Tile(Icons.badge, t.tileEmergencyProfile,
+                    () => _open(_profileHub(t))),
+              if (Features.emergencyContacts)
+                _Tile(Icons.contacts, t.tileContacts, () => _open(_contactsHub(t))),
+              if (Features.eventLog)
+                _Tile(Icons.folder_shared, t.tileRecords,
+                    () => _open(const SafetyEventLogScreen())),
             ]),
 
             _SectionHeader(t.sectionLearn),
