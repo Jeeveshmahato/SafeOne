@@ -24,6 +24,8 @@
 - [ ] Host `privacy_policy.html` at a public URL (GitHub Pages, your site, etc.)
       and note the URL.
 - [ ] Fill Store listing using `store_listing.md`.
+  - Choose `Lifestyle` category only.
+  - Do not declare the app as a Health/Medical app if you are publishing from a personal developer account.
 - [ ] Fill Data Safety using `data_safety_form.md`.
 - [ ] Complete content rating questionnaire (answer location-sharing truthfully).
 - [ ] Submit sensitive-permission declarations using `permission_declarations.md`

@@ -40,7 +40,9 @@ is explained in the app and detailed in our privacy policy.
 Stay prepared. Stay safe. Download SafeOne.
 
 ## App category
-Lifestyle (or Health & Fitness)
+Lifestyle only
+
+> Note: SafeOne is a personal safety app. Do not select the Health & Fitness category or declare it as a medical app in Play Console if you are submitting from a personal developer account, because that may trigger the organization-only account requirement.
 
 ## Tags / type
 App (free), no in-app purchases, no ads.
