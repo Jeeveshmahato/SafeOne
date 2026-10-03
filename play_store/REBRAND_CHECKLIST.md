@@ -26,7 +26,11 @@ Settings → Developer account → Account details:
 - [ ] Category stays **Lifestyle**
 
 ## 5. Udyam (udyamregistration.gov.in → Update/Cancel Udyam Registration)
-- [ ] Name of enterprise / unit: **Tejovan Labs** (currently "SAFEONE")
+> The Play account is an **Organization** account verified against D-U-N-S
+> 311438971 with legal name **SAFEONE**. Keep the legal name as SAFEONE; only the
+> public developer name is Tejovan Labs. If you ever rename legally, update Udyam
+> → D-U-N-S → Google payments profile → Play together, or verification may fail.
+- [ ] Keep name of enterprise as **SAFEONE** (do not rename for now)
 - [ ] Major activity: **Services** (currently Manufacturing)
 - [ ] NIC codes: **62011** (software development) and **58202** (software publishing),
       replacing 32909
