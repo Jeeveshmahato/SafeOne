@@ -3,82 +3,109 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SafeOne — Privacy Policy</title>
+<title>Tejovan Labs</title>
+<meta name="description" content="Tejovan Labs builds simple, private apps that help people every day. Makers of SafeOne, the personal safety app.">
+<link rel="icon" href="assets/safeone-icon.png">
 <style>
-  body{font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;max-width:760px;
-       margin:40px auto;padding:0 20px;line-height:1.6;color:#222}
-  h1{font-size:1.8rem} h2{margin-top:1.6em;font-size:1.2rem}
-  code{background:#f3f3f3;padding:1px 4px;border-radius:3px}
+  :root{
+    --bg:#ffffff; --surface:#f7f5fc; --text:#1c1530; --muted:#5d5670;
+    --brand:#6d28d9; --brand-2:#7c3aed; --line:#e7e2f3; --on-brand:#ffffff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#120e1c; --surface:#1d1730; --text:#f2eefb; --muted:#b4abc8;
+      --brand:#a78bfa; --brand-2:#8b5cf6; --line:#2e2645; --on-brand:#120e1c;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;line-height:1.6}
+  a{color:var(--brand)}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px}
+  header{padding:24px 0;border-bottom:1px solid var(--line)}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .logo{font-weight:800;font-size:1.25rem;letter-spacing:-.01em;color:var(--text);text-decoration:none}
+  .logo span{color:var(--brand)}
+  nav a{margin-left:20px;text-decoration:none;color:var(--muted);font-size:.95rem}
+  .hero{padding:72px 0 56px}
+  .hero h1{font-size:clamp(2rem,5vw,3rem);line-height:1.15;margin:0 0 16px;letter-spacing:-.02em}
+  .hero p{font-size:1.15rem;color:var(--muted);max-width:620px;margin:0}
+  h2{font-size:1.5rem;margin:0 0 20px}
+  .card{display:flex;gap:24px;align-items:flex-start;background:var(--surface);
+        border:1px solid var(--line);border-radius:20px;padding:28px}
+  .card img{width:96px;height:96px;border-radius:22px;flex:none}
+  .card h3{margin:0 0 4px;font-size:1.35rem}
+  .tag{color:var(--muted);margin:0 0 12px}
+  .card ul{margin:0 0 20px;padding-left:20px;color:var(--muted)}
+  .btns{display:flex;flex-wrap:wrap;gap:12px}
+  .btn{display:inline-block;padding:10px 18px;border-radius:999px;text-decoration:none;font-weight:600}
+  .btn.primary{background:var(--brand);color:var(--on-brand)}
+  .btn.ghost{border:1px solid var(--line);color:var(--text)}
+  section{padding:24px 0 48px}
+  .values{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .values div{border:1px solid var(--line);border-radius:16px;padding:20px}
+  .values h4{margin:0 0 6px}
+  .values p{margin:0;color:var(--muted);font-size:.95rem}
+  footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);font-size:.9rem}
+  @media (max-width:560px){
+    .card{flex-direction:column}
+    nav a{margin-left:12px}
+  }
 </style>
 </head>
 <body>
-<h1>Privacy Policy — SafeOne</h1>
-<p><strong>Last updated: 15 June 2026</strong></p>
-<p>SafeOne ("the app", "we", "us") is a personal safety application published by its founder,
-Jeevesh Mahato. This policy explains what data the app uses, how it is used, and
-your choices. Contact: <strong>jeeveshatwork@gmail.com</strong>.</p>
+<header>
+  <div class="wrap">
+    <a class="logo" href="./">Tejovan<span> Labs</span></a>
+    <nav><a href="#apps">Apps</a><a href="#contact">Contact</a></nav>
+  </div>
+</header>
 
-<h2>Summary</h2>
-<ul>
-<li>SafeOne does <strong>not</strong> have a server. We do <strong>not</strong>
-collect, transmit, sell, or share your personal data with us or any third party.</li>
-<li>All your data (emergency contacts, app-lock PIN, safety log, recordings)
-stays <strong>on your device</strong>.</li>
-<li>The only time information leaves your device is when <strong>you</strong> send
-an SOS, check-in, or location message — it goes directly from your own SMS app to
-the emergency contacts <strong>you</strong> chose.</li>
-</ul>
+<main class="wrap">
+  <div class="hero">
+    <h1>Simple, private apps that help people every day.</h1>
+    <p>Tejovan Labs is an independent app studio from Jharkhand, India. We build
+    useful apps that work offline and respect your privacy.</p>
+  </div>
 
-<h2>Information the app uses (all on-device)</h2>
-<p><strong>Location.</strong> Used to build a Google Maps link included in the
-SOS / check-in / "Follow Me" message you send. With your permission, location may
-be read in the background so hands-free SOS and safety check-in can include your
-location when the app is closed or the screen is locked. Location is never
-uploaded to us or any server.</p>
-<p><strong>Emergency contacts.</strong> Names/phone numbers you enter are stored
-locally and used only to address the SMS messages you choose to send. The app
-does not read your phone's contact list.</p>
-<p><strong>SMS messages.</strong> SafeOne does <strong>not</strong> read, receive,
-or send SMS silently. Triggering an SOS opens your standard Messages app with the
-text pre-filled, and you tap "send". We never see the message content.</p>
-<p><strong>Microphone / audio recordings.</strong> Optional audio-evidence
-recordings are saved as files on your device only and are not uploaded.</p>
-<p><strong>Camera.</strong> Used only for features you initiate; captured media
-stays on your device.</p>
-<p><strong>App-lock PIN and biometrics.</strong> Your PIN is stored only as a
-salted, hashed value in the device's secure storage — never plain text, never
-transmitted. Fingerprint verification is handled entirely by Android; the app
-never receives your fingerprint data.</p>
-<p><strong>Safety log.</strong> Stored locally; you can export or clear it anytime.</p>
+  <section id="apps">
+    <h2>Our apps</h2>
+    <div class="card">
+      <img src="assets/safeone-icon.png" alt="SafeOne app icon">
+      <div>
+        <h3>SafeOne</h3>
+        <p class="tag">SOS &amp; personal safety · Android</p>
+        <ul>
+          <li>One-tap and hands-free SOS (shake, volume or power button)</li>
+          <li>Live location sharing, Follow Me and safety check-in timer</li>
+          <li>Fake call, siren, flashlight and audio evidence</li>
+          <li>Indian emergency helplines, in 13 languages</li>
+        </ul>
+        <div class="btns">
+          <a class="btn primary" href="https://play.google.com/store/apps/details?id=com.safeone.app">Get it on Google Play</a>
+          <a class="btn ghost" href="privacy.html">Privacy policy</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<h2>Information we do NOT collect</h2>
-<p>No analytics, advertising identifiers, crash data, usage data, account
-information, or any personal data on our servers. No ads, no third-party trackers.</p>
+  <section>
+    <h2>How we build</h2>
+    <div class="values">
+      <div><h4>Private by default</h4><p>Your data stays on your phone. No accounts, no trackers.</p></div>
+      <div><h4>Made for India</h4><p>Local helplines, Indian languages and low-network situations.</p></div>
+      <div><h4>Simple to use</h4><p>Clear screens that work when you are stressed or in a hurry.</p></div>
+    </div>
+  </section>
 
-<h2>Permissions and why they are used</h2>
-<ul>
-<li><strong>Location (incl. background)</strong> — include your location in safety messages.</li>
-<li><strong>Microphone</strong> — optional audio-evidence recording.</li>
-<li><strong>Camera</strong> — optional evidence / QR capture.</li>
-<li><strong>Foreground service</strong> — keep hands-free SOS triggers active when locked.</li>
-<li><strong>Exact alarm / full-screen intent / notifications</strong> — deliver the
-scheduled fake call and safety check-in alerts on time, even when the app is closed.</li>
-<li><strong>Biometric</strong> — unlock the app lock.</li>
-<li><strong>Boot completed</strong> — restart safety monitoring after a reboot if you enabled it.</li>
-</ul>
+  <section id="contact">
+    <h2>Contact</h2>
+    <p>Questions, feedback or support: <a href="mailto:jeeveshatwork@gmail.com">jeeveshatwork@gmail.com</a></p>
+  </section>
+</main>
 
-<h2>Children</h2>
-<p>SafeOne is not directed to children under 13 and does not knowingly collect
-data from them.</p>
-
-<h2>Data retention and deletion</h2>
-<p>All data is stored only on your device; delete it any time by clearing it in
-the app or uninstalling. We hold no copy of your data.</p>
-
-<h2>Changes to this policy</h2>
-<p>We may update this policy; the "Last updated" date will change accordingly.</p>
-
-<h2>Contact</h2>
-<p>Questions: <strong>jeeveshatwork@gmail.com</strong></p>
+<footer>
+  <div class="wrap">© 2026 Tejovan Labs · Seraikela-Kharsawan, Jharkhand, India · <a href="privacy.html">SafeOne privacy policy</a></div>
+</footer>
 </body>
 </html>

@@ -26,10 +26,9 @@
     <!-- So the app can ask to be exempt from battery optimization, otherwise
          aggressive OEMs cancel the scheduled call when the app is swiped away. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
-    <!-- Always-on foreground service that keeps the hands-free SOS triggers
-         (shake / volume / power) working when the screen is locked or the app
-         is backgrounded. "location" type because the SOS includes location. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <!-- specialUse type required for shake/volume/power SOS triggers and
+         Follow Me background location — declared in Play Console App content. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
 
     <application
@@ -64,16 +63,15 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- Keeps shake / volume / power SOS triggers alive when locked or
-             backgrounded, and sends the SOS itself (works even if the Flutter
-             app process is dead). -->
+        <!-- specialUse foreground service: detects shake/volume/power SOS
+             triggers and runs Follow Me background location sharing. -->
         <service
             android:name=".SafetyMonitorService"
             android:exported="false"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="Monitors shake/volume/power to send an emergency SOS while the screen is locked." />
+                android:value="SafeOne uses this service to detect emergency triggers (shake, volume, power button) and share live location with trusted contacts during an active SOS — even when the screen is off." />
         </service>
 
         <!-- Fires the native safety check-in SOS if the deadline passes without
