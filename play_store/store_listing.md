@@ -80,5 +80,5 @@ App (free), no in-app purchases, no ads.
 - (Optional) 7" / 10" tablet screenshots.
 
 ## Contact details
-- Email: jeeveshatwork@gmail.com
+- Email: safeeonee@gmail.com
 - Privacy policy URL: <host privacy_policy.html and paste URL>

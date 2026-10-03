@@ -16,7 +16,7 @@ moves from the site root to `privacy.html`.
 ## 3. Play Console: Developer account
 Settings → Developer account → Account details:
 - [ ] Developer name: **Tejovan Labs**
-- [ ] Contact email: jeeveshatwork@gmail.com
+- [ ] Contact email: safeeonee@gmail.com
 - [ ] Website: https://jeeveshmahato.github.io/SafeOne/
 
 ## 4. Play Console: Store listing (Grow → Store presence → Main store listing)

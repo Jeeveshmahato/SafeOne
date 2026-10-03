@@ -4,7 +4,7 @@
 
 SafeOne ("the app", "we", "us") is a personal safety application published by
 **Tejovan Labs** (Seraikela-Kharsawan, Jharkhand, India). This policy explains what data the app uses, how it is used, and
-your choices. Contact: **jeeveshatwork@gmail.com**.
+your choices. Contact: **safeeonee@gmail.com**.
 
 ## Summary
 
@@ -79,7 +79,7 @@ hold no copy. You can delete it at any time:
   storage*, or uninstall SafeOne. This permanently removes your contacts, PIN,
   recordings, settings and log.
 
-If you have any question about your data, email jeeveshatwork@gmail.com and we
+If you have any question about your data, email safeeonee@gmail.com and we
 will reply within 30 days.
 
 ## Changes to this policy
@@ -88,4 +88,4 @@ We may update this policy; the "Last updated" date will change accordingly.
 
 ## Contact
 
-Questions about this policy: **jeeveshatwork@gmail.com**
+Questions about this policy: **safeeonee@gmail.com**

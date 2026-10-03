@@ -189,7 +189,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   static final Uri _privacyUrl =
       Uri.parse('https://jeeveshmahato.github.io/SafeOne/privacy.html');
   static final Uri _supportUrl =
-      Uri.parse('mailto:jeeveshatwork@gmail.com?subject=SafeOne%20support');
+      Uri.parse('mailto:safeeonee@gmail.com?subject=SafeOne%20support');
 
   Future<void> _openLink(Uri uri) async {
     try {
@@ -395,7 +395,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ListTile(
                     leading: _leading(Icons.mail_outline_rounded),
                     title: Text(t.settingsSupport),
-                    subtitle: const Text('jeeveshatwork@gmail.com'),
+                    subtitle: const Text('safeeonee@gmail.com'),
                     trailing: const Icon(Icons.open_in_new_rounded, size: 20),
                     onTap: () => _openLink(_supportUrl),
                   ),

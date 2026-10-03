@@ -47,3 +47,7 @@ android/key.properties
 android/upload-keystore.jks
 *.jks
 *.keystore
+
+# Personal / legal documents (Udyam certificate etc.) contain contact
+# details and must never be published with the public repo.
+*.pdf
