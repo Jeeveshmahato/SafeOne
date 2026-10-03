@@ -9,6 +9,8 @@ import 'screens/pin_setup_screen.dart';
 import 'services/app_lock_service.dart';
 import 'services/locale_controller.dart';
 import 'services/notification_service.dart';
+import 'theme/app_theme.dart';
+import 'widgets/app_ui.dart';
 
 /// This is where the app starts running.
 Future<void> main() async {
@@ -42,12 +44,11 @@ class WomenSafetyApp extends StatelessWidget {
           navigatorKey: rootNavigatorKey,
           onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            // A purple-based color scheme. Change the seedColor to recolor
-            // the whole app.
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-            useMaterial3: true,
-          ),
+          // Colours, fonts and component styles live in AppTheme; the app
+          // follows the phone's light/dark setting.
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: ThemeMode.system,
           // Language settings: a null locale means "follow the phone".
           locale: locale,
           supportedLocales: AppLocalizations.supportedLocales,
@@ -57,12 +58,6 @@ class WomenSafetyApp extends StatelessWidget {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          builder: (context, child) {
-            return SafeArea(
-              top: false,
-              child: child!,
-            );
-          },
           home: const AppGate(),
         );
       },
@@ -156,15 +151,13 @@ class _AppGateState extends State<AppGate> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    if (_loading) return const _Splash();
     if (!_pinSet) {
       // Nudge into mandatory PIN setup right after the first frame.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && !_unlocked) _startPinSetup();
       });
-      return const Scaffold(body: Center(child: Icon(Icons.shield, size: 64)));
+      return const _Splash();
     }
     if (!_unlocked) {
       return LockScreen(
@@ -176,5 +169,16 @@ class _AppGateState extends State<AppGate> with WidgetsBindingObserver {
       );
     }
     return const HomeScreen();
+  }
+}
+
+/// A quiet branded placeholder shown for the split second while the lock state
+/// loads, instead of a bare spinner.
+class _Splash extends StatelessWidget {
+  const _Splash();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(body: Center(child: AppLogo(size: 72)));
   }
 }

@@ -53,7 +53,7 @@ class NotificationService {
       tz.setLocalLocation(tz.getLocation(name));
     } catch (_) {/* falls back to UTC */}
 
-    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const android = AndroidInitializationSettings('@drawable/ic_stat_safeone');
     const ios = DarwinInitializationSettings();
     await _plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),

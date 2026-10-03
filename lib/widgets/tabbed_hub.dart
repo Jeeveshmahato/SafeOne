@@ -22,12 +22,24 @@ class TabbedHub extends StatefulWidget {
   final List<HubTab> tabs;
   final int initialIndex;
 
+  /// Switches the nearest enclosing hub to tab [index] — lets a tab send the
+  /// user to a sibling tab (e.g. "Edit" on the QR card opens the ID tab).
+  static void select(BuildContext context, int index) {
+    context.findAncestorStateOfType<_TabbedHubState>()?.select(index);
+  }
+
   @override
   State<TabbedHub> createState() => _TabbedHubState();
 }
 
 class _TabbedHubState extends State<TabbedHub> {
   late int _index = widget.initialIndex;
+
+  void select(int index) {
+    if (index >= 0 && index < widget.tabs.length) {
+      setState(() => _index = index);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

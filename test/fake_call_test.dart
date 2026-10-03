@@ -87,9 +87,9 @@ void main() {
     await tester.pumpWidget(_app(const FakeCallSetupScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Fake Call'), findsWidgets);
-    expect(find.text('Start Fake Call'), findsOneWidget);
-    expect(find.text('Ring Sound'), findsOneWidget);
+    expect(find.text('Fake call'), findsWidgets);
+    expect(find.text('Start fake call'), findsOneWidget);
+    expect(find.text('Ring sound'), findsOneWidget);
     expect(find.text('Police siren'), findsOneWidget);
     expect(find.text('Phone ring'), findsOneWidget);
   });
@@ -103,7 +103,7 @@ void main() {
     // Hindi label for "Start Fake Call".
     expect(find.text('नकली कॉल शुरू करें'), findsOneWidget);
     // No leftover English on the primary action.
-    expect(find.text('Start Fake Call'), findsNothing);
+    expect(find.text('Start fake call'), findsNothing);
   });
 
   testWidgets('incoming call starts the ring sound and shows accept/decline',
@@ -146,7 +146,7 @@ void main() {
 
     // Ongoing call screen shows its End Call control and a timer (00:00).
     expect(find.byType(OngoingCallScreen), findsOneWidget);
-    expect(find.text('End Call'), findsOneWidget);
+    expect(find.text('End call'), findsOneWidget);
     expect(find.text('00:00'), findsOneWidget);
 
     // Let the call timer tick once.

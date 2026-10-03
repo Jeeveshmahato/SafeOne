@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../config/features.dart';
 import '../l10n/app_localizations.dart';
@@ -6,12 +7,13 @@ import '../services/app_lock_service.dart';
 import '../services/locale_controller.dart';
 import '../services/safety_monitor_service.dart';
 import '../services/settings_repository.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 import '../widgets/duration_field.dart';
 import 'pin_setup_screen.dart';
 
-/// Screen where the user changes app settings.
-///
-/// For now it has one setting: how many seconds the SOS countdown lasts.
+/// Screen where the user changes app settings: language, app lock, how the
+/// SOS behaves, hands-free triggers, and links to the privacy policy/support.
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
@@ -146,7 +148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final current = LocaleController.instance.value?.languageCode;
     showModalBottomSheet<void>(
       context: context,
-      showDragHandle: true,
+      isScrollControlled: true,
       builder: (sheetContext) {
         return SafeArea(
           child: ListView(
@@ -156,8 +158,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                 child: Text(
                   t.language,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
               RadioGroup<String>(
@@ -185,197 +186,296 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  static final Uri _privacyUrl =
+      Uri.parse('https://jeeveshmahato.github.io/SafeOne/privacy.html');
+  static final Uri _supportUrl =
+      Uri.parse('mailto:jeeveshatwork@gmail.com?subject=SafeOne%20support');
+
+  Future<void> _openLink(Uri uri) async {
+    try {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {/* no browser / mail app */}
+  }
+
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(title: Text(t.settingsTitle)),
       body: _selectedSeconds == null
           ? const Center(child: CircularProgressIndicator())
           : ListView(
+              padding: EdgeInsets.fromLTRB(
+                  16, 0, 16, 32 + MediaQuery.paddingOf(context).bottom),
               children: [
-                // Language picker.
-                ListTile(
-                  leading: const Icon(Icons.language),
-                  title: Text(t.language),
-                  subtitle: Text(t.languageSubtitle),
-                  trailing: Text(
-                    LocaleController.displayName(
-                      LocaleController.instance.value ??
-                          Localizations.localeOf(context),
+                // ---- General ----
+                SectionLabel(t.settingsSectionGeneral,
+                    padding: const EdgeInsets.fromLTRB(4, 8, 4, 12)),
+                _SettingsGroup(children: [
+                  ListTile(
+                    leading: _leading(Icons.translate_rounded),
+                    title: Text(t.language),
+                    subtitle: Text(t.languageSubtitle),
+                    trailing: Text(
+                      LocaleController.displayName(
+                        LocaleController.instance.value ??
+                            Localizations.localeOf(context),
+                      ),
+                      style: theme.textTheme.labelLarge!
+                          .copyWith(color: scheme.primary),
                     ),
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    onTap: _openLanguagePicker,
                   ),
-                  onTap: _openLanguagePicker,
-                ),
-                const Divider(),
+                ]),
 
                 // ---- Security ----
-                _SectionHeader(t.securitySection),
-                ListTile(
-                  leading: const Icon(Icons.password),
-                  title: Text(t.securityChangePin),
-                  onTap: _changePin,
-                ),
-                SwitchListTile(
-                  secondary: const Icon(Icons.fingerprint),
-                  title: Text(t.securityBiometric),
-                  subtitle: Text(t.securityBiometricSubtitle),
-                  value: _biometricEnabled,
-                  onChanged: _biometricAvailable ? _setBiometric : null,
-                ),
-                ListTile(
-                  leading: const Icon(Icons.lock_clock),
-                  title: Text(t.securityAutoLock),
-                  trailing: DropdownButton<int>(
-                    value: _graceSeconds,
-                    onChanged: (v) => _setGrace(v ?? 0),
-                    items: [
-                      DropdownMenuItem(
-                        value: 0,
-                        child: Text(t.securityAutoLockImmediate),
-                      ),
-                      for (final s in const [30, 60, 300])
-                        DropdownMenuItem(
-                          value: s,
-                          child: Text(t.securityAutoLockGrace(s)),
-                        ),
-                    ],
+                SectionLabel(t.securitySection),
+                _SettingsGroup(children: [
+                  ListTile(
+                    leading: _leading(Icons.pin_rounded),
+                    title: Text(t.securityChangePin),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: _changePin,
                   ),
-                ),
-                const Divider(),
+                  SwitchListTile(
+                    secondary: _leading(Icons.fingerprint_rounded),
+                    title: Text(t.securityBiometric),
+                    subtitle: Text(t.securityBiometricSubtitle),
+                    value: _biometricEnabled,
+                    onChanged: _biometricAvailable ? _setBiometric : null,
+                  ),
+                  ListTile(
+                    leading: _leading(Icons.lock_clock_rounded),
+                    title: Text(t.securityAutoLock),
+                    subtitle: Text(_graceLabel(t, _graceSeconds)),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: _openAutoLockPicker,
+                  ),
+                ]),
 
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
-                  child: Text(
-                    'SOS countdown length',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                // ---- SOS alert ----
+                SectionLabel(t.settingsSectionSos),
+                _SettingsGroup(children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _leading(Icons.timer_outlined),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(t.settingsCountdownTitle,
+                                      style: theme.listTileTheme.titleTextStyle),
+                                  Text(t.settingsCountdownSubtitle,
+                                      style:
+                                          theme.listTileTheme.subtitleTextStyle),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        // Fully customisable countdown in seconds / minutes / hours.
+                        DurationField(
+                          initial: Duration(seconds: _selectedSeconds ?? 5),
+                          initialUnit: TimeUnit.seconds,
+                          onChanged: (d) => _select(d.inSeconds),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'How long you have to cancel before the SOS is sent.',
-                    style: TextStyle(color: Colors.black54),
+                  SwitchListTile(
+                    secondary: _leading(Icons.notifications_off_outlined),
+                    title: Text(t.securitySilentSos),
+                    subtitle: Text(t.securitySilentSosSubtitle),
+                    value: _silentSos,
+                    onChanged: _setSilentSos,
                   ),
-                ),
-                const SizedBox(height: 8),
-                // Fully customisable countdown in seconds / minutes / hours.
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: DurationField(
-                    initial: Duration(seconds: _selectedSeconds ?? 5),
-                    initialUnit: TimeUnit.seconds,
-                    onChanged: (d) => _select(d.inSeconds),
+                  if (Features.backgroundLocation)
+                    SwitchListTile(
+                      secondary: _leading(Icons.share_location_rounded),
+                      title: Text(t.securityLiveUpdates),
+                      subtitle: Text(t.securityLiveUpdatesSubtitle),
+                      value: _liveUpdates,
+                      onChanged: _setLiveUpdates,
+                    ),
+                  // Editable SOS message.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _leading(Icons.sms_outlined),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(t.settingsMessageTitle,
+                                      style: theme.listTileTheme.titleTextStyle),
+                                  Text(
+                                    t.settingsMessageSubtitle('{location}'),
+                                    style:
+                                        theme.listTileTheme.subtitleTextStyle,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: _messageController,
+                          minLines: 3,
+                          maxLines: 6,
+                          decoration: InputDecoration(
+                            hintText: t.settingsMessageHint,
+                          ),
+                          // Save automatically as the user types.
+                          onChanged: _saveMessage,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                const Divider(),
-                // Background trigger toggles — hidden in v1.0 Play Store build.
+                ]),
+
+                // ---- Hands-free triggers ----
                 if (Features.backgroundTriggers) ...[
-                  SwitchListTile(
-                    title: const Text('Shake to send SOS'),
-                    subtitle: const Text(
-                      'When on, shaking the phone starts the SOS countdown.',
+                  SectionLabel(t.settingsSectionTriggers),
+                  _SettingsGroup(children: [
+                    SwitchListTile(
+                      secondary: _leading(Icons.vibration_rounded),
+                      title: Text(t.settingsShakeTitle),
+                      subtitle: Text(t.settingsShakeSubtitle),
+                      value: _shakeEnabled,
+                      onChanged: _setShake,
                     ),
-                    value: _shakeEnabled,
-                    onChanged: _setShake,
-                  ),
-                  SwitchListTile(
-                    title: Text(t.securityVolumeTrigger),
-                    subtitle: Text(t.securityVolumeTriggerSubtitle),
-                    value: _volumeTrigger,
-                    onChanged: _setVolumeTrigger,
-                  ),
-                  SwitchListTile(
-                    title: const Text('Power button SOS'),
-                    subtitle: const Text(
-                      'When on, rapidly pressing the power button (3×) starts '
-                      'the SOS.',
+                    SwitchListTile(
+                      secondary: _leading(Icons.volume_up_rounded),
+                      title: Text(t.securityVolumeTrigger),
+                      subtitle: Text(t.securityVolumeTriggerSubtitle),
+                      value: _volumeTrigger,
+                      onChanged: _setVolumeTrigger,
                     ),
-                    value: _powerTrigger,
-                    onChanged: _setPowerTrigger,
-                  ),
+                    SwitchListTile(
+                      secondary: _leading(Icons.power_settings_new_rounded),
+                      title: Text(t.settingsPowerTitle),
+                      subtitle: Text(t.settingsPowerSubtitle),
+                      value: _powerTrigger,
+                      onChanged: _setPowerTrigger,
+                    ),
+                  ]),
                   if (_shakeEnabled || _volumeTrigger || _powerTrigger)
-                    const Padding(
-                      padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
-                      child: Text(
-                        'Safety mode runs in the background so shake / volume / '
-                        'power can send an SOS even when your phone is locked. '
-                        'You\'ll see a permanent "Safety mode active" '
-                        'notification while it\'s on.',
-                        style: TextStyle(fontSize: 12, color: Colors.black54),
-                      ),
+                    NoticeCard(
+                      tone: Tone.info,
+                      message: t.settingsSafetyModeNote,
+                      margin: const EdgeInsets.only(top: 12),
                     ),
                 ],
-                SwitchListTile(
-                  title: Text(t.securitySilentSos),
-                  subtitle: Text(t.securitySilentSosSubtitle),
-                  value: _silentSos,
-                  onChanged: _setSilentSos,
-                ),
-                if (Features.backgroundLocation)
-                  SwitchListTile(
-                    title: Text(t.securityLiveUpdates),
-                    subtitle: Text(t.securityLiveUpdatesSubtitle),
-                    value: _liveUpdates,
-                    onChanged: _setLiveUpdates,
+
+                // ---- About ----
+                SectionLabel(t.settingsSectionAbout),
+                _SettingsGroup(children: [
+                  ListTile(
+                    leading: _leading(Icons.privacy_tip_outlined),
+                    title: Text(t.settingsPrivacyPolicy),
+                    subtitle: Text(t.settingsPrivacySubtitle),
+                    trailing: const Icon(Icons.open_in_new_rounded, size: 20),
+                    onTap: () => _openLink(_privacyUrl),
                   ),
-                const Divider(),
-                // Editable SOS message.
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+                  ListTile(
+                    leading: _leading(Icons.mail_outline_rounded),
+                    title: Text(t.settingsSupport),
+                    subtitle: const Text('jeeveshatwork@gmail.com'),
+                    trailing: const Icon(Icons.open_in_new_rounded, size: 20),
+                    onTap: () => _openLink(_supportUrl),
+                  ),
+                ]),
+                const SizedBox(height: 24),
+                Center(
                   child: Text(
-                    'SOS message',
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(
-                    'This text is sent to your contacts. Keep the word '
-                    '{location} where you want the map link to appear.',
-                    style: TextStyle(color: Colors.black54),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: TextField(
-                    controller: _messageController,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Type your emergency message…',
-                    ),
-                    // Save automatically as the user types.
-                    onChanged: _saveMessage,
+                    t.settingsMadeBy,
+                    style: theme.textTheme.bodySmall,
                   ),
                 ),
               ],
             ),
     );
   }
+
+  Widget _leading(IconData icon) =>
+      Icon(icon, color: Theme.of(context).colorScheme.onSurfaceVariant);
+
+  String _graceLabel(AppLocalizations t, int seconds) =>
+      seconds == 0 ? t.securityAutoLockImmediate : t.securityAutoLockGrace(seconds);
+
+  /// Pick the auto-lock delay in a bottom sheet (standard settings pattern;
+  /// an inline dropdown squeezed the title onto two lines).
+  void _openAutoLockPicker() {
+    final t = AppLocalizations.of(context);
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+              child: Text(t.securityAutoLock,
+                  style: Theme.of(context).textTheme.titleLarge),
+            ),
+            RadioGroup<int>(
+              groupValue: _graceSeconds,
+              onChanged: (v) {
+                if (v != null) _setGrace(v);
+                Navigator.pop(sheetContext);
+              },
+              child: Column(
+                children: [
+                  for (final s in const [0, 30, 60, 300])
+                    RadioListTile<int>(
+                      value: s,
+                      title: Text(_graceLabel(t, s)),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-/// A small bold heading used to group settings into sections.
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title);
+/// A rounded card holding a group of related settings, separated by
+/// inset dividers.
+class _SettingsGroup extends StatelessWidget {
+  const _SettingsGroup({required this.children});
 
-  final String title;
+  final List<Widget> children;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0) const Divider(indent: 56),
+            children[i],
+          ],
+        ],
       ),
     );
   }

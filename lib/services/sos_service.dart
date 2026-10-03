@@ -101,25 +101,35 @@ class SosService {
     }
 
     try {
-      // Step 3: get the current location.
-      final position = await _locationService.getCurrentLocation();
-      final mapsLink = _locationService.buildMapsLink(
-        position.latitude,
-        position.longitude,
-      );
+      // Step 3: get the location — best effort. An alert without a location
+      // is far better than no alert, so a GPS failure never stops the SOS.
+      final position = await _locationService.getBestEffortLocation();
+      final String locationText = position == null
+          ? '(location unavailable)'
+          : _locationService.buildMapsLink(
+              position.latitude,
+              position.longitude,
+            );
 
       // Step 4: build the message from the template.
       const String placeholder = '{location}';
       final String message = messageTemplate.contains(placeholder)
-          ? messageTemplate.replaceAll(placeholder, mapsLink)
-          : '$messageTemplate $mapsLink';
+          ? messageTemplate.replaceAll(placeholder, locationText)
+          : '$messageTemplate $locationText';
 
-      // Step 5: send it to everyone.
+      // Step 5: open Messages addressed to everyone.
       final phoneNumbers = contacts.map((c) => c.phone).toList();
-      await _smsService.sendSos(
+      final opened = await _smsService.sendSos(
         phoneNumbers: phoneNumbers,
         message: message,
       );
+      if (!opened) {
+        return const SosResult(
+          success: false,
+          message: "Couldn't open your Messages app. Call 112 or text your "
+              'contacts directly.',
+        );
+      }
 
       // Step 6: buzz the phone to confirm (only if it can vibrate). Skipped
       // for a silent/stealth SOS so an attacker doesn't notice it was sent.
@@ -129,7 +139,10 @@ class SosService {
 
       return SosResult(
         success: true,
-        message: '$successPrefix ${contacts.length} contact(s).',
+        message: position == null
+            ? '$successPrefix ${contacts.length} contact(s), without location '
+                '(turn on GPS for a map link).'
+            : '$successPrefix ${contacts.length} contact(s).',
       );
     } catch (error) {
       // Any failure (location off, permission denied, etc.) ends up here with

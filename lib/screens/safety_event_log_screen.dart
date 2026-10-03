@@ -4,6 +4,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../models/safety_event.dart';
 import '../services/safety_event_repository.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 
 /// The single Safety Log. Shows every real safety action the app recorded (SOS,
 /// check-in, location shared, fake call) and lets the user log an incident by
@@ -39,6 +41,20 @@ class _SafetyEventLogScreenState extends State<SafetyEventLogScreen> {
   Future<void> _deleteEvent(SafetyEvent event) async {
     await _repo.remove(event.id);
     await _loadEvents();
+    if (!mounted) return;
+    // Log entries can be evidence, so a stray tap must be easy to undo.
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: const Text('Entry deleted'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () async {
+            await _repo.add(event);
+            await _loadEvents();
+          },
+        ),
+      ));
   }
 
   Future<void> _clearAll() async {
@@ -51,7 +67,12 @@ class _SafetyEventLogScreenState extends State<SafetyEventLogScreen> {
           TextButton(
               onPressed: () => Navigator.pop(ctx, false),
               child: const Text('Cancel')),
-          TextButton(
+          FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(ctx).colorScheme.error,
+                foregroundColor: Theme.of(ctx).colorScheme.onError,
+                minimumSize: const Size(0, 44),
+              ),
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text('Clear')),
         ],
@@ -140,17 +161,16 @@ class _SafetyEventLogScreenState extends State<SafetyEventLogScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Safety Log'),
-        centerTitle: true,
+        title: const Text('Safety log'),
         actions: [
           if (_events.isNotEmpty) ...[
             IconButton(
-              icon: const Icon(Icons.ios_share),
+              icon: const Icon(Icons.ios_share_rounded),
               tooltip: 'Export / share log',
               onPressed: _exportLog,
             ),
             IconButton(
-              icon: const Icon(Icons.delete_sweep),
+              icon: const Icon(Icons.delete_sweep_outlined),
               tooltip: 'Clear log',
               onPressed: _clearAll,
             ),
@@ -159,37 +179,22 @@ class _SafetyEventLogScreenState extends State<SafetyEventLogScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _logIncident,
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.edit_note_rounded),
         label: const Text('Log incident'),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _events.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.check_circle,
-                          size: 80, color: Colors.green[300]),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No safety events yet',
-                        style:
-                            TextStyle(fontSize: 18, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'SOS alerts, check-ins and incidents you log\n'
-                        'will appear here.',
-                        textAlign: TextAlign.center,
-                        style:
-                            TextStyle(fontSize: 14, color: Colors.grey[500]),
-                      ),
-                    ],
-                  ),
+              ? const EmptyState(
+                  icon: Icons.history_rounded,
+                  title: 'No safety events yet',
+                  message: 'SOS alerts, check-ins and incidents you log '
+                      'will appear here.',
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(8),
+                  // Leave room at the bottom so the FAB never hides an entry.
+                  padding: EdgeInsets.fromLTRB(
+                      16, 8, 16, 96 + MediaQuery.paddingOf(context).bottom),
                   itemCount: _events.length,
                   itemBuilder: (context, index) {
                     final event = _events[index]; // newest first
@@ -212,76 +217,76 @@ class _EventCard extends StatelessWidget {
     required this.onDelete,
   });
 
-  Color _getEventColor() {
+  Color _getEventColor(BuildContext context) {
+    final s = context.safety;
     switch (event.type) {
       case SafetyEventType.sos:
-        return Colors.red;
+        return s.sos;
       case SafetyEventType.checkIn:
-        return Colors.green;
+        return s.success;
       case SafetyEventType.fakeCall:
-        return Colors.blue;
+        return s.info;
       case SafetyEventType.incidentLogged:
-        return Colors.orange;
+        return s.warning;
       case SafetyEventType.locationShared:
-        return Colors.purple;
+        return Theme.of(context).colorScheme.primary;
     }
   }
 
   IconData _getEventIcon() {
     switch (event.type) {
       case SafetyEventType.sos:
-        return Icons.emergency;
+        return Icons.sos_rounded;
       case SafetyEventType.checkIn:
-        return Icons.check_circle;
+        return Icons.verified_user_rounded;
       case SafetyEventType.fakeCall:
-        return Icons.phone;
+        return Icons.phone_in_talk_rounded;
       case SafetyEventType.incidentLogged:
-        return Icons.warning;
+        return Icons.edit_note_rounded;
       case SafetyEventType.locationShared:
-        return Icons.location_on;
+        return Icons.share_location_rounded;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.textTheme.bodySmall;
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: Icon(
-          _getEventIcon(),
-          color: _getEventColor(),
-          size: 28,
+        contentPadding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+        leading: IconBadge(
+          icon: _getEventIcon(),
+          color: _getEventColor(context),
         ),
-        title: Text(
-          event.typeLabel,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text(event.typeLabel),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 4),
-            Text(
-              DateFormat('MMM d, HH:mm').format(event.timestamp),
-              style: const TextStyle(fontSize: 12),
-            ),
+            const SizedBox(height: 2),
+            Text(DateFormat('d MMM, HH:mm').format(event.timestamp),
+                style: muted),
             if (event.location != null)
               Text(
                 event.location!,
-                style: const TextStyle(fontSize: 12),
+                style: muted,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-            if (event.contactsNotified != null && event.contactsNotified!.isNotEmpty)
+            if (event.contactsNotified != null &&
+                event.contactsNotified!.isNotEmpty)
               Text(
                 '→ ${event.contactsNotified!.join(', ')}',
-                style: const TextStyle(fontSize: 11, color: Colors.blue),
+                style: muted!.copyWith(color: theme.colorScheme.primary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
           ],
         ),
         trailing: IconButton(
-          icon: const Icon(Icons.close, color: Colors.red, size: 20),
+          icon: const Icon(Icons.delete_outline_rounded, size: 22),
+          tooltip: 'Delete entry',
           onPressed: onDelete,
         ),
         onTap: () => _showEventDetails(context),
@@ -290,56 +295,68 @@ class _EventCard extends StatelessWidget {
   }
 
   void _showEventDetails(BuildContext context) {
+    final theme = Theme.of(context);
+    Widget field(String label, Widget value) => Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: theme.textTheme.labelMedium!.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant)),
+              const SizedBox(height: 2),
+              value,
+            ],
+          ),
+        );
     showModalBottomSheet(
       context: context,
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              event.typeLabel,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Time',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600),
-            ),
-            Text(
-              DateFormat('EEEE, MMM d, yyyy · HH:mm:ss').format(event.timestamp),
-              style: const TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Description',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600),
-            ),
-            Text(
-              event.description,
-              style: const TextStyle(fontSize: 14),
-            ),
-            if (event.location != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                'Location',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600),
+      isScrollControlled: true,
+      builder: (context) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  IconBadge(
+                      icon: _getEventIcon(), color: _getEventColor(context)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(event.typeLabel,
+                        style: theme.textTheme.titleLarge),
+                  ),
+                ],
               ),
-              Text(
-                event.location!,
-                style: const TextStyle(fontSize: 14),
+              field(
+                'Time',
+                Text(
+                  DateFormat('EEEE, d MMM yyyy · HH:mm:ss')
+                      .format(event.timestamp),
+                  style: theme.textTheme.bodyLarge,
+                ),
               ),
+              field('Description',
+                  Text(event.description, style: theme.textTheme.bodyLarge)),
+              if (event.location != null)
+                field('Location',
+                    Text(event.location!, style: theme.textTheme.bodyLarge)),
+              if (event.contactsNotified != null &&
+                  event.contactsNotified!.isNotEmpty)
+                field(
+                  'Contacts notified',
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      for (final name in event.contactsNotified!)
+                        Text('• $name', style: theme.textTheme.bodyLarge),
+                    ],
+                  ),
+                ),
             ],
-            if (event.contactsNotified != null && event.contactsNotified!.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                'Contacts Notified',
-                style: TextStyle(fontSize: 12, color: Colors.grey[600], fontWeight: FontWeight.w600),
-              ),
-              ...event.contactsNotified!.map((name) => Text('• $name')),
-            ],
-          ],
+          ),
         ),
       ),
     );

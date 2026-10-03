@@ -21,20 +21,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSubtitle => 'Choose your preferred language';
 
   @override
-  String get fakeCallTitle => 'Fake Call';
+  String get fakeCallTitle => 'Fake call';
 
   @override
   String get fakeCallHeader =>
       'Create a fake incoming call to help you leave an unsafe situation. The call looks realistic and gives you a reason to step away.';
 
   @override
-  String get chooseScenario => 'Choose a Scenario';
+  String get chooseScenario => 'Choose a scenario';
 
   @override
-  String get chooseCaller => 'Choose a Caller';
+  String get chooseCaller => 'Choose a caller';
 
   @override
-  String get phoneNumberOptional => 'Phone Number (Optional)';
+  String get phoneNumberOptional => 'Phone number (optional)';
 
   @override
   String get phoneHint => 'e.g. +91 98765 43210';
@@ -43,7 +43,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phoneHelper => 'Shows on the fake call screen for realism';
 
   @override
-  String get whatToSay => 'What to Say (If They Pick Up)';
+  String get whatToSay => 'What to say (if they pick up)';
 
   @override
   String get whatToSayHint =>
@@ -54,13 +54,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Quick message to say if caller picks up by accident';
 
   @override
-  String get callDelay => 'Call Delay';
+  String get callDelay => 'Call delay';
 
   @override
-  String get quickPresets => 'Quick Presets';
+  String get quickPresets => 'Quick presets';
 
   @override
-  String get orCustomTime => 'Or Enter Custom Time';
+  String get orCustomTime => 'Or enter a custom time';
 
   @override
   String get hours => 'Hours';
@@ -72,16 +72,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get seconds => 'Seconds';
 
   @override
-  String get advancedOptions => 'Advanced Options';
+  String get advancedOptions => 'Advanced options';
 
   @override
-  String get repeatCall => 'Repeat Call';
+  String get repeatCall => 'Repeat call';
 
   @override
   String get repeatCallSubtitle => 'Call keeps \"ringing\" if you decline it';
 
   @override
-  String get autoEndCall => 'Auto-End Call';
+  String get autoEndCall => 'Auto-end call';
 
   @override
   String get autoEndCallSubtitle => 'Call ends automatically after a set time';
@@ -90,7 +90,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get endAfter => 'End after:';
 
   @override
-  String get ringSound => 'Ring Sound';
+  String get ringSound => 'Ring sound';
 
   @override
   String get ringSoundPhone => 'Phone ring';
@@ -99,7 +99,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ringSoundSiren => 'Police siren';
 
   @override
-  String get startFakeCall => 'Start Fake Call';
+  String get startFakeCall => 'Start fake call';
 
   @override
   String get now => 'Now';
@@ -128,7 +128,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get incomingCall => 'Incoming call…';
 
   @override
-  String get callEnded => 'Call Ended';
+  String get callEnded => 'Call ended';
 
   @override
   String get decline => 'Decline';
@@ -157,7 +157,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get keypad => 'Keypad';
 
   @override
-  String get endCall => 'End Call';
+  String get endCall => 'End call';
 
   @override
   String secondsShort(int count) {
@@ -267,22 +267,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tilePoliceSos => 'Police SOS';
 
   @override
-  String get tileWhatToDo => 'What To Do';
+  String get tileWhatToDo => 'What to do';
 
   @override
-  String get tileIndiaHelp => 'India Help';
+  String get tileIndiaHelp => 'India help';
 
   @override
-  String get tileJourneySafe => 'Journey Safe';
+  String get tileJourneySafe => 'Journey safe';
 
   @override
-  String get tileQrCard => 'QR Card';
+  String get tileQrCard => 'QR card';
 
   @override
-  String get tileLocationPing => 'Location Ping';
+  String get tileLocationPing => 'Location ping';
 
   @override
-  String get tileDangerZones => 'Danger Zones';
+  String get tileDangerZones => 'Danger zones';
 
   @override
   String get sectionGetHelp => 'Get help';
@@ -306,7 +306,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tileRecords => 'Records';
 
   @override
-  String get tileSafetyCheckin => 'Safety check-in';
+  String get tileSafetyCheckin => 'Check-in timer';
 
   @override
   String get quickActions => 'Quick actions';
@@ -351,7 +351,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lockUseBiometric => 'Use fingerprint / face';
 
   @override
-  String get lockBiometricReason => 'Unlock Women Safety';
+  String get lockBiometricReason => 'Unlock SafeOne';
 
   @override
   String get pinSetTitle => 'Set a PIN';
@@ -473,7 +473,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabPing => 'Ping';
 
   @override
-  String get tabEmergencyId => 'ID';
+  String get tabEmergencyId => 'Medical ID';
 
   @override
   String get tabMedical => 'Medical';
@@ -512,4 +512,149 @@ class AppLocalizationsEn extends AppLocalizations {
   String homeContactsSaved(int count) {
     return '$count emergency contact(s) saved.';
   }
+
+  @override
+  String get homeTagline => 'Help is one tap away';
+
+  @override
+  String homeContactsReady(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count contacts will be alerted',
+      one: '1 contact will be alerted',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get homeAddContactsTitle => 'Add your emergency contacts';
+
+  @override
+  String get homeAddContactsAction => 'Add contacts';
+
+  @override
+  String get sosButtonCaption => 'Tap to alert  ·  Hold for silent SOS';
+
+  @override
+  String get sosButtonSemantics =>
+      'Send SOS alert. Long-press to send silently.';
+
+  @override
+  String get sosSending => 'Sending…';
+
+  @override
+  String get tileReportPortals => 'Report & portals';
+
+  @override
+  String get errorNoContacts =>
+      'Please add at least one emergency contact first.';
+
+  @override
+  String get errorNoFlashlight => 'This phone has no flashlight.';
+
+  @override
+  String get errorMicDenied => 'Microphone permission denied.';
+
+  @override
+  String get recordingStarted => 'Recording started.';
+
+  @override
+  String get recordingSaved => 'Recording saved to this phone.';
+
+  @override
+  String get recordingStopped => 'Recording stopped.';
+
+  @override
+  String get sosCountdownTitle => 'Sending SOS';
+
+  @override
+  String get sosCountdownBody =>
+      'Your location will be sent to your emergency contacts.';
+
+  @override
+  String get sosCountdownHint => 'Tap Cancel if this was a mistake.';
+
+  @override
+  String get sosSendNow => 'Send now';
+
+  @override
+  String get settingsSectionGeneral => 'General';
+
+  @override
+  String get settingsSectionSos => 'SOS alert';
+
+  @override
+  String get settingsSectionTriggers => 'Hands-free SOS';
+
+  @override
+  String get settingsSectionAbout => 'About';
+
+  @override
+  String get settingsCountdownTitle => 'SOS countdown';
+
+  @override
+  String get settingsCountdownSubtitle =>
+      'How long you have to cancel before the SOS is sent.';
+
+  @override
+  String get settingsShakeTitle => 'Shake to send SOS';
+
+  @override
+  String get settingsShakeSubtitle =>
+      'Shaking the phone starts the SOS countdown.';
+
+  @override
+  String get settingsPowerTitle => 'Power button SOS';
+
+  @override
+  String get settingsPowerSubtitle =>
+      'Pressing the power button 3 times quickly starts the SOS.';
+
+  @override
+  String get settingsSafetyModeNote =>
+      'Safety mode runs in the background so these triggers work even when your phone is locked. You\'ll see a \"Safety mode active\" notification while it\'s on.';
+
+  @override
+  String get settingsMessageTitle => 'SOS message';
+
+  @override
+  String settingsMessageSubtitle(String token) {
+    return 'Sent to your contacts. Keep $token where the map link should appear.';
+  }
+
+  @override
+  String get settingsMessageHint => 'Type your emergency message…';
+
+  @override
+  String get settingsPrivacyPolicy => 'Privacy policy';
+
+  @override
+  String get settingsPrivacySubtitle => 'Your data never leaves this phone';
+
+  @override
+  String get settingsSupport => 'Contact support';
+
+  @override
+  String get settingsMadeBy => 'SafeOne by Tejovan Labs';
+
+  @override
+  String get homeAddContactsBody =>
+      'When you press SOS, they get an SMS with your live location.';
+
+  @override
+  String get homeLocationTitle => 'Allow location access';
+
+  @override
+  String get homeLocationBody =>
+      'So your SOS includes a map link to where you are. Do it now, not during an emergency.';
+
+  @override
+  String get homeLocationAction => 'Allow location';
+
+  @override
+  String get homeLocationSettings => 'Open settings';
+
+  @override
+  String get homeTools => 'Safety tools';
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../config/features.dart';
 import '../l10n/app_localizations.dart';
@@ -15,6 +16,8 @@ import '../services/share_location_service.dart';
 import '../services/siren_service.dart';
 import '../services/sos_service.dart';
 import '../services/volume_button_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 import '../widgets/tabbed_hub.dart';
 import 'contacts_screen.dart';
 import 'emergency_id_screen.dart';
@@ -25,7 +28,6 @@ import 'follow_me_screen.dart';
 import 'helpline_screen.dart';
 import 'india_emergency_resources_screen.dart';
 import 'journey_safe_screen.dart';
-import 'medical_screen.dart';
 import 'nearby_places_screen.dart';
 import 'police_sos_screen.dart';
 import 'quick_contacts_screen.dart';
@@ -44,7 +46,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final ContactsRepository _contactsRepository = ContactsRepository();
   final SettingsRepository _settingsRepository = SettingsRepository();
   final SosService _sosService = SosService();
@@ -63,6 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _liveUpdates = SettingsRepository.defaultLiveUpdates;
 
   bool _sendingSos = false;
+
+  // Location permission state, so we can ask *before* an emergency rather
+  // than interrupting the SOS with a system dialog.
+  LocationPermission? _locationPermission;
   bool _sirenOn = false;
   bool _flashOn = false;
   bool _sosBlinkOn = false;
@@ -75,12 +81,42 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadContacts();
     _loadSettings();
+    _checkLocationPermission();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // The user may have granted location in system Settings meanwhile.
+    if (state == AppLifecycleState.resumed) _checkLocationPermission();
+  }
+
+  Future<void> _checkLocationPermission() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (!mounted) return;
+      setState(() => _locationPermission = permission);
+    } catch (_) {/* location unavailable on this device */}
+  }
+
+  Future<void> _requestLocationPermission() async {
+    if (_locationPermission == LocationPermission.deniedForever) {
+      await Geolocator.openAppSettings();
+    } else {
+      await Geolocator.requestPermission();
+    }
+    await _checkLocationPermission();
+  }
+
+  bool get _needsLocation =>
+      _locationPermission == LocationPermission.denied ||
+      _locationPermission == LocationPermission.deniedForever;
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _sirenService.dispose();
     _shakeService.stop();
     _flashlightService.stop();
@@ -132,12 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showMessage(String text, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(text),
-        backgroundColor: isError ? Colors.red : Colors.green,
-      ),
-    );
+    showAppSnack(context, text, tone: isError ? Tone.danger : Tone.success);
   }
 
   // ---------------------------------------------------------------------------
@@ -149,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _triggerSos() async {
     if (_sendingSos) return;
     if (_contacts.isEmpty) {
-      _showMessage('Please add at least one emergency contact first.',
+      _showMessage(AppLocalizations.of(context).errorNoContacts,
           isError: true);
       return;
     }
@@ -166,6 +197,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     if (!mounted) return;
     setState(() => _sendingSos = false);
+    _checkLocationPermission();
     _showMessage(result.message, isError: !result.success);
     if (result.success) {
       _eventLog.log(
@@ -183,7 +215,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_sendingSos) return;
     final t = AppLocalizations.of(context);
     if (_contacts.isEmpty) {
-      _showMessage('Please add at least one emergency contact first.',
+      _showMessage(AppLocalizations.of(context).errorNoContacts,
           isError: true);
       return;
     }
@@ -236,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _checkIn() async {
     if (_sendingSos) return;
     if (_contacts.isEmpty) {
-      _showMessage('Please add at least one emergency contact first.',
+      _showMessage(AppLocalizations.of(context).errorNoContacts,
           isError: true);
       return;
     }
@@ -281,8 +313,9 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       return;
     }
+    final noFlashlight = AppLocalizations.of(context).errorNoFlashlight;
     if (!await _flashlightService.isAvailable()) {
-      _showMessage('This phone has no flashlight.', isError: true);
+      _showMessage(noFlashlight, isError: true);
       return;
     }
     await _flashlightService.start();
@@ -298,8 +331,9 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _sosBlinkOn = false);
       return;
     }
+    final noFlashlight = AppLocalizations.of(context).errorNoFlashlight;
     if (!await _flashlightService.isAvailable()) {
-      _showMessage('This phone has no flashlight.', isError: true);
+      _showMessage(noFlashlight, isError: true);
       return;
     }
     await _flashlightService.stop();
@@ -316,16 +350,18 @@ class _HomeScreenState extends State<HomeScreen> {
       final path = await _recorderService.stop();
       if (!mounted) return;
       setState(() => _recording = false);
-      _showMessage(path != null ? 'Recording saved.' : 'Recording stopped.');
+      final t = AppLocalizations.of(context);
+      _showMessage(path != null ? t.recordingSaved : t.recordingStopped);
     } else {
       final started = await _recorderService.start();
       if (!mounted) return;
       if (!started) {
-        _showMessage('Microphone permission denied.', isError: true);
+        _showMessage(AppLocalizations.of(context).errorMicDenied,
+            isError: true);
         return;
       }
       setState(() => _recording = true);
-      _showMessage('Recording started.');
+      _showMessage(AppLocalizations.of(context).recordingStarted);
     }
   }
 
@@ -345,7 +381,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _open(Widget screen) {
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen))
-        .then((_) => _loadContacts());
+        .then((_) {
+      _loadContacts();
+      _checkLocationPermission();
+    });
   }
 
   Future<void> _openSettings() async {
@@ -368,9 +407,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ]);
 
   Widget _profileHub(AppLocalizations t) => TabbedHub(tabs: [
-        HubTab(icon: Icons.badge, label: t.tabEmergencyId, screen: const EmergencyIDScreen()),
-        HubTab(icon: Icons.medical_services, label: t.tabMedical, screen: const MedicalScreen()),
-        HubTab(icon: Icons.qr_code_2, label: t.tabQr, screen: const EmergencyQrScreen()),
+        // The Medical ID must stay first: the QR tab's "Edit" switches to it.
+        HubTab(icon: Icons.medical_information_rounded, label: t.tabEmergencyId, screen: const EmergencyIDScreen()),
+        HubTab(icon: Icons.qr_code_2_rounded, label: t.tabQr, screen: const EmergencyQrScreen()),
       ]);
 
   Widget _contactsHub(AppLocalizations t) => TabbedHub(tabs: [
@@ -391,199 +430,452 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final s = context.safety;
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(t.appTitle),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: t.settingsTitle,
-            onPressed: _openSettings,
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(
+              20, 8, 20, 32 + MediaQuery.paddingOf(context).bottom),
           children: [
-            Center(
-              child: Text(
-                _contacts.isEmpty
-                    ? t.homeNoContacts
-                    : t.homeContactsSaved(_contacts.length),
-                style: const TextStyle(fontSize: 16),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // The big SOS button: tap = countdown, long-press = silent.
-            Center(
-              child: GestureDetector(
-                onTap: _triggerSos,
-                onLongPress: _triggerSilentSos,
-                child: Container(
-                  width: 180,
-                  height: 180,
-                  decoration: const BoxDecoration(
-                      shape: BoxShape.circle, color: Colors.red),
-                  child: Center(
-                    child: _sendingSos
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Text(t.sos,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 44,
-                                fontWeight: FontWeight.bold)),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Center(
-              child: Text(
-                '${t.homeSosHint}\n${t.homeSilentSosHint}',
-                style: const TextStyle(color: Colors.black54),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // Live location sharing banner (only while active and feature is on).
-            if (Features.backgroundLocation && _liveSharing)
-              Card(
-                color: Colors.orange.shade50,
-                child: ListTile(
-                  leading: const Icon(Icons.location_on, color: Colors.orange),
-                  title: Text(t.sosLiveBannerActive),
-                  trailing: TextButton(
-                    onPressed: _stopLiveSharing,
-                    child: Text(t.sosLiveStop),
-                  ),
-                ),
-              ),
-            if (Features.backgroundLocation && _liveSharing) const SizedBox(height: 8),
-
-            // Quick actions: instant toggles.
-            _SectionHeader(t.quickActions),
+            // Header: brand on the left, settings on the right.
             Row(
               children: [
+                const AppLogo(size: 40),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: _QuickAction(
-                    icon: _sirenOn ? Icons.volume_off : Icons.volume_up,
-                    label: _sirenOn ? t.tileStopSiren : t.tileSiren,
-                    active: _sirenOn,
-                    onTap: _toggleSiren,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(t.appTitle, style: theme.textTheme.headlineSmall),
+                      Text(
+                        t.homeTagline,
+                        style: theme.textTheme.bodyMedium!
+                            .copyWith(color: scheme.onSurfaceVariant),
+                      ),
+                    ],
                   ),
                 ),
-                Expanded(
-                  child: _QuickAction(
-                    icon: Icons.flashlight_on,
-                    label: _sosBlinkOn
-                        ? t.tileStopBlink
-                        : (_flashOn ? t.tileStopLight : t.tileFlashlight),
-                    active: _flashOn || _sosBlinkOn,
-                    onTap: _toggleFlashlight,
-                    onLongPress: _toggleSosBlink,
-                  ),
-                ),
-                Expanded(
-                  child: _QuickAction(
-                    icon: _recording ? Icons.stop : Icons.mic,
-                    label: _recording ? t.tileStopRec : t.tileRecord,
-                    active: _recording,
-                    onTap: _toggleRecording,
-                  ),
+                IconButton.filledTonal(
+                  icon: const Icon(Icons.settings_rounded),
+                  tooltip: t.settingsTitle,
+                  onPressed: _openSettings,
                 ),
               ],
             ),
+            const SizedBox(height: 20),
 
-            // Grouped tools.
-            _SectionHeader(t.sectionGetHelp),
-            _grid([
-              _Tile(Icons.call, t.tileHelplines, () => _open(_helplinesHub(t))),
-              _Tile(Icons.travel_explore, t.tileNearbyHelp,
+            // Who will be alerted. Without contacts the SOS can't work, so
+            // this becomes a prominent call to action.
+            if (_contacts.isEmpty)
+              NoticeCard(
+                tone: Tone.warning,
+                icon: Icons.person_add_alt_1_rounded,
+                title: t.homeAddContactsTitle,
+                message: t.homeAddContactsBody,
+                action: FilledButton.tonal(
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 44),
+                    backgroundColor: s.warning,
+                    foregroundColor: scheme.surface,
+                  ),
+                  onPressed: () => _open(_contactsHub(t)),
+                  child: Text(t.homeAddContactsAction),
+                ),
+              )
+            else
+              Center(
+                child: _ContactsPill(
+                  label: t.homeContactsReady(_contacts.length),
+                  onTap: () => _open(_contactsHub(t)),
+                ),
+              ),
+            // Ready the location permission once contacts exist.
+            if (_contacts.isNotEmpty && _needsLocation) ...[
+              const SizedBox(height: 12),
+              NoticeCard(
+                tone: Tone.info,
+                icon: Icons.location_on_outlined,
+                title: t.homeLocationTitle,
+                message: t.homeLocationBody,
+                action: FilledButton.tonal(
+                  style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+                  onPressed: _requestLocationPermission,
+                  child: Text(
+                    _locationPermission == LocationPermission.deniedForever
+                        ? t.homeLocationSettings
+                        : t.homeLocationAction,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 28),
+
+            // The SOS button: tap = countdown, long-press = silent.
+            Center(
+              child: _SosButton(
+                label: t.sos,
+                semanticsLabel: t.sosButtonSemantics,
+                busy: _sendingSos,
+                onTap: _triggerSos,
+                onLongPress: _triggerSilentSos,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              t.sosButtonCaption,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium!
+                  .copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 8),
+
+            // Live location sharing banner (only while active).
+            if (Features.backgroundLocation && _liveSharing) ...[
+              const SizedBox(height: 16),
+              _LiveSharingBanner(
+                label: t.sosLiveBannerActive,
+                stopLabel: t.sosLiveStop,
+                onStop: _stopLiveSharing,
+              ),
+            ],
+
+            // Quick actions: instant toggles.
+            SectionLabel(t.quickActions),
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _QuickAction(
+                      icon: _sirenOn
+                          ? Icons.volume_off_rounded
+                          : Icons.campaign_rounded,
+                      label: _sirenOn ? t.tileStopSiren : t.tileSiren,
+                      active: _sirenOn,
+                      onTap: _toggleSiren,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _QuickAction(
+                      icon: _flashOn || _sosBlinkOn
+                          ? Icons.flashlight_off_rounded
+                          : Icons.flashlight_on_rounded,
+                      label: _sosBlinkOn
+                          ? t.tileStopBlink
+                          : (_flashOn ? t.tileStopLight : t.tileFlashlight),
+                      active: _flashOn || _sosBlinkOn,
+                      onTap: _toggleFlashlight,
+                      onLongPress: _toggleSosBlink,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _QuickAction(
+                      icon: _recording ? Icons.stop_rounded : Icons.mic_rounded,
+                      label: _recording ? t.tileStopRec : t.tileRecord,
+                      active: _recording,
+                      onTap: _toggleRecording,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // All tools in one 3-column grid, ordered get help -> share &
+            // track -> my info -> learn. Twelve tiles fill four full rows.
+            SectionLabel(t.homeTools),
+            _ToolGrid(tiles: [
+              _Tile(Icons.call_rounded, t.tileHelplines,
+                  () => _open(_helplinesHub(t))),
+              _Tile(Icons.travel_explore_rounded, t.tileNearbyHelp,
                   () => _open(const NearbyPlacesScreen())),
-              _Tile(Icons.phone_in_talk, t.tileFakeCall,
+              _Tile(Icons.phone_in_talk_rounded, t.tileFakeCall,
                   () => _open(const FakeCallSetupScreen())),
-              _Tile(Icons.gavel, 'Report / Portals',
+              _Tile(Icons.gavel_rounded, t.tileReportPortals,
                   () => _open(const IndiaEmergencyResourcesScreen(
                       initialTab: 'portals'))),
-            ]),
-
-            _SectionHeader(t.sectionShareTrack),
-            _grid([
               if (Features.followMe)
-                _Tile(Icons.my_location, t.tileLiveTracking,
+                _Tile(Icons.my_location_rounded, t.tileLiveTracking,
                     () => _open(_liveTrackingHub(t))),
               if (Features.shareLocation)
-                _Tile(Icons.share_location, t.tileShareLocation, _shareLocation),
+                _Tile(Icons.share_location_rounded, t.tileShareLocation,
+                    _shareLocation),
               if (Features.safetyCheckin)
-                _Tile(Icons.timer, t.tileSafetyCheckin,
+                _Tile(Icons.timer_rounded, t.tileSafetyCheckin,
                     () => _open(const SafetyTimerScreen())),
               if (Features.imSafe)
-                _Tile(Icons.check_circle, t.tileImSafe, _checkIn),
-            ]),
-
-            _SectionHeader(t.sectionMyInfo),
-            _grid([
+                _Tile(Icons.verified_user_rounded, t.tileImSafe, _checkIn),
               if (Features.emergencyProfile)
-                _Tile(Icons.badge, t.tileEmergencyProfile,
-                    () => _open(_profileHub(t))),
+                _Tile(Icons.medical_information_rounded,
+                    t.tileEmergencyProfile, () => _open(_profileHub(t))),
               if (Features.emergencyContacts)
-                _Tile(Icons.contacts, t.tileContacts, () => _open(_contactsHub(t))),
+                _Tile(Icons.contacts_rounded, t.tileContacts,
+                    () => _open(_contactsHub(t))),
               if (Features.eventLog)
-                _Tile(Icons.folder_shared, t.tileRecords,
+                _Tile(Icons.history_rounded, t.tileRecords,
                     () => _open(const SafetyEventLogScreen())),
-            ]),
-
-            _SectionHeader(t.sectionLearn),
-            _grid([
-              _Tile(Icons.menu_book, t.tileSafetyTips, () => _open(_learnHub(t))),
+              _Tile(Icons.menu_book_rounded, t.tileSafetyTips,
+                  () => _open(_learnHub(t))),
             ]),
           ],
         ),
       ),
     );
   }
-
-  Widget _grid(List<_Tile> tiles) {
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 0.95,
-      children: tiles,
-    );
-  }
 }
 
-/// A bold section heading on the home screen.
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader(this.title);
-  final String title;
+/// The hero SOS button: a solid red disc with a slow, calm pulsing ring.
+///
+/// The halo stops when the system "remove animations" setting is on, and the
+/// whole control is exposed to screen readers as one button with both the
+/// tap and long-press actions.
+class _SosButton extends StatefulWidget {
+  const _SosButton({
+    required this.label,
+    required this.semanticsLabel,
+    required this.busy,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  final String label;
+  final String semanticsLabel;
+  final bool busy;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  @override
+  State<_SosButton> createState() => _SosButtonState();
+}
+
+class _SosButtonState extends State<_SosButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  );
+  bool _pressed = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (MediaQuery.disableAnimationsOf(context)) {
+      _pulse.stop();
+      _pulse.value = 0;
+    } else if (!_pulse.isAnimating) {
+      _pulse.repeat();
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 20, bottom: 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
+    final s = context.safety;
+    const core = 196.0;
+    const halo = 264.0;
+
+    return Semantics(
+      button: true,
+      label: widget.semanticsLabel,
+      onTap: widget.onTap,
+      onLongPress: widget.onLongPress,
+      child: ExcludeSemantics(
+        child: SizedBox(
+          width: halo,
+          height: halo,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Two expanding, fading rings, half a cycle apart.
+              AnimatedBuilder(
+                animation: _pulse,
+                builder: (context, _) => Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    for (final offset in const [0.0, 0.5])
+                      _ring(((_pulse.value + offset) % 1.0), core, halo, s.sos),
+                  ],
+                ),
+              ),
+              // Static soft halo so the button reads well even with no motion.
+              Container(
+                width: core + 28,
+                height: core + 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: s.sos.withValues(alpha: 0.12),
+                ),
+              ),
+              GestureDetector(
+                onTapDown: (_) => setState(() => _pressed = true),
+                onTapUp: (_) => setState(() => _pressed = false),
+                onTapCancel: () => setState(() => _pressed = false),
+                onTap: widget.onTap,
+                onLongPress: () {
+                  setState(() => _pressed = false);
+                  widget.onLongPress();
+                },
+                child: AnimatedScale(
+                  scale: _pressed ? 0.95 : 1,
+                  duration: const Duration(milliseconds: 120),
+                  curve: Curves.easeOut,
+                  child: Container(
+                    width: core,
+                    height: core,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: s.sos,
+                    ),
+                    child: Center(
+                      child: widget.busy
+                          ? SizedBox(
+                              width: 48,
+                              height: 48,
+                              child: CircularProgressIndicator(
+                                color: s.onSos,
+                                strokeWidth: 4,
+                              ),
+                            )
+                          : Text(
+                              widget.label,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayMedium!
+                                  .copyWith(
+                                    color: s.onSos,
+                                    letterSpacing: 2,
+                                  ),
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _ring(double t, double core, double halo, Color color) {
+    final size = core + (halo - core) * t;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: color.withValues(alpha: 0.35 * (1 - t)),
+          width: 2,
         ),
       ),
     );
   }
 }
 
-/// A compact instant-action button used in the quick-actions row.
+/// A rounded pill showing how many contacts will be alerted; opens contacts.
+class _ContactsPill extends StatelessWidget {
+  const _ContactsPill({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final s = context.safety;
+    return Material(
+      color: s.successContainer,
+      shape: const StadiumBorder(),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.check_circle_rounded, size: 18, color: s.success),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  label,
+                  style: theme.textTheme.labelLarge!
+                      .copyWith(color: s.onSuccessContainer),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.chevron_right_rounded,
+                  size: 18, color: s.onSuccessContainer),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Shown while location is being shared live after an SOS.
+class _LiveSharingBanner extends StatelessWidget {
+  const _LiveSharingBanner({
+    required this.label,
+    required this.stopLabel,
+    required this.onStop,
+  });
+
+  final String label;
+  final String stopLabel;
+  final VoidCallback onStop;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final s = context.safety;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+      decoration: BoxDecoration(
+        color: s.sosContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.location_on_rounded, color: s.sos),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: theme.textTheme.titleSmall!
+                  .copyWith(color: s.onSosContainer),
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: s.sos,
+              foregroundColor: s.onSos,
+              minimumSize: const Size(0, 40),
+            ),
+            onPressed: onStop,
+            child: Text(stopLabel),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A compact instant-action toggle used in the quick-actions row. Turns solid
+/// while active so it's obvious the siren/light/recording is on.
 class _QuickAction extends StatelessWidget {
   const _QuickAction({
     required this.icon,
@@ -601,27 +893,43 @@ class _QuickAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? Colors.orange : Theme.of(context).colorScheme.primary;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, size: 28, color: color),
-              const SizedBox(height: 6),
-              Text(label,
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final s = context.safety;
+    final fg = active ? s.onSos : scheme.onSurface;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: active ? BorderSide.none : BorderSide(color: scheme.outlineVariant),
+    );
+    return Semantics(
+      button: true,
+      toggled: active,
+      child: Material(
+        color: active ? s.sos : scheme.surfaceContainerLowest,
+        shape: shape,
+        child: InkWell(
+          onTap: onTap,
+          onLongPress: onLongPress,
+          customBorder: shape,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 26, color: fg),
+                const SizedBox(height: 8),
+                Text(
+                  label,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12)),
-            ],
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelLarge!.copyWith(
+                    color: fg,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -629,37 +937,93 @@ class _QuickAction extends StatelessWidget {
   }
 }
 
-/// One square button in a section grid.
-class _Tile extends StatelessWidget {
+/// One tool in a section grid.
+class _Tile {
   const _Tile(this.icon, this.label, this.onTap);
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
+}
+
+/// Lays tool tiles out three per row. Each row sizes to its tallest tile, so
+/// long translations or large system font sizes never overflow.
+class _ToolGrid extends StatelessWidget {
+  const _ToolGrid({required this.tiles});
+
+  final List<_Tile> tiles;
+
+  static const _columns = 3;
+  static const _gap = 12.0;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 34, color: color),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(label,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13)),
+    return Column(
+      children: [
+        for (var i = 0; i < tiles.length; i += _columns) ...[
+          if (i > 0) const SizedBox(height: _gap),
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (var j = i; j < i + _columns; j++) ...[
+                  if (j > i) const SizedBox(width: _gap),
+                  Expanded(
+                    child: j < tiles.length
+                        ? _ToolTile(tile: tiles[j])
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
             ),
-          ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ToolTile extends StatelessWidget {
+  const _ToolTile({required this.tile});
+
+  final _Tile tile;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: BorderSide(color: scheme.outlineVariant),
+    );
+    return Semantics(
+      button: true,
+      child: Material(
+        color: scheme.surfaceContainerLowest,
+        shape: shape,
+        child: InkWell(
+          onTap: tile.onTap,
+          customBorder: shape,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 112),
+            padding: const EdgeInsets.fromLTRB(8, 16, 8, 14),
+            // Top-aligned so icons line up across a row even when one
+            // label wraps to two lines.
+            child: Column(
+              children: [
+                IconBadge(icon: tile.icon, size: 44),
+                const SizedBox(height: 10),
+                Text(
+                  tile.label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelLarge!
+                      .copyWith(fontWeight: FontWeight.w500, height: 1.25),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

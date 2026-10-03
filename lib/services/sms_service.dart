@@ -14,13 +14,13 @@ class SmsService {
   Future<bool> ensureSmsPermission() async => true;
 
   /// Open the Messages app with [message] pre-filled, addressed to every number
-  /// in [phoneNumbers]. Returns silently if the list is empty or no SMS app is
-  /// available.
-  Future<void> sendSos({
+  /// in [phoneNumbers]. Returns whether the Messages app was opened, so the
+  /// caller never reports an alert as sent when it wasn't.
+  Future<bool> sendSos({
     required List<String> phoneNumbers,
     required String message,
   }) async {
-    if (phoneNumbers.isEmpty) return;
+    if (phoneNumbers.isEmpty) return false;
 
     // Most Android/iOS dialers accept comma-separated recipients in the path.
     final String recipients = phoneNumbers.join(',');
@@ -29,8 +29,12 @@ class SmsService {
       path: recipients,
       queryParameters: {'body': message},
     );
-    if (await canLaunchUrl(smsUri)) {
-      await launchUrl(smsUri, mode: LaunchMode.externalApplication);
+    // Launch directly: `canLaunchUrl` can wrongly report false on some
+    // Android 11+ devices, which would silently drop the alert.
+    try {
+      return await launchUrl(smsUri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      return false;
     }
   }
 }

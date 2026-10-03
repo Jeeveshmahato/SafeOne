@@ -6,6 +6,8 @@ import '../models/emergency_contact.dart';
 import '../services/contacts_repository.dart';
 import '../services/sos_service.dart';
 import '../widgets/duration_field.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 
 /// "Follow Me" live-tracking.
 ///
@@ -41,12 +43,7 @@ class _FollowMeScreenState extends State<FollowMeScreen> {
 
   void _showMessage(String text, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(text),
-        backgroundColor: isError ? Colors.red : Colors.green,
-      ),
-    );
+    showAppSnack(context, text, tone: isError ? Tone.danger : Tone.success);
   }
 
   Future<void> _start() async {
@@ -96,40 +93,61 @@ class _FollowMeScreenState extends State<FollowMeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Follow Me')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Center(child: _running ? _buildRunning() : _buildSetup()),
+      body: SafeArea(
+        top: false,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: _running ? _buildRunning() : _buildSetup(),
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildSetup() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Icon(Icons.my_location, size: 64, color: Colors.deepPurple),
-        const SizedBox(height: 16),
-        const Text(
-          'Your live location will be sent to your emergency contacts every '
-          'few minutes until you tap Stop.',
+        Center(
+          child: IconBadge(icon: Icons.my_location_rounded, size: 72),
+        ),
+        const SizedBox(height: 20),
+        Text('Share your journey',
+            textAlign: TextAlign.center, style: theme.textTheme.headlineSmall),
+        const SizedBox(height: 8),
+        Text(
+          'Your live location is sent to your emergency contacts at a regular '
+          'interval until you tap Stop.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16),
+          style: theme.textTheme.bodyLarge!
+              .copyWith(color: scheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 28),
+        Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Send an update every', style: theme.textTheme.titleSmall),
+                const SizedBox(height: 12),
+                DurationField(
+                  initial: _interval,
+                  initialUnit: TimeUnit.minutes,
+                  onChanged: (d) => _interval = d,
+                ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 24),
-        const Text('Send an update every:', style: TextStyle(fontSize: 16)),
-        const SizedBox(height: 8),
-        DurationField(
-          initial: _interval,
-          initialUnit: TimeUnit.minutes,
-          onChanged: (d) => _interval = d,
-        ),
-        const SizedBox(height: 32),
         FilledButton.icon(
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          ),
           onPressed: _start,
-          icon: const Icon(Icons.play_arrow),
+          icon: const Icon(Icons.play_arrow_rounded),
           label: const Text('Start sharing'),
         ),
       ],
@@ -137,41 +155,58 @@ class _FollowMeScreenState extends State<FollowMeScreen> {
   }
 
   Widget _buildRunning() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final s = context.safety;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (_sending)
-          const CircularProgressIndicator()
-        else
-          const Icon(Icons.location_on, size: 64, color: Colors.green),
-        const SizedBox(height: 16),
-        const Text(
-          'Sharing your location…',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        Center(
+          child: SizedBox(
+            width: 72,
+            height: 72,
+            child: _sending
+                ? const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
+                  )
+                : IconBadge(
+                    icon: Icons.location_on_rounded,
+                    color: s.success,
+                    size: 72,
+                  ),
+          ),
         ),
+        const SizedBox(height: 20),
+        Text('Sharing your location',
+            textAlign: TextAlign.center, style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
-        Text('Updates sent: $_updatesSent'),
-        if (_lastSent != null)
-          Text(
-            'Last update: ${_lastSent!.hour.toString().padLeft(2, '0')}:'
-            '${_lastSent!.minute.toString().padLeft(2, '0')}',
-            style: const TextStyle(color: Colors.black54),
+        Text(
+          _lastSent == null
+              ? 'Updates sent: $_updatesSent'
+              : 'Updates sent: $_updatesSent  ·  Last at '
+                  '${_lastSent!.hour.toString().padLeft(2, '0')}:'
+                  '${_lastSent!.minute.toString().padLeft(2, '0')}',
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyLarge!
+              .copyWith(color: scheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 28),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: s.sos,
+            foregroundColor: s.onSos,
+            minimumSize: const Size.fromHeight(56),
           ),
-        const SizedBox(height: 32),
-        SizedBox(
-          width: 220,
-          height: 60,
-          child: FilledButton.icon(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: _stop,
-            icon: const Icon(Icons.stop),
-            label: const Text('Stop', style: TextStyle(fontSize: 20)),
-          ),
+          onPressed: _stop,
+          icon: const Icon(Icons.stop_rounded),
+          label: const Text('Stop sharing'),
         ),
         const SizedBox(height: 16),
-        const Text(
-          'Keep this app open during your journey.',
-          style: TextStyle(color: Colors.black54),
+        const NoticeCard(
+          tone: Tone.warning,
+          message: 'Keep SafeOne open during your journey so updates keep '
+              'going out.',
         ),
       ],
     );

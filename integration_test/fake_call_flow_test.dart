@@ -44,7 +44,7 @@ void main() {
     expect(find.byType(FakeCallSetupScreen), findsOneWidget);
 
     // Start the call immediately (default delay = Now).
-    final startBtn = find.text('Start Fake Call');
+    final startBtn = find.text('Start fake call');
     await tester.ensureVisible(startBtn);
     await tester.tap(startBtn);
     // NOTE: the call screens run continuous feedback (looping vibration, audio,
@@ -63,7 +63,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(OngoingCallScreen), findsOneWidget);
-    expect(find.text('End Call'), findsOneWidget);
+    expect(find.text('End call'), findsOneWidget);
 
     // Let the timer tick once, then hang up.
     await tester.pump(const Duration(seconds: 1));

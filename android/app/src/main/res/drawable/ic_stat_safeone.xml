@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome status-bar icon: the SafeOne shield with a heart cut out.
+     Android tints it, so it must be a single solid colour. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M5,3H19A1.5,1.5 0,0 1,20.5 4.5C20.5,10 17,15.5 12,21C7,15.5 3.5,10 3.5,4.5A1.5,1.5 0,0 1,5 3Z M12,13.4C10.2,12 9,10.9 9,9.6C9,8.7 9.7,8 10.5,8C11.1,8 11.6,8.3 12,8.8C12.4,8.3 12.9,8 13.5,8C14.3,8 15,8.7 15,9.6C15,10.9 13.8,12 12,13.4Z" />
+</vector>

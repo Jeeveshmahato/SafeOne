@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/medical_info.dart';
@@ -8,6 +9,9 @@ import '../models/medical_info.dart';
 /// the same way [ContactsRepository] saves contacts.
 class MedicalRepository {
   static const String _storageKey = 'medical_info';
+
+  /// Bumped on every save so open screens (e.g. the QR card) can refresh.
+  static final ValueNotifier<int> changes = ValueNotifier<int>(0);
 
   /// Read the saved medical info, or an empty one if nothing is saved yet.
   Future<MedicalInfo> load() async {
@@ -25,5 +29,6 @@ class MedicalRepository {
   Future<void> save(MedicalInfo info) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_storageKey, jsonEncode(info.toMap()));
+    changes.value++;
   }
 }

@@ -3,6 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/flashlight_service.dart';
 import '../services/siren_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 
 class PoliceSosScreen extends StatefulWidget {
   const PoliceSosScreen({super.key});
@@ -66,265 +68,152 @@ class _PoliceSosScreenState extends State<PoliceSosScreen> {
     try {
       if (await launchUrl(uri, mode: LaunchMode.platformDefault)) return;
     } catch (_) {/* ignore and try the canLaunch path below */}
-    if (await canLaunchUrl(uri)) {
+    try {
       await launchUrl(uri);
-    }
+    } catch (_) {/* no dialer */}
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final sc = context.safety;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Police SOS'),
-        centerTitle: true,
-        backgroundColor: Colors.red,
-      ),
+      appBar: AppBar(title: const Text('Police SOS')),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(
+            16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (!_sosActive) ...[
-              // Warning
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red[300]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '⚠️ POLICE SOS MODE',
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'This will:\n'
-                      '• Activate loud police siren\n'
-                      '• Flash SOS Morse code continuously\n'
-                      '• Attract police & public attention\n'
-                      '• Make it obvious you need help\n\n'
-                      'Use only in actual police emergency.',
-                      style: TextStyle(fontSize: 12, height: 1.5),
-                    ),
-                  ],
-                ),
+              const NoticeCard(
+                tone: Tone.danger,
+                title: 'Police SOS mode',
+                message: 'Plays a loud police siren and flashes SOS in Morse '
+                    'code to draw attention. Use only in a real emergency.',
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
 
               // Main activation button
-              Container(
-                width: double.infinity,
-                height: 200,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.red[600]!, Colors.red[900]!],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.red.withOpacity(0.5),
-                      blurRadius: 20,
-                      spreadRadius: 5,
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _activatePoliceMode,
-                    borderRadius: BorderRadius.circular(16),
+              Material(
+                color: sc.sos,
+                borderRadius: BorderRadius.circular(24),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  onTap: _activatePoliceMode,
+                  child: SizedBox(
+                    height: 200,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.sos,
-                          size: 80,
-                          color: Colors.white,
-                        ),
+                        Icon(Icons.local_police_rounded,
+                            size: 72, color: sc.onSos),
                         const SizedBox(height: 12),
-                        const Text(
-                          'ACTIVATE POLICE SOS',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
-                          ),
+                        Text(
+                          'Activate police SOS',
+                          style: theme.textTheme.titleLarge!
+                              .copyWith(color: sc.onSos),
                         ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Press and hold to activate',
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Tap to start siren and SOS flashing',
+                          style: theme.textTheme.bodyMedium!.copyWith(
+                              color: sc.onSos.withValues(alpha: 0.85)),
                         ),
                       ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Quick call button
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: sc.sos,
+                  side: BorderSide(color: sc.sos, width: 1.5),
+                ),
+                onPressed: _callPolice,
+                icon: const Icon(Icons.call_rounded),
+                label: const Text('Call 112 (Police / Emergency)'),
+              ),
+
+              SectionLabel('How it helps'),
+              _buildInfoCard(
+                icon: Icons.campaign_rounded,
+                title: 'Loud siren',
+                description:
+                    'Alerts police and nearby people that you need help right now.',
+              ),
+              const SizedBox(height: 12),
+              _buildInfoCard(
+                icon: Icons.flashlight_on_rounded,
+                title: 'SOS light signal',
+                description:
+                    'Blinking SOS in Morse code (··· ––– ···) is recognised as a distress signal worldwide.',
+              ),
+              const SizedBox(height: 12),
+              _buildInfoCard(
+                icon: Icons.visibility_rounded,
+                title: 'Stay visible',
+                description:
+                    'Noise and light help police and others find you quickly.',
+              ),
+            ] else ...[
+              // Active mode UI
+              const SizedBox(height: 32),
+              Center(
+                child: Container(
+                  width: 168,
+                  height: 168,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: sc.sos,
                   ),
-                  onPressed: _callPolice,
-                  icon: const Icon(Icons.call),
-                  label: const Text(
-                    'Call 112 (Police / Emergency)',
-                    style: TextStyle(fontSize: 16),
+                  child: Icon(Icons.local_police_rounded,
+                      size: 84, color: sc.onSos),
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Police SOS active',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.headlineSmall!.copyWith(color: sc.sos),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Running for $_countdownSeconds seconds',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium!
+                    .copyWith(color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 24),
+              Card(
+                margin: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _signal(Icons.campaign_rounded,
+                          _sirenOn ? 'Siren on' : 'Siren off', _sirenOn),
+                      _signal(Icons.flashlight_on_rounded,
+                          _flashOn ? 'SOS flash on' : 'Flash off', _flashOn),
+                    ],
                   ),
                 ),
               ),
               const SizedBox(height: 32),
-
-              // Info cards
-              _buildInfoCard(
-                icon: Icons.volume_up,
-                title: 'Why Siren?',
-                description:
-                    'Loud police siren alerts police and nearby people that you need immediate help.',
-              ),
-              const SizedBox(height: 12),
-              _buildInfoCard(
-                icon: Icons.flashlight_on,
-                title: 'Why Flashlight?',
-                description:
-                    'SOS Morse code blinking (... --- ...) is recognized as distress signal worldwide.',
-              ),
-              const SizedBox(height: 12),
-              _buildInfoCard(
-                icon: Icons.location_on,
-                title: 'Why Stay Visible?',
-                description:
-                    'Making noise and light ensures police CAN FIND you quickly in dangerous situations.',
-              ),
-            ] else ...[
-              // Active mode UI
-              Column(
-                children: [
-                  const SizedBox(height: 40),
-                  Container(
-                    width: 180,
-                    height: 180,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.red,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.red.withOpacity(0.7),
-                          blurRadius: 30,
-                          spreadRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        Icons.sos,
-                        size: 100,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  Text(
-                    'POLICE SOS ACTIVE',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red[700],
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.blue[50],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Emergency Signals Active:',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Column(
-                              children: [
-                                Icon(
-                                  Icons.volume_up,
-                                  size: 48,
-                                  color: _sirenOn ? Colors.red : Colors.grey,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _sirenOn ? 'SIREN ON' : 'SIREN OFF',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: _sirenOn ? Colors.red : Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              children: [
-                                Icon(
-                                  Icons.flashlight_on,
-                                  size: 48,
-                                  color: _flashOn ? Colors.amber : Colors.grey,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _flashOn ? 'SOS FLASH ON' : 'FLASH OFF',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: _flashOn ? Colors.amber : Colors.grey,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  Text(
-                    'Police SOS running for $_countdownSeconds seconds',
-                    style: const TextStyle(fontSize: 14, color: Colors.black54),
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.grey,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 12,
-                      ),
-                    ),
-                    onPressed: _deactivatePoliceMode,
-                    icon: const Icon(Icons.stop),
-                    label: const Text('Stop SOS'),
-                  ),
-                ],
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: scheme.inverseSurface,
+                  foregroundColor: scheme.onInverseSurface,
+                  minimumSize: const Size.fromHeight(56),
+                ),
+                onPressed: _deactivatePoliceMode,
+                icon: const Icon(Icons.stop_rounded),
+                label: const Text('Stop SOS'),
               ),
             ],
           ],
@@ -333,42 +222,49 @@ class _PoliceSosScreenState extends State<PoliceSosScreen> {
     );
   }
 
+  Widget _signal(IconData icon, String label, bool on) {
+    final theme = Theme.of(context);
+    final color =
+        on ? context.safety.sos : theme.colorScheme.onSurfaceVariant;
+    return Column(
+      children: [
+        IconBadge(icon: icon, color: color, size: 56),
+        const SizedBox(height: 8),
+        Text(label, style: theme.textTheme.labelLarge!.copyWith(color: color)),
+      ],
+    );
+  }
+
   Widget _buildInfoCard(
       {required IconData icon,
       required String title,
       required String description}) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.green[200]!),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: Colors.green[600], size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
+    final theme = Theme.of(context);
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            IconBadge(icon: icon, color: context.safety.success, size: 40),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 2),
+                  Text(
+                    description,
+                    style: theme.textTheme.bodyMedium!.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: const TextStyle(fontSize: 12, height: 1.4),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

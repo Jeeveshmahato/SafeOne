@@ -91,7 +91,6 @@ class _DurationFieldState extends State<DurationField> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: const InputDecoration(
-              border: OutlineInputBorder(),
               isDense: true,
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
             ),

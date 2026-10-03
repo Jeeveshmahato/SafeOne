@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/app_lock_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 import '../widgets/pin_pad.dart';
 
 /// Screen for creating a PIN (first run) or changing it (from Settings).
@@ -71,8 +73,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
         }
         await _lock.setPin(_entry);
         if (!mounted) return;
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(t.pinSaved)));
+        showAppSnack(context, t.pinSaved, tone: Tone.success);
         Navigator.pop(context, true);
     }
   }
@@ -88,6 +89,13 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    // Progress through the steps (current PIN is only asked when changing).
+    final steps = widget.requireCurrent
+        ? const [_Step.current, _Step.create, _Step.confirm]
+        : const [_Step.create, _Step.confirm];
+    final stepIndex = steps.indexOf(_step);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.requireCurrent ? t.pinChangeTitle : t.pinSetTitle),
@@ -97,22 +105,46 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.lock_outline, size: 56),
-                const SizedBox(height: 16),
+                IconBadge(
+                  icon: Icons.lock_rounded,
+                  color: scheme.primary,
+                  background: scheme.secondaryContainer,
+                  size: 64,
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < steps.length; i++)
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        width: i == stepIndex ? 28 : 12,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(3),
+                          color: i <= stepIndex
+                              ? scheme.primary
+                              : scheme.outlineVariant,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 20),
                 Text(
                   _title(t),
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.headlineSmall,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   t.pinSetSubtitle,
-                  style: const TextStyle(color: Colors.black54),
+                  style: theme.textTheme.bodyMedium!
+                      .copyWith(color: scheme.onSurfaceVariant),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),

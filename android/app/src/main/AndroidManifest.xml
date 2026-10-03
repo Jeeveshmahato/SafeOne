@@ -138,5 +138,10 @@
             <action android:name="android.intent.action.SENDTO"/>
             <data android:scheme="smsto"/>
         </intent>
+        <!-- The SOS opens Messages with an sms: link. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="sms"/>
+        </intent>
     </queries>
 </manifest>

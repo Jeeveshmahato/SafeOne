@@ -39,6 +39,25 @@ class LocationService {
     );
   }
 
+  /// For emergencies: returns the best position available without ever
+  /// blocking the alert. Tries a fresh fix for up to [timeout] (a fresh
+  /// high-accuracy fix can take a long time indoors), then falls back to the
+  /// last known position, and finally returns null — so the caller can still
+  /// send the SOS without a location instead of not sending it at all.
+  Future<Position?> getBestEffortLocation({
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
+    try {
+      return await getCurrentLocation().timeout(timeout);
+    } catch (_) {
+      try {
+        return await Geolocator.getLastKnownPosition();
+      } catch (_) {
+        return null;
+      }
+    }
+  }
+
   /// Builds a Google Maps link for a location, e.g.
   /// https://maps.google.com/?q=12.34,56.78
   /// Anyone who receives this can tap it to see the spot on a map.

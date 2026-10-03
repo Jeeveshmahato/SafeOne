@@ -33,6 +33,9 @@ object SosSender {
 
     private const val CHANNEL_ID = "sos_alert_v1"
     private const val NOTIF_ID = 4100
+    // Live-location updates use their own ID so stopping sharing can remove
+    // them without touching a pending SOS prompt.
+    private const val FOLLOW_ME_NOTIF_ID = 4101
 
     /// Surfaces the SOS to all saved contacts via a full-screen "tap to send"
     /// notification. Returns true if a notification was posted.
@@ -41,10 +44,12 @@ object SosSender {
         if (contacts.isEmpty()) return false
         notifySos(
             context,
+            id = NOTIF_ID,
             title = "Send emergency SOS",
             body = "Tap to send your SOS message to your emergency contacts.",
             recipients = contacts,
             message = buildMessage(context),
+            fullScreen = true,
         )
         if (!prefBool(context, "silent_sos")) vibrate(context)
         return true
@@ -57,12 +62,25 @@ object SosSender {
         val link = lastKnownMapsLink(context) ?: "(location unavailable)"
         notifySos(
             context,
+            id = FOLLOW_ME_NOTIF_ID,
             title = "Share your live location",
             body = "Tap to send your current location to your contacts.",
             recipients = contacts,
             message = "Following my journey. Live location: $link",
+            // A routine update must not take over the screen like an SOS.
+            fullScreen = false,
         )
         return true
+    }
+
+    /// Removes the pending live-location prompt (called when sharing stops).
+    fun cancelFollowMe(context: Context) {
+        try {
+            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.cancel(FOLLOW_ME_NOTIF_ID)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to cancel live-location notification", e)
+        }
     }
 
     private fun buildMessage(context: Context): String {
@@ -102,10 +120,12 @@ object SosSender {
     /// SEND_SMS permission that Google Play restricts.
     private fun notifySos(
         context: Context,
+        id: Int,
         title: String,
         body: String,
         recipients: List<String>,
         message: String,
+        fullScreen: Boolean,
     ) {
         try {
             val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -130,20 +150,26 @@ object SosSender {
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                     PendingIntent.FLAG_IMMUTABLE else 0
-            val contentIntent = PendingIntent.getActivity(context, NOTIF_ID, smsIntent, flags)
+            val contentIntent = PendingIntent.getActivity(context, id, smsIntent, flags)
 
             val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-                .setSmallIcon(android.R.drawable.ic_dialog_alert)
+                .setSmallIcon(R.drawable.ic_stat_safeone)
                 .setContentTitle(title)
                 .setContentText(body)
                 .setStyle(NotificationCompat.BigTextStyle().bigText("$body\n\n$message"))
-                .setPriority(NotificationCompat.PRIORITY_MAX)
-                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setPriority(
+                    if (fullScreen) NotificationCompat.PRIORITY_MAX
+                    else NotificationCompat.PRIORITY_HIGH,
+                )
+                .setCategory(
+                    if (fullScreen) NotificationCompat.CATEGORY_ALARM
+                    else NotificationCompat.CATEGORY_REMINDER,
+                )
                 .setAutoCancel(true)
                 .setContentIntent(contentIntent)
-                .setFullScreenIntent(contentIntent, true)
+            if (fullScreen) builder.setFullScreenIntent(contentIntent, true)
 
-            nm.notify(NOTIF_ID, builder.build())
+            nm.notify(id, builder.build())
         } catch (e: Exception) {
             Log.e(TAG, "Failed to post SOS notification", e)
         }

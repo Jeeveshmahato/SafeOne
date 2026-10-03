@@ -3,6 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../models/emergency_contact.dart';
 import '../services/contacts_repository.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 
 class QuickContactsScreen extends StatefulWidget {
   const QuickContactsScreen({super.key});
@@ -37,39 +39,28 @@ class _QuickContactsScreenState extends State<QuickContactsScreen> {
         if (_favoriteNames.length < 5) {
           _favoriteNames.add(contactName);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('You can only favorite up to 5 contacts')),
-          );
+          showAppSnack(context, 'You can favourite up to 5 contacts',
+              tone: Tone.warning);
         }
       }
     });
   }
 
-  Future<void> _callContact(EmergencyContact contact) async {
-    final url = 'tel:${contact.phone}';
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not make call')),
-        );
-      }
-    }
+  /// Opens the dialer / messages app. We launch directly rather than asking
+  /// `canLaunchUrl` first, which can wrongly report false on Android 11+.
+  Future<void> _launch(Uri uri, String error) async {
+    var ok = false;
+    try {
+      ok = await launchUrl(uri);
+    } catch (_) {}
+    if (!ok && mounted) showAppSnack(context, error, tone: Tone.danger);
   }
 
-  Future<void> _messageContact(EmergencyContact contact) async {
-    final url = 'sms:${contact.phone}';
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url));
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not send message')),
-        );
-      }
-    }
-  }
+  Future<void> _callContact(EmergencyContact contact) =>
+      _launch(Uri.parse('tel:${contact.phone}'), 'Could not start the call');
+
+  Future<void> _messageContact(EmergencyContact contact) =>
+      _launch(Uri.parse('sms:${contact.phone}'), 'Could not open messages');
 
   @override
   Widget build(BuildContext context) {
@@ -81,142 +72,100 @@ class _QuickContactsScreenState extends State<QuickContactsScreen> {
         .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Quick Contacts'),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Info card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red[200]!),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '⚡ Quick Access',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Mark up to 5 contacts as favorites for instant 1-tap calling or messaging. '
-                    'Perfect for emergencies when every second counts.',
-                    style: TextStyle(fontSize: 12, height: 1.5),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Favorites section
-            if (favorites.isNotEmpty) ...[
-              const Text(
-                '⭐ Favorite Contacts',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              ...favorites.map((contact) => _buildFavoriteCard(contact)).toList(),
-              const SizedBox(height: 24),
-            ],
-
-            // All contacts section
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      appBar: AppBar(title: const Text('Quick contacts')),
+      body: _contacts.isEmpty
+          ? const EmptyState(
+              icon: Icons.star_outline_rounded,
+              title: 'No contacts yet',
+              message: 'Add emergency contacts in the "All" tab, then star up '
+                  'to 5 of them here for one-tap calling.',
+            )
+          : ListView(
+              padding: EdgeInsets.fromLTRB(
+                  16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
               children: [
-                const Text(
-                  'All Contacts',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                const NoticeCard(
+                  tone: Tone.info,
+                  icon: Icons.bolt_rounded,
+                  title: 'One-tap access',
+                  message: 'Star up to 5 contacts to call or message them '
+                      'instantly when every second counts.',
                 ),
-                Text(
-                  '${_contactsRepository.toString()}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
+                if (favorites.isNotEmpty) ...[
+                  SectionLabel('Favourites (${favorites.length}/5)'),
+                  for (final contact in favorites) _buildFavoriteCard(contact),
+                ],
+                if (others.isNotEmpty) ...[
+                  SectionLabel('All contacts (${others.length})'),
+                  for (final contact in others) _buildContactCard(contact),
+                ],
               ],
             ),
-            const SizedBox(height: 12),
-            if (_contacts.isEmpty)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 32),
-                  child: Column(
-                    children: [
-                      Icon(Icons.person_add, size: 48, color: Colors.grey[300]),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No contacts added',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            else
-              ...others.map((contact) => _buildContactCard(contact)).toList(),
-          ],
-        ),
-      ),
+    );
+  }
+
+  Widget _avatar(EmergencyContact contact, {bool favourite = false}) {
+    final scheme = Theme.of(context).colorScheme;
+    final name = contact.name.trim();
+    return CircleAvatar(
+      radius: 22,
+      backgroundColor:
+          favourite ? context.safety.sosContainer : scheme.secondaryContainer,
+      foregroundColor:
+          favourite ? context.safety.onSosContainer : scheme.onSecondaryContainer,
+      child: favourite
+          ? const Icon(Icons.star_rounded)
+          : Text(name.isEmpty ? '?' : name.characters.first.toUpperCase(),
+              style: Theme.of(context).textTheme.titleMedium!
+                  .copyWith(color: scheme.onSecondaryContainer)),
     );
   }
 
   Widget _buildFavoriteCard(EmergencyContact contact) {
+    final s = context.safety;
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(0, 4, 0, 16),
         child: Column(
           children: [
             ListTile(
-              leading: CircleAvatar(
-                radius: 24,
-                backgroundColor: Colors.red,
-                child: const Icon(Icons.star, color: Colors.white),
-              ),
-              title: Text(
-                contact.name,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
+              contentPadding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
+              leading: _avatar(contact, favourite: true),
+              title: Text(contact.name),
               subtitle: Text(contact.phone),
               trailing: IconButton(
-                icon: const Icon(Icons.close),
+                icon: const Icon(Icons.star_rounded),
+                color: s.warning,
+                tooltip: 'Remove from favourites',
                 onPressed: () => _toggleFavorite(contact.name),
               ),
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: s.sos,
+                        foregroundColor: s.onSos,
+                      ),
+                      onPressed: () => _callContact(contact),
+                      icon: const Icon(Icons.call_rounded, size: 20),
+                      label: const Text('Call'),
                     ),
-                    onPressed: () => _callContact(contact),
-                    icon: const Icon(Icons.call, size: 18),
-                    label: const Text('Call'),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _messageContact(contact),
+                      icon: const Icon(Icons.sms_rounded, size: 20),
+                      label: const Text('SMS'),
                     ),
-                    onPressed: () => _messageContact(contact),
-                    icon: const Icon(Icons.sms, size: 18),
-                    label: const Text('SMS'),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -226,30 +175,31 @@ class _QuickContactsScreenState extends State<QuickContactsScreen> {
 
   Widget _buildContactCard(EmergencyContact contact) {
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: CircleAvatar(
-          child: Text(contact.name[0]),
-        ),
+        contentPadding: const EdgeInsets.fromLTRB(16, 4, 4, 4),
+        leading: _avatar(contact),
         title: Text(contact.name),
         subtitle: Text(contact.phone),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.call, color: Colors.green, size: 20),
+              icon: const Icon(Icons.call_rounded),
+              color: context.safety.success,
               onPressed: () => _callContact(contact),
               tooltip: 'Call',
             ),
             IconButton(
-              icon: const Icon(Icons.sms, color: Colors.blue, size: 20),
+              icon: const Icon(Icons.sms_rounded),
+              color: context.safety.info,
               onPressed: () => _messageContact(contact),
               tooltip: 'Message',
             ),
             IconButton(
-              icon: const Icon(Icons.star_border, color: Colors.orange, size: 20),
+              icon: const Icon(Icons.star_outline_rounded),
               onPressed: () => _toggleFavorite(contact.name),
-              tooltip: 'Add to favorites',
+              tooltip: 'Add to favourites',
             ),
           ],
         ),
