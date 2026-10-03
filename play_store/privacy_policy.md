@@ -1,9 +1,9 @@
 # Privacy Policy — SafeOne
 
-**Last updated: 15 June 2026**
+**Last updated: 3 October 2026**
 
-SafeOne ("the app", "we", "us") is a personal safety application published by its founder,
-Jeevesh Mahato. This policy explains what data the app uses, how it is used, and
+SafeOne ("the app", "we", "us") is a personal safety application published by
+**Tejovan Labs** (Seraikela-Kharsawan, Jharkhand, India). This policy explains what data the app uses, how it is used, and
 your choices. Contact: **jeeveshatwork@gmail.com**.
 
 ## Summary
@@ -69,10 +69,18 @@ advertising and no third-party trackers.
 SafeOne is not directed to children under 13 and does not knowingly collect data
 from them.
 
-## Data retention and deletion
+## Deleting your data
 
-Because all data is stored only on your device, you can delete it at any time by
-clearing it in the app or uninstalling the app. We hold no copy of your data.
+Because all data lives only on your device, you are in full control of it and we
+hold no copy. You can delete it at any time:
+
+- **Safety log**: open the safety log in the app and tap *Clear all*.
+- **Everything**: go to Android *Settings → Apps → SafeOne → Storage → Clear
+  storage*, or uninstall SafeOne. This permanently removes your contacts, PIN,
+  recordings, settings and log.
+
+If you have any question about your data, email jeeveshatwork@gmail.com and we
+will reply within 30 days.
 
 ## Changes to this policy
 

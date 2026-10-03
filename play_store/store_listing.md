@@ -1,41 +1,59 @@
 # Play Store listing copy (SafeOne)
 
 ## App name (max 30 chars)
-SafeOne – Personal Safety SOS
+SafeOne: SOS & Personal Safety
 
 ## Short description (max 80 chars)
-One-tap SOS, fake call, live location & hands-free alerts to keep you safe.
+Shake-to-SOS, live location, fake call & safety timer. No ads, no sign-up.
 
 ## Full description (max 4000 chars)
-SafeOne is a personal safety app built to help you get help fast — even without
-unlocking your phone.
+SafeOne helps you get help fast and keeps the people you trust one tap away, even when you can't unlock your phone.
 
-KEY FEATURES
-• One-tap SOS — send your location to your emergency contacts instantly.
-• Hands-free triggers — shake your phone or press the volume/power button three
-  times to start an SOS, even when the screen is locked.
-• Silent SOS — long-press to send help discreetly, with no sound or vibration.
-• Fake call — schedule a realistic incoming call to give you an exit from an
-  uncomfortable situation. It rings even when the app is closed.
-• Safety check-in timer — if you don't mark yourself safe in time, SafeOne
-  prompts an SOS automatically.
-• Follow Me / live location — share your journey with someone you trust.
-• Audio evidence recording — record and keep audio on your device.
-• Siren & flashlight — draw attention in an emergency.
-• Emergency resources — quick access to helplines and complaint portals.
-• App lock — protect the app with a 6-digit PIN and fingerprint.
+Whether you're walking home late, travelling alone or taking a cab, SafeOne gives you quick ways to raise an alarm. Your data stays on your phone.
 
-YOUR PRIVACY COMES FIRST
-SafeOne has no server. Your emergency contacts, PIN, recordings, and safety log
-stay on your device. SafeOne never uploads your data and shows no ads. When you
-send an SOS, it opens your own Messages app with the alert pre-filled — you tap
-send, and the message goes straight to the people you chose.
+🚨 SOS IN ONE TAP
+• Big SOS button gets an SMS with your live location ready for your emergency contacts
+• Silent SOS: long-press to alert contacts with no sound or vibration
+• Countdown before sending, so you can cancel a false alarm
 
-PERMISSIONS
-SafeOne asks only for what its safety features need: location (to share where you
-are), microphone and camera (for evidence you choose to capture), notifications
-and alarms (so alerts arrive on time), and biometrics (to unlock the app). Each
-is explained in the app and detailed in our privacy policy.
+📳 HANDS-FREE SOS
+• Shake your phone to start an SOS
+• Press the volume or power button three times, even with the screen locked
+• Turn each trigger on or off in Settings
+
+📍 LIVE LOCATION & FOLLOW ME
+• Keep sharing your location with contacts after an SOS
+• Follow Me sends regular location updates while you travel
+• One-tap "I'm Safe" message when you arrive
+
+⏱️ SAFETY CHECK-IN TIMER
+Going somewhere unfamiliar? Set a timer. If you don't check in before it runs out, SafeOne starts an SOS for you.
+
+📞 FAKE CALL
+Need a way out of an uncomfortable situation? Schedule a realistic incoming call with a caller name of your choice. It rings even when the app is closed.
+
+🔦 QUICK ACTIONS
+• Loud siren to draw attention
+• Flashlight with SOS Morse blink
+• Audio recording to keep evidence on your device
+
+🏥 HELP NEARBY
+• Find nearby police stations and hospitals
+• Indian emergency helplines in one place: 112, police, ambulance, women's helpline, child helpline, cyber crime and more
+• Emergency ID and medical card with a QR code for first responders
+• Safety tips and emergency guides
+
+🌐 13 LANGUAGES
+English, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, Punjabi, Odia, Assamese and Urdu.
+
+🔒 PRIVATE BY DESIGN
+• No account, no sign-up, no ads
+• No servers: contacts, recordings, PIN and safety log stay on your device
+• SOS messages go through your phone's own SMS, straight to the people you chose
+• App lock with PIN and fingerprint
+• Uninstall the app and all of its data is deleted
+
+SafeOne is a personal safety tool and doesn't replace official emergency services. In immediate danger, call 112.
 
 Stay prepared. Stay safe. Download SafeOne.
 

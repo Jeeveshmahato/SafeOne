@@ -4,6 +4,21 @@ Fill the Data Safety section exactly as below. SafeOne has no backend, so the
 core answer is: **we do not collect or share any data.** Be precise — Google
 cross-checks this against your APK's permissions.
 
+## ⚠️ Fix the live listing (October 2026)
+The published listing currently says *"This app may collect: Personal info, Audio
+and Contacts"* and *"Data can't be deleted"*. That doesn't match the app: SafeOne
+has no server and no network SDKs (no Firebase, analytics, ads or HTTP calls). It
+only opens other apps (Messages, Maps, Dialer) via `url_launcher`.
+
+Play Console → **Policy and programs → App content → Data safety → Manage**:
+1. Data collection and security → *Does your app collect or share any of the
+   required user data types?* → **No**.
+2. Remove every data type that was ticked (Personal info, Audio, Contacts).
+3. Save → Submit. The listing will then show **"No data collected"** and
+   **"No data shared with third parties"**.
+4. Make sure the privacy policy URL (App content → Privacy policy) is
+   `https://jeeveshmahato.github.io/SafeOne/privacy.html`.
+
 ## Data collection & sharing (top-level)
 - **Does your app collect or share any of the required user data types?**
   → **No.**

@@ -20,19 +20,19 @@ class Features {
 
   /// Shake / volume-triple-press / power-triple-press SOS triggers.
   /// Requires the always-on foreground service (Special Use FGS declaration).
-  static const bool backgroundTriggers = false;
+  static const bool backgroundTriggers = true;
 
   /// Live location sharing that continues after an SOS (foreground service +
   /// background location permission).
-  static const bool backgroundLocation = false;
+  static const bool backgroundLocation = true;
 
   /// Safety check-in timer that auto-sends SOS if you don't confirm safe
   /// arrival (uses foreground service scheduled alarm).
-  static const bool safetyCheckin = false;
+  static const bool safetyCheckin = true;
 
   /// "Follow Me" mode — periodic location SMS while travelling
   /// (foreground service + background location).
-  static const bool followMe = false;
+  static const bool followMe = true;
 
   // ── v1.0: ON ───────────────────────────────────────────────────────────────
 
