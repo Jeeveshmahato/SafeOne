@@ -1,13 +1,15 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-import '../models/emergency_id.dart';
+import '../models/medical_info.dart';
 import '../services/medical_repository.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
+import '../widgets/tabbed_hub.dart';
 
-/// Display a scannable QR code containing the user's emergency ID and medical info.
-/// First responders can scan this code (offline) to instantly get critical medical
-/// information: blood type, allergies, medical conditions, and emergency contacts.
+/// Shows a scannable QR code with the user's Medical ID. Anyone can scan it
+/// offline with a normal phone camera to read blood group, allergies,
+/// conditions and who to call.
 class EmergencyQrScreen extends StatefulWidget {
   const EmergencyQrScreen({super.key});
 
@@ -17,290 +19,139 @@ class EmergencyQrScreen extends StatefulWidget {
 
 class _EmergencyQrScreenState extends State<EmergencyQrScreen> {
   final MedicalRepository _medicalRepository = MedicalRepository();
-  EmergencyID? _emergencyId;
-  bool _loading = true;
-  String _qrData = '';
+  MedicalInfo? _info;
 
   @override
   void initState() {
     super.initState();
     _load();
-  }
-
-  Future<void> _load() async {
-    final medicalInfo = await _medicalRepository.load();
-    setState(() {
-      _emergencyId = EmergencyID(
-        fullName: medicalInfo.fullName,
-        bloodType: medicalInfo.bloodGroup,
-        allergies: medicalInfo.allergies,
-        medicalConditions: medicalInfo.medications,
-      );
-      _qrData = _generateQrData(_emergencyId!);
-      _loading = false;
-    });
-  }
-
-  /// Encode emergency data as JSON for the QR code.
-  String _generateQrData(EmergencyID id) {
-    final Map<String, dynamic> data = {
-      'name': id.fullName,
-      'blood': id.bloodType ?? 'Not specified',
-      'allergies': id.allergies ?? 'None known',
-      'conditions': id.medicalConditions ?? 'None',
-      'emergencyContact': id.emergencyContactName ?? 'Not set',
-      'emergencyPhone': id.emergencyContactPhone ?? 'Not set',
-      'dob': id.dateOfBirth ?? 'Not set',
-      'timestamp': DateTime.now().toIso8601String(),
-    };
-    return jsonEncode(data);
+    // The ID tab may be edited while this tab stays alive in the hub.
+    MedicalRepository.changes.addListener(_load);
   }
 
   @override
+  void dispose() {
+    MedicalRepository.changes.removeListener(_load);
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    final info = await _medicalRepository.load();
+    if (!mounted) return;
+    setState(() => _info = info);
+  }
+
+  /// Plain, human-readable text: a phone camera shows it as-is, so a
+  /// paramedic can read it without any special app (raw JSON was unreadable).
+  String _qrText(MedicalInfo info) {
+    final lines = <String>['EMERGENCY MEDICAL ID', 'Name: ${info.fullName}'];
+    void add(String label, String value) {
+      if (value.trim().isNotEmpty) lines.add('$label: ${value.trim()}');
+    }
+
+    add('Date of birth', info.dateOfBirth);
+    add('Blood group', info.bloodGroup);
+    add('Allergies', info.allergies);
+    add('Conditions', info.conditions);
+    add('Medications', info.medications);
+    add('Notes', info.notes);
+    final contact = [info.emergencyContactName, info.emergencyContactPhone]
+        .where((v) => v.trim().isNotEmpty)
+        .join(' ');
+    add('Emergency contact', contact);
+    return lines.join('\n');
+  }
+
+  /// The Medical ID is the first tab of the profile hub.
+  void _openEditor() => TabbedHub.select(context, 0);
+
+  @override
   Widget build(BuildContext context) {
+    final info = _info;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Emergency QR Card'),
-        elevation: 0,
-      ),
-      body: _loading
+      appBar: AppBar(title: const Text('QR card')),
+      body: info == null
           ? const Center(child: CircularProgressIndicator())
-          : _emergencyId == null || _emergencyId!.fullName.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.person_add_outlined,
-                        size: 48,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No emergency ID set',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'First, fill in your medical info\nin the Medical ID screen.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text('Go Back'),
-                      ),
-                    ],
+          : info.isEmpty
+              ? EmptyState(
+                  icon: Icons.qr_code_2_rounded,
+                  title: 'No Medical ID yet',
+                  message: 'Create your Medical ID first. Your QR card is '
+                      'made from it automatically.',
+                  action: FilledButton(
+                    onPressed: _openEditor,
+                    child: const Text('Create Medical ID'),
                   ),
                 )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      // QR Code
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(24),
-                          child: Column(
-                            children: [
-                              Text(
-                                'Scan for Emergency Info',
-                                style: Theme.of(context).textTheme.titleSmall!
-                                    .copyWith(
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              QrImageView(
-                                data: _qrData,
-                                version: QrVersions.auto,
-                                size: 280,
-                                embeddedImage: null,
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Screenshot this for your lock screen',
-                                style: Theme.of(context).textTheme.bodySmall!
-                                    .copyWith(
-                                  color: Colors.grey[600],
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Medical Summary
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Medical Summary',
-                                style: Theme.of(context).textTheme.titleSmall,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildInfoRow(
-                                'Name',
-                                _emergencyId!.fullName,
-                                Icons.person,
-                              ),
-                              const Divider(),
-                              _buildInfoRow(
-                                'Blood Type',
-                                _emergencyId!.bloodType ?? 'Not specified',
-                                Icons.bloodtype_outlined,
-                              ),
-                              const Divider(),
-                              _buildInfoRow(
-                                'Allergies',
-                                _emergencyId!.allergies ?? 'None known',
-                                Icons.warning_amber_rounded,
-                              ),
-                              const Divider(),
-                              _buildInfoRow(
-                                'Medical Conditions',
-                                _emergencyId!.medicalConditions ?? 'None',
-                                Icons.health_and_safety,
-                              ),
-                              if (_emergencyId!.emergencyContactName != null &&
-                                  _emergencyId!.emergencyContactName!.isNotEmpty)
-                                ...[
-                                  const Divider(),
-                                  _buildInfoRow(
-                                    'Emergency Contact',
-                                    '${_emergencyId!.emergencyContactName} - ${_emergencyId!.emergencyContactPhone ?? 'No phone'}',
-                                    Icons.phone_in_talk,
-                                  ),
-                                ],
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // How it works
-                      Card(
-                        color: Colors.blue[50],
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.info_outline,
-                                    color: Colors.blue[700],
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'How it works',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleSmall!
-                                        .copyWith(
-                                          color: Colors.blue[700],
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                '• Screenshot the QR code and set it as your lock screen wallpaper or save to favorites\n\n'
-                                '• First responders can scan it to instantly access your blood type, allergies, and conditions\n\n'
-                                '• Works offline — no internet needed\n\n'
-                                '• Can be scanned by paramedics, police, or anyone with a camera phone\n\n'
-                                '• Update this card anytime you change your medical information',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  height: 1.6,
-                                  color: Colors.blue[900],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      // Action buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Take a screenshot to save the QR code',
-                                    ),
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.screenshot),
-                              label: const Text('Screenshot'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
-                              icon: const Icon(Icons.edit),
-                              label: const Text('Edit Info'),
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
+              : _buildCard(info),
     );
   }
 
-  /// Helper widget to display info rows.
-  Widget _buildInfoRow(String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 20, color: Colors.grey[600]),
-          const SizedBox(width: 12),
-          Expanded(
+  Widget _buildCard(MedicalInfo info) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return ListView(
+      padding: EdgeInsets.fromLTRB(
+          16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
+      children: [
+        Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(24),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
-                ),
+                Text(info.fullName,
+                    style: theme.textTheme.titleLarge,
+                    textAlign: TextAlign.center),
                 const SizedBox(height: 4),
                 Text(
-                  value,
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  'Scan for emergency medical info',
+                  style: theme.textTheme.bodyMedium!
+                      .copyWith(color: scheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 20),
+                // Always dark-on-white, even in dark mode: QR scanners need
+                // the contrast.
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Semantics(
+                    label: 'QR code with your Medical ID',
+                    child: QrImageView(
+                      data: _qrText(info),
+                      version: QrVersions.auto,
+                      size: 240,
+                      backgroundColor: Colors.white,
+                      eyeStyle: const QrEyeStyle(
+                          eyeShape: QrEyeShape.square, color: Colors.black),
+                      dataModuleStyle: const QrDataModuleStyle(
+                          dataModuleShape: QrDataModuleShape.square,
+                          color: Colors.black),
+                    ),
+                  ),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        const NoticeCard(
+          tone: Tone.info,
+          title: 'Keep it handy',
+          message: 'Take a screenshot and set it as your lock-screen '
+              'wallpaper. Anyone can scan it with a phone camera, with no '
+              'internet or app needed.',
+        ),
+        const SizedBox(height: 16),
+        OutlinedButton.icon(
+          onPressed: _openEditor,
+          icon: const Icon(Icons.edit_outlined),
+          label: const Text('Edit Medical ID'),
+        ),
+      ],
     );
   }
 }

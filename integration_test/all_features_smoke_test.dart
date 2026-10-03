@@ -135,7 +135,7 @@ void main() {
     await tester.tap(tile);
     await settle(tester);
 
-    final startBtn = find.text('Start Fake Call');
+    final startBtn = find.text('Start fake call');
     await tester.ensureVisible(startBtn);
     await tester.tap(startBtn);
     await settle(tester);
@@ -143,12 +143,12 @@ void main() {
     expect(find.byIcon(Icons.call), findsOneWidget); // accept
     await tester.tap(find.byIcon(Icons.call));
     await settle(tester);
-    expect(find.text('End Call'), findsOneWidget);
+    expect(find.text('End call'), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 1));
     await tester.tap(find.byIcon(Icons.call_end));
     await Future<void>.delayed(const Duration(milliseconds: 500));
     await tester.pumpAndSettle();
-    expect(find.text('End Call'), findsNothing);
+    expect(find.text('End call'), findsNothing);
   });
 }

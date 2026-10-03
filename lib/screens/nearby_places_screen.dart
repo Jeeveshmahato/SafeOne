@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../services/nearby_places_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 
 /// Screen that lets the user find nearby emergency / useful places.
 ///
@@ -49,12 +51,8 @@ class _NearbyPlacesScreenState extends State<NearbyPlacesScreen> {
       await _service.openNearby(query);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.toString().replaceFirst('Exception: ', '')),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showAppSnack(context, error.toString().replaceFirst('Exception: ', ''),
+          tone: Tone.danger);
     } finally {
       if (mounted) setState(() => _opening = false);
     }
@@ -62,40 +60,53 @@ class _NearbyPlacesScreenState extends State<NearbyPlacesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Nearby help')),
       body: Stack(
         children: [
           ListView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+                16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
             children: [
-              const Text(
-                'Tap a place to see the nearest ones around you on Google Maps. '
-                'Make sure your location (GPS) is turned on.',
-                style: TextStyle(color: Colors.black54),
+              const NoticeCard(
+                tone: Tone.info,
+                icon: Icons.map_outlined,
+                message: 'Tap a place to see the nearest ones on Google Maps. '
+                    'Make sure location (GPS) is on.',
               ),
               const SizedBox(height: 16),
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1.4,
-                children: _places.map((place) {
-                  return _PlaceTile(
-                    icon: place.icon,
-                    label: place.label,
-                    onTap: () => _open(place.query),
-                  );
-                }).toList(),
-              ),
+              // Two per row; each row sizes to its tallest tile so long
+              // labels or large fonts never overflow.
+              for (var i = 0; i < _places.length; i += 2)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var j = i; j < i + 2; j++) ...[
+                          if (j > i) const SizedBox(width: 12),
+                          Expanded(
+                            child: j < _places.length
+                                ? _PlaceTile(
+                                    icon: _places[j].icon,
+                                    label: _places[j].label,
+                                    onTap: () => _open(_places[j].query),
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
           // A dim overlay with a spinner while Maps is opening.
           if (_opening)
-            Container(
-              color: Colors.black26,
+            ColoredBox(
+              color: scheme.scrim.withValues(alpha: 0.32),
               child: const Center(child: CircularProgressIndicator()),
             ),
         ],
@@ -118,29 +129,36 @@ class _PlaceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 36, color: color),
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+      side: BorderSide(color: scheme.outlineVariant),
+    );
+    return Material(
+      color: scheme.surfaceContainerLowest,
+      shape: shape,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: shape,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 96),
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 26, color: scheme.onSurface),
+              const SizedBox(height: 10),
+              Text(
                 label,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelLarge!
+                    .copyWith(fontWeight: FontWeight.w500),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

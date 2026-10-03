@@ -147,7 +147,7 @@ abstract class AppLocalizations {
   /// No description provided for @fakeCallTitle.
   ///
   /// In en, this message translates to:
-  /// **'Fake Call'**
+  /// **'Fake call'**
   String get fakeCallTitle;
 
   /// No description provided for @fakeCallHeader.
@@ -159,19 +159,19 @@ abstract class AppLocalizations {
   /// No description provided for @chooseScenario.
   ///
   /// In en, this message translates to:
-  /// **'Choose a Scenario'**
+  /// **'Choose a scenario'**
   String get chooseScenario;
 
   /// No description provided for @chooseCaller.
   ///
   /// In en, this message translates to:
-  /// **'Choose a Caller'**
+  /// **'Choose a caller'**
   String get chooseCaller;
 
   /// No description provided for @phoneNumberOptional.
   ///
   /// In en, this message translates to:
-  /// **'Phone Number (Optional)'**
+  /// **'Phone number (optional)'**
   String get phoneNumberOptional;
 
   /// No description provided for @phoneHint.
@@ -189,7 +189,7 @@ abstract class AppLocalizations {
   /// No description provided for @whatToSay.
   ///
   /// In en, this message translates to:
-  /// **'What to Say (If They Pick Up)'**
+  /// **'What to say (if they pick up)'**
   String get whatToSay;
 
   /// No description provided for @whatToSayHint.
@@ -207,19 +207,19 @@ abstract class AppLocalizations {
   /// No description provided for @callDelay.
   ///
   /// In en, this message translates to:
-  /// **'Call Delay'**
+  /// **'Call delay'**
   String get callDelay;
 
   /// No description provided for @quickPresets.
   ///
   /// In en, this message translates to:
-  /// **'Quick Presets'**
+  /// **'Quick presets'**
   String get quickPresets;
 
   /// No description provided for @orCustomTime.
   ///
   /// In en, this message translates to:
-  /// **'Or Enter Custom Time'**
+  /// **'Or enter a custom time'**
   String get orCustomTime;
 
   /// No description provided for @hours.
@@ -243,13 +243,13 @@ abstract class AppLocalizations {
   /// No description provided for @advancedOptions.
   ///
   /// In en, this message translates to:
-  /// **'Advanced Options'**
+  /// **'Advanced options'**
   String get advancedOptions;
 
   /// No description provided for @repeatCall.
   ///
   /// In en, this message translates to:
-  /// **'Repeat Call'**
+  /// **'Repeat call'**
   String get repeatCall;
 
   /// No description provided for @repeatCallSubtitle.
@@ -261,7 +261,7 @@ abstract class AppLocalizations {
   /// No description provided for @autoEndCall.
   ///
   /// In en, this message translates to:
-  /// **'Auto-End Call'**
+  /// **'Auto-end call'**
   String get autoEndCall;
 
   /// No description provided for @autoEndCallSubtitle.
@@ -279,7 +279,7 @@ abstract class AppLocalizations {
   /// No description provided for @ringSound.
   ///
   /// In en, this message translates to:
-  /// **'Ring Sound'**
+  /// **'Ring sound'**
   String get ringSound;
 
   /// No description provided for @ringSoundPhone.
@@ -297,7 +297,7 @@ abstract class AppLocalizations {
   /// No description provided for @startFakeCall.
   ///
   /// In en, this message translates to:
-  /// **'Start Fake Call'**
+  /// **'Start fake call'**
   String get startFakeCall;
 
   /// No description provided for @now.
@@ -345,7 +345,7 @@ abstract class AppLocalizations {
   /// No description provided for @callEnded.
   ///
   /// In en, this message translates to:
-  /// **'Call Ended'**
+  /// **'Call ended'**
   String get callEnded;
 
   /// No description provided for @decline.
@@ -399,7 +399,7 @@ abstract class AppLocalizations {
   /// No description provided for @endCall.
   ///
   /// In en, this message translates to:
-  /// **'End Call'**
+  /// **'End call'**
   String get endCall;
 
   /// No description provided for @secondsShort.
@@ -603,37 +603,37 @@ abstract class AppLocalizations {
   /// No description provided for @tileWhatToDo.
   ///
   /// In en, this message translates to:
-  /// **'What To Do'**
+  /// **'What to do'**
   String get tileWhatToDo;
 
   /// No description provided for @tileIndiaHelp.
   ///
   /// In en, this message translates to:
-  /// **'India Help'**
+  /// **'India help'**
   String get tileIndiaHelp;
 
   /// No description provided for @tileJourneySafe.
   ///
   /// In en, this message translates to:
-  /// **'Journey Safe'**
+  /// **'Journey safe'**
   String get tileJourneySafe;
 
   /// No description provided for @tileQrCard.
   ///
   /// In en, this message translates to:
-  /// **'QR Card'**
+  /// **'QR card'**
   String get tileQrCard;
 
   /// No description provided for @tileLocationPing.
   ///
   /// In en, this message translates to:
-  /// **'Location Ping'**
+  /// **'Location ping'**
   String get tileLocationPing;
 
   /// No description provided for @tileDangerZones.
   ///
   /// In en, this message translates to:
-  /// **'Danger Zones'**
+  /// **'Danger zones'**
   String get tileDangerZones;
 
   /// No description provided for @sectionGetHelp.
@@ -681,7 +681,7 @@ abstract class AppLocalizations {
   /// No description provided for @tileSafetyCheckin.
   ///
   /// In en, this message translates to:
-  /// **'Safety check-in'**
+  /// **'Check-in timer'**
   String get tileSafetyCheckin;
 
   /// No description provided for @quickActions.
@@ -759,7 +759,7 @@ abstract class AppLocalizations {
   /// No description provided for @lockBiometricReason.
   ///
   /// In en, this message translates to:
-  /// **'Unlock Women Safety'**
+  /// **'Unlock SafeOne'**
   String get lockBiometricReason;
 
   /// No description provided for @pinSetTitle.
@@ -981,7 +981,7 @@ abstract class AppLocalizations {
   /// No description provided for @tabEmergencyId.
   ///
   /// In en, this message translates to:
-  /// **'ID'**
+  /// **'Medical ID'**
   String get tabEmergencyId;
 
   /// No description provided for @tabMedical.
@@ -1055,6 +1055,258 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} emergency contact(s) saved.'**
   String homeContactsSaved(int count);
+
+  /// No description provided for @homeTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Help is one tap away'**
+  String get homeTagline;
+
+  /// No description provided for @homeContactsReady.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 contact will be alerted} other{{count} contacts will be alerted}}'**
+  String homeContactsReady(int count);
+
+  /// No description provided for @homeAddContactsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your emergency contacts'**
+  String get homeAddContactsTitle;
+
+  /// No description provided for @homeAddContactsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add contacts'**
+  String get homeAddContactsAction;
+
+  /// No description provided for @sosButtonCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to alert  ·  Hold for silent SOS'**
+  String get sosButtonCaption;
+
+  /// No description provided for @sosButtonSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'Send SOS alert. Long-press to send silently.'**
+  String get sosButtonSemantics;
+
+  /// No description provided for @sosSending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending…'**
+  String get sosSending;
+
+  /// No description provided for @tileReportPortals.
+  ///
+  /// In en, this message translates to:
+  /// **'Report & portals'**
+  String get tileReportPortals;
+
+  /// No description provided for @errorNoContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Please add at least one emergency contact first.'**
+  String get errorNoContacts;
+
+  /// No description provided for @errorNoFlashlight.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone has no flashlight.'**
+  String get errorNoFlashlight;
+
+  /// No description provided for @errorMicDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Microphone permission denied.'**
+  String get errorMicDenied;
+
+  /// No description provided for @recordingStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording started.'**
+  String get recordingStarted;
+
+  /// No description provided for @recordingSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording saved to this phone.'**
+  String get recordingSaved;
+
+  /// No description provided for @recordingStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Recording stopped.'**
+  String get recordingStopped;
+
+  /// No description provided for @sosCountdownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending SOS'**
+  String get sosCountdownTitle;
+
+  /// No description provided for @sosCountdownBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location will be sent to your emergency contacts.'**
+  String get sosCountdownBody;
+
+  /// No description provided for @sosCountdownHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Cancel if this was a mistake.'**
+  String get sosCountdownHint;
+
+  /// No description provided for @sosSendNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Send now'**
+  String get sosSendNow;
+
+  /// No description provided for @settingsSectionGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get settingsSectionGeneral;
+
+  /// No description provided for @settingsSectionSos.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS alert'**
+  String get settingsSectionSos;
+
+  /// No description provided for @settingsSectionTriggers.
+  ///
+  /// In en, this message translates to:
+  /// **'Hands-free SOS'**
+  String get settingsSectionTriggers;
+
+  /// No description provided for @settingsSectionAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'About'**
+  String get settingsSectionAbout;
+
+  /// No description provided for @settingsCountdownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS countdown'**
+  String get settingsCountdownTitle;
+
+  /// No description provided for @settingsCountdownSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How long you have to cancel before the SOS is sent.'**
+  String get settingsCountdownSubtitle;
+
+  /// No description provided for @settingsShakeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shake to send SOS'**
+  String get settingsShakeTitle;
+
+  /// No description provided for @settingsShakeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shaking the phone starts the SOS countdown.'**
+  String get settingsShakeSubtitle;
+
+  /// No description provided for @settingsPowerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Power button SOS'**
+  String get settingsPowerTitle;
+
+  /// No description provided for @settingsPowerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pressing the power button 3 times quickly starts the SOS.'**
+  String get settingsPowerSubtitle;
+
+  /// No description provided for @settingsSafetyModeNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety mode runs in the background so these triggers work even when your phone is locked. You\'ll see a \"Safety mode active\" notification while it\'s on.'**
+  String get settingsSafetyModeNote;
+
+  /// No description provided for @settingsMessageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS message'**
+  String get settingsMessageTitle;
+
+  /// No description provided for @settingsMessageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to your contacts. Keep {token} where the map link should appear.'**
+  String settingsMessageSubtitle(String token);
+
+  /// No description provided for @settingsMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type your emergency message…'**
+  String get settingsMessageHint;
+
+  /// No description provided for @settingsPrivacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get settingsPrivacyPolicy;
+
+  /// No description provided for @settingsPrivacySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data never leaves this phone'**
+  String get settingsPrivacySubtitle;
+
+  /// No description provided for @settingsSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get settingsSupport;
+
+  /// No description provided for @settingsMadeBy.
+  ///
+  /// In en, this message translates to:
+  /// **'SafeOne by Tejovan Labs'**
+  String get settingsMadeBy;
+
+  /// No description provided for @homeAddContactsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'When you press SOS, they get an SMS with your live location.'**
+  String get homeAddContactsBody;
+
+  /// No description provided for @homeLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow location access'**
+  String get homeLocationTitle;
+
+  /// No description provided for @homeLocationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'So your SOS includes a map link to where you are. Do it now, not during an emergency.'**
+  String get homeLocationBody;
+
+  /// No description provided for @homeLocationAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow location'**
+  String get homeLocationAction;
+
+  /// No description provided for @homeLocationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get homeLocationSettings;
+
+  /// No description provided for @homeTools.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety tools'**
+  String get homeTools;
 }
 
 class _AppLocalizationsDelegate

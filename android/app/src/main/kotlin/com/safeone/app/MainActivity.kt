@@ -127,6 +127,7 @@ class MainActivity : FlutterFragmentActivity() {
                 }
                 "stopLiveShare" -> {
                     SosSender.setPrefBool(this, "live_sharing_active", false)
+                    SosSender.cancelFollowMe(this)
                     syncService() // keep running if a trigger is on, else stop
                     result.success(true)
                 }

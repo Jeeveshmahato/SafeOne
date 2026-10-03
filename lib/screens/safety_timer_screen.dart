@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../services/notification_service.dart';
 import '../services/safety_monitor_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 import '../widgets/duration_field.dart';
 
 /// "Reach home safely" timer.
@@ -69,12 +71,8 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
     await NotificationService.instance.cancelCheckin();
     if (!mounted) return;
     setState(() => _running = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Glad you are safe! Check-in cancelled.'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    showAppSnack(context, 'Glad you are safe! Check-in cancelled.',
+        tone: Tone.success);
   }
 
   /// Format seconds as HH:MM:SS (hours shown only when needed).
@@ -91,41 +89,60 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(AppLocalizations.of(context).tileSafetyCheckin)),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+      body: SafeArea(
+        top: false,
         child: Center(
-          child: _running ? _buildRunning() : _buildSetup(),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: _running ? _buildRunning() : _buildSetup(),
+          ),
         ),
       ),
     );
   }
 
-  /// The screen shown BEFORE the timer starts (pick minutes + Start).
+  /// The screen shown BEFORE the timer starts (pick a duration + Start).
   Widget _buildSetup() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'If you do not tap "I\'m safe" before the timer ends, an SOS with '
+        const Center(child: IconBadge(icon: Icons.timer_rounded, size: 72)),
+        const SizedBox(height: 20),
+        Text('Safety check-in',
+            textAlign: TextAlign.center, style: theme.textTheme.headlineSmall),
+        const SizedBox(height: 8),
+        Text(
+          'If you don\'t tap "I\'m safe" before the timer ends, an SOS with '
           'your location is sent automatically.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16),
+          style: theme.textTheme.bodyLarge!
+              .copyWith(color: scheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 28),
+        Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Journey time', style: theme.textTheme.titleSmall),
+                const SizedBox(height: 12),
+                DurationField(
+                  initial: _duration,
+                  initialUnit: TimeUnit.minutes,
+                  onChanged: (d) => _duration = d,
+                ),
+              ],
+            ),
+          ),
         ),
         const SizedBox(height: 24),
-        const Text('Journey time:', style: TextStyle(fontSize: 16)),
-        const SizedBox(height: 8),
-        DurationField(
-          initial: _duration,
-          initialUnit: TimeUnit.minutes,
-          onChanged: (d) => _duration = d,
-        ),
-        const SizedBox(height: 32),
         FilledButton.icon(
-          style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-          ),
           onPressed: _start,
-          icon: const Icon(Icons.play_arrow),
+          icon: const Icon(Icons.play_arrow_rounded),
           label: const Text('Start timer'),
         ),
       ],
@@ -134,32 +151,62 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
 
   /// The screen shown WHILE the timer is counting down.
   Widget _buildRunning() {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final s = context.safety;
+    final total = _duration.inSeconds <= 0 ? 1 : _duration.inSeconds;
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text('Time left', style: TextStyle(fontSize: 18)),
-        const SizedBox(height: 12),
-        Text(
-          _formatTime(_secondsLeft),
-          style: const TextStyle(fontSize: 64, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 32),
-        SizedBox(
-          width: 220,
-          height: 60,
-          child: FilledButton.icon(
-            style: FilledButton.styleFrom(backgroundColor: Colors.green),
-            onPressed: _imSafe,
-            icon: const Icon(Icons.check),
-            label: const Text("I'm safe", style: TextStyle(fontSize: 20)),
+        Center(
+          child: SizedBox(
+            width: 240,
+            height: 240,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                CircularProgressIndicator(
+                  value: (_secondsLeft / total).clamp(0.0, 1.0),
+                  strokeWidth: 10,
+                  strokeCap: StrokeCap.round,
+                  backgroundColor: scheme.surfaceContainerHighest,
+                ),
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Time left',
+                          style: theme.textTheme.labelLarge!
+                              .copyWith(color: scheme.onSurfaceVariant)),
+                      Text(
+                        _formatTime(_secondsLeft),
+                        style: theme.textTheme.displaySmall!.copyWith(
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
+        const SizedBox(height: 32),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: s.success,
+            foregroundColor: scheme.surface,
+            minimumSize: const Size.fromHeight(60),
+          ),
+          onPressed: _imSafe,
+          icon: const Icon(Icons.check_rounded),
+          label: const Text("I'm safe"),
+        ),
         const SizedBox(height: 16),
-        const Text(
-          'You can lock or close the phone — the alert still works in the '
-          'background.',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.black54),
+        const NoticeCard(
+          tone: Tone.info,
+          message: 'You can lock or close the phone. The alert still works '
+              'in the background.',
         ),
       ],
     );

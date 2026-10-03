@@ -22,7 +22,7 @@ Settings → Developer account → Account details:
 ## 4. Play Console: Store listing (Grow → Store presence → Main store listing)
 - [ ] App name, short and full description from `store_listing.md`
 - [ ] Feature graphic: `graphics/feature_graphic_1024x500.png`
-- [ ] Phone screenshots: replace all with `graphics/store_screenshots/01–04`
+- [ ] Phone screenshots: replace all with the 7 images in `graphics/store_screenshots/` (01–07, in order)
 - [ ] Category stays **Lifestyle**
 
 ## 5. Udyam (udyamregistration.gov.in → Update/Cancel Udyam Registration)

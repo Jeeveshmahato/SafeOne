@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../services/notification_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 
 /// A guided checklist that walks the user through the permissions needed for
 /// the scheduled fake call to ring when the app is closed or the phone is
@@ -107,14 +109,14 @@ class _BackgroundSetupScreenState extends State<BackgroundSetupScreen>
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(
+                  16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
               children: [
-                const Text(
-                  'Turn these on so safety features — the scheduled fake call, '
-                  'live location sharing and the check-in auto-alert — keep '
-                  'working even when the app is closed or your phone is locked. '
-                  'Tap each "Fix" to open the right settings page.',
-                  style: TextStyle(color: Colors.black54),
+                const NoticeCard(
+                  tone: Tone.info,
+                  message: 'Turn these on so the scheduled fake call, live '
+                      'location sharing and the check-in auto-alert keep '
+                      'working when the app is closed or the phone is locked.',
                 ),
                 const SizedBox(height: 16),
                 _SetupTile(
@@ -167,17 +169,18 @@ class _BackgroundSetupScreenState extends State<BackgroundSetupScreen>
                   status: _bgLocation,
                   onFix: () => _run(_requestBackgroundLocation),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () => _run(() => openAppSettings().then((_) {})),
-                  icon: const Icon(Icons.settings),
+                  icon: const Icon(Icons.settings_outlined),
                   label: const Text('Open app settings'),
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Tip: on some phones (Motorola, Xiaomi, etc.) also enable '
-                  '"Autostart" / "Allow background activity" for this app.',
-                  style: TextStyle(color: Colors.black45, fontSize: 12),
+                const SizedBox(height: 16),
+                const NoticeCard(
+                  tone: Tone.neutral,
+                  message: 'Tip: on some phones (Motorola, Xiaomi, etc.) also '
+                      'enable "Autostart" / "Allow background activity" for '
+                      'SafeOne.',
                 ),
               ],
             ),
@@ -204,13 +207,20 @@ class _SetupTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final ok = status == true;
     return Card(
+      margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: Icon(icon),
+        contentPadding: const EdgeInsets.fromLTRB(16, 8, 12, 8),
+        leading: IconBadge(
+          icon: icon,
+          color: ok ? context.safety.success : null,
+          size: 40,
+        ),
         title: Text(title),
         subtitle: Text(subtitle),
         trailing: ok
-            ? const Icon(Icons.check_circle, color: Colors.green)
-            : FilledButton(
+            ? Icon(Icons.check_circle_rounded, color: context.safety.success)
+            : FilledButton.tonal(
+                style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
                 onPressed: onFix,
                 child: Text(status == null ? 'Allow' : 'Fix'),
               ),

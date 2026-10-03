@@ -11,6 +11,8 @@ import '../services/notification_service.dart';
 import '../services/scheduled_call_repository.dart';
 import 'background_setup_screen.dart';
 import 'fake_call_screen.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 
 /// Enhanced fake call setup screen with preset callers, custom delays, and more.
 ///
@@ -459,7 +461,6 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(t.fakeCallTitle),
-        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.tune),
@@ -481,20 +482,16 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
   Widget _buildSetup() {
     final t = AppLocalizations.of(context);
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(
+          16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header text
-          Card(
-            color: Colors.blue,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Text(
-                t.fakeCallHeader,
-                style: const TextStyle(color: Colors.white, height: 1.5),
-              ),
-            ),
+          NoticeCard(
+            tone: Tone.info,
+            icon: Icons.phone_in_talk_outlined,
+            message: t.fakeCallHeader,
           ),
           const SizedBox(height: 24),
 
@@ -531,16 +528,12 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
 
           // Start button
           FilledButton.icon(
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
             onPressed: _schedule,
             icon: Icon(_editingId != null
                 ? Icons.save
                 : Icons.phone_in_talk),
             label: Text(
               _editingId != null ? 'Save changes' : t.startFakeCall,
-              style: const TextStyle(fontSize: 16),
             ),
           ),
           if (_editingId != null) ...[
@@ -565,7 +558,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       children: [
         Text(
           'Upcoming calls',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
         for (final call in _scheduled) _upcomingTile(call, t),
@@ -579,14 +572,11 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
     final secs = remaining.inSeconds < 0 ? 0 : remaining.inSeconds;
     final isEditing = _editingId == call.id;
     return Card(
-      color: isEditing ? Colors.deepPurple.withValues(alpha: 0.08) : null,
+      color: isEditing ? Theme.of(context).colorScheme.secondaryContainer : null,
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: const CircleAvatar(child: Icon(Icons.phone_in_talk)),
-        title: Text(
-          call.callerName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text(call.callerName),
         subtitle: Text(
           'Rings in ${_formatClock(secs)}'
           '${call.callerPhone.isNotEmpty ? ' · ${call.callerPhone}' : ''}',
@@ -595,12 +585,12 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.edit_outlined),
               tooltip: 'Modify',
               onPressed: () => _editScheduled(call),
             ),
             IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              icon: const Icon(Icons.delete_outline_rounded),
               tooltip: 'Cancel call',
               onPressed: () => _cancelScheduled(call),
             ),
@@ -618,7 +608,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       children: [
         Text(
           t.ringSound,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -652,7 +642,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       children: [
         Text(
           t.chooseScenario,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
         SingleChildScrollView(
@@ -663,7 +653,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: FilterChip(
-                  label: Text(scenario.name, style: const TextStyle(fontSize: 12)),
+                  label: Text(scenario.name),
                   selected: isSelected,
                   onSelected: (_) => _selectScenario(scenario),
                   showCheckmark: isSelected,
@@ -678,12 +668,13 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 _selectedScenario!.description,
-                style: const TextStyle(fontSize: 13, color: Colors.black54),
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
             ),
           ),
@@ -699,12 +690,12 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       children: [
         Text(
           t.chooseCaller,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'Tap to pick. Long-press your own callers to edit or delete.',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -759,7 +750,8 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
+              leading: Icon(Icons.delete_outline_rounded,
+                  color: Theme.of(context).colorScheme.error),
               title: const Text('Delete'),
               onTap: () {
                 Navigator.pop(ctx);
@@ -780,7 +772,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       children: [
         Text(
           t.phoneNumberOptional,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
         TextField(
@@ -805,7 +797,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       children: [
         Text(
           t.whatToSay,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
         TextField(
@@ -830,14 +822,14 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       children: [
         Text(
           t.callDelay,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
 
         // Quick preset buttons
         Text(
           t.quickPresets,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -846,7 +838,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
           children: _delayPresets.map((seconds) {
             final isSelected = seconds == _selectedDelaySeconds;
             return ChoiceChip(
-              label: Text(_formatDelay(seconds, t), style: const TextStyle(fontSize: 12)),
+              label: Text(_formatDelay(seconds, t)),
               selected: isSelected,
               onSelected: (_) {
                 setState(() {
@@ -863,7 +855,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
         // Custom delay input
         Text(
           t.orCustomTime,
-          style: const TextStyle(fontSize: 12, color: Colors.black54),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
         Row(
@@ -920,7 +912,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       children: [
         Text(
           t.advancedOptions,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 12),
 

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
+
 /// A built-in, OFFLINE guide of safety and basic first-aid tips. All the text
 /// is stored inside the app, so it works with no internet and no cost.
 ///
@@ -85,45 +88,34 @@ class SafetyTipsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Safety & first aid')),
       body: ListView(
-        padding: const EdgeInsets.all(12),
+        padding: EdgeInsets.fromLTRB(
+            16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
         children: [
-          Card(
-            color: Colors.amber.shade50,
-            child: const Padding(
-              padding: EdgeInsets.all(12),
-              child: Text(
-                'General guidance only. In a real emergency, call your local '
-                'emergency number (112 in India) first.',
-                style: TextStyle(color: Colors.black87),
-              ),
-            ),
+          const NoticeCard(
+            tone: Tone.warning,
+            message: 'General guidance only. In a real emergency, call your '
+                'local emergency number (112 in India) first.',
           ),
-          const SizedBox(height: 8),
-          ..._tips.map((tip) {
-            return Card(
+          const SizedBox(height: 16),
+          for (final tip in _tips)
+            Card(
+              margin: const EdgeInsets.only(bottom: 12),
               child: ExpansionTile(
-                leading: Icon(tip.icon, color: Colors.deepPurple),
-                title: Text(
-                  tip.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                childrenPadding:
-                    const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                shape: const Border(),
+                collapsedShape: const Border(),
+                leading: IconBadge(icon: tip.icon, size: 40),
+                title: Text(tip.title, style: theme.textTheme.titleSmall),
+                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                expandedCrossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      tip.body,
-                      style: const TextStyle(fontSize: 15, height: 1.4),
-                    ),
-                  ),
+                  Text(tip.body, style: theme.textTheme.bodyLarge),
                 ],
               ),
-            );
-          }),
+            ),
         ],
       ),
     );

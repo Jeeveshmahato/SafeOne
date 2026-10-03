@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 
 import '../l10n/app_localizations.dart';
@@ -96,14 +97,11 @@ class _OngoingCallScreenState extends State<OngoingCallScreen> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF12303B), Color(0xFF0A0A0A)],
-          ),
-        ),
+      // Solid near-black like the stock phone-call screen, in both themes so
+      // the fake call always looks real.
+      backgroundColor: const Color(0xFF121212),
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
         child: SafeArea(
           child: Column(
             children: [

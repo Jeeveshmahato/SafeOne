@@ -4,32 +4,32 @@
   "settingsTitle": "Settings",
   "language": "Language",
   "languageSubtitle": "Choose your preferred language",
-  "fakeCallTitle": "Fake Call",
+  "fakeCallTitle": "Fake call",
   "fakeCallHeader": "Create a fake incoming call to help you leave an unsafe situation. The call looks realistic and gives you a reason to step away.",
-  "chooseScenario": "Choose a Scenario",
-  "chooseCaller": "Choose a Caller",
-  "phoneNumberOptional": "Phone Number (Optional)",
+  "chooseScenario": "Choose a scenario",
+  "chooseCaller": "Choose a caller",
+  "phoneNumberOptional": "Phone number (optional)",
   "phoneHint": "e.g. +91 98765 43210",
   "phoneHelper": "Shows on the fake call screen for realism",
-  "whatToSay": "What to Say (If They Pick Up)",
+  "whatToSay": "What to say (if they pick up)",
   "whatToSayHint": "e.g. I'm on an important call, give me a moment.",
   "whatToSayHelper": "Quick message to say if caller picks up by accident",
-  "callDelay": "Call Delay",
-  "quickPresets": "Quick Presets",
-  "orCustomTime": "Or Enter Custom Time",
+  "callDelay": "Call delay",
+  "quickPresets": "Quick presets",
+  "orCustomTime": "Or enter a custom time",
   "hours": "Hours",
   "minutes": "Minutes",
   "seconds": "Seconds",
-  "advancedOptions": "Advanced Options",
-  "repeatCall": "Repeat Call",
+  "advancedOptions": "Advanced options",
+  "repeatCall": "Repeat call",
   "repeatCallSubtitle": "Call keeps \"ringing\" if you decline it",
-  "autoEndCall": "Auto-End Call",
+  "autoEndCall": "Auto-end call",
   "autoEndCallSubtitle": "Call ends automatically after a set time",
   "endAfter": "End after:",
-  "ringSound": "Ring Sound",
+  "ringSound": "Ring sound",
   "ringSoundPhone": "Phone ring",
   "ringSoundSiren": "Police siren",
-  "startFakeCall": "Start Fake Call",
+  "startFakeCall": "Start fake call",
   "now": "Now",
   "callInCountdown": "Call in {seconds}",
   "@callInCountdown": {
@@ -43,11 +43,15 @@
   "fakeCallScheduledTitle": "Call scheduled",
   "fakeCallScheduledHint": "The call will ring in {time}, even if you lock your phone or close the app. Grant the notification and full-screen permissions if asked.",
   "@fakeCallScheduledHint": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "cancel": "Cancel",
   "incomingCall": "Incoming call…",
-  "callEnded": "Call Ended",
+  "callEnded": "Call ended",
   "decline": "Decline",
   "accept": "Accept",
   "close": "Close",
@@ -63,7 +67,7 @@
   "mute": "Mute",
   "speaker": "Speaker",
   "keypad": "Keypad",
-  "endCall": "End Call",
+  "endCall": "End call",
   "secondsShort": "{count} sec",
   "@secondsShort": {
     "placeholders": {
@@ -128,13 +132,12 @@
   "tileSafetyLog": "Safety log",
   "tileEmergencyId": "Emergency ID",
   "tilePoliceSos": "Police SOS",
-  "tileWhatToDo": "What To Do",
-  "tileIndiaHelp": "India Help",
-  "tileJourneySafe": "Journey Safe",
-  "tileQrCard": "QR Card",
-  "tileLocationPing": "Location Ping",
-  "tileDangerZones": "Danger Zones",
-
+  "tileWhatToDo": "What to do",
+  "tileIndiaHelp": "India help",
+  "tileJourneySafe": "Journey safe",
+  "tileQrCard": "QR card",
+  "tileLocationPing": "Location ping",
+  "tileDangerZones": "Danger zones",
   "sectionGetHelp": "Get help",
   "sectionShareTrack": "Share & track",
   "sectionMyInfo": "My info",
@@ -142,27 +145,34 @@
   "tileLiveTracking": "Live tracking",
   "tileEmergencyProfile": "Emergency profile",
   "tileRecords": "Records",
-  "tileSafetyCheckin": "Safety check-in",
+  "tileSafetyCheckin": "Check-in timer",
   "quickActions": "Quick actions",
   "homeSilentSosHint": "Long-press SOS to send silently (no sound or buzz).",
   "silentSosSent": "Silent alert sent to {count} contact(s).",
   "@silentSosSent": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "sosLiveBannerActive": "Sharing your live location with contacts",
   "sosLiveStop": "Stop sharing",
   "sosLiveStarted": "Live location sharing started. Tap \"I'm safe\" to stop.",
   "sosLiveStopped": "Live location sharing stopped.",
-
   "lockTitle": "Enter PIN",
   "lockSubtitle": "Enter your PIN to unlock",
   "lockWrongPin": "Wrong PIN. Try again.",
   "lockTooManyAttempts": "Too many attempts. Wait {seconds}s.",
   "@lockTooManyAttempts": {
-    "placeholders": { "seconds": { "type": "int" } }
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
   },
   "lockUseBiometric": "Use fingerprint / face",
-  "lockBiometricReason": "Unlock Women Safety",
+  "lockBiometricReason": "Unlock SafeOne",
   "pinSetTitle": "Set a PIN",
   "pinSetSubtitle": "This PIN protects your contacts, medical info and records.",
   "pinCreateStep": "Create a 6-digit PIN",
@@ -172,7 +182,6 @@
   "pinSaved": "PIN saved.",
   "pinChangeTitle": "Change PIN",
   "pinCurrentStep": "Enter your current PIN",
-
   "securitySection": "Security",
   "securityChangePin": "Change PIN",
   "securityBiometric": "Unlock with fingerprint / face",
@@ -181,7 +190,11 @@
   "securityAutoLockImmediate": "Immediately",
   "securityAutoLockGrace": "After {seconds}s in background",
   "@securityAutoLockGrace": {
-    "placeholders": { "seconds": { "type": "int" } }
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
   },
   "securitySilentSos": "Silent SOS",
   "securitySilentSosSubtitle": "No vibration confirmation when sending SOS.",
@@ -189,13 +202,16 @@
   "securityLiveUpdatesSubtitle": "Keep sending your location to contacts until you tap \"I'm safe\".",
   "securityVolumeTrigger": "Triple-press volume to send SOS",
   "securityVolumeTriggerSubtitle": "Press a volume button 3 times quickly to start the SOS.",
-
   "checkinScheduleTitle": "Auto-alert if I don't check in",
   "checkinScheduleSubtitle": "If you don't tap \"I'm safe\" before the deadline, your contacts are alerted automatically.",
   "checkinSetDeadline": "Alert my contacts in",
   "checkinActive": "Active — alert at {time}",
   "@checkinActive": {
-    "placeholders": { "time": { "type": "String" } }
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "checkinStart": "Start check-in",
   "checkinImSafe": "I'm safe — cancel",
@@ -203,12 +219,11 @@
   "checkinFired": "You didn't check in. Alerting your contacts.",
   "checkinReminderTitle": "Safety check-in due",
   "checkinReminderBody": "Tap \"I'm safe\" or your contacts will be alerted.",
-
   "tabFollowMe": "Follow me",
   "tabJourney": "Journey",
   "tabBuddy": "Buddy",
   "tabPing": "Ping",
-  "tabEmergencyId": "ID",
+  "tabEmergencyId": "Medical ID",
   "tabMedical": "Medical",
   "tabQr": "QR card",
   "tabIncidents": "Incidents",
@@ -220,7 +235,6 @@
   "tabWhatToDo": "What to do",
   "tabAllContacts": "All",
   "tabQuick": "Quick",
-
   "homeContactsSaved": "{count} emergency contact(s) saved.",
   "@homeContactsSaved": {
     "placeholders": {
@@ -228,5 +242,61 @@
         "type": "int"
       }
     }
-  }
+  },
+  "homeTagline": "Help is one tap away",
+  "homeContactsReady": "{count, plural, =1{1 contact will be alerted} other{{count} contacts will be alerted}}",
+  "@homeContactsReady": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "homeAddContactsTitle": "Add your emergency contacts",
+  "homeAddContactsAction": "Add contacts",
+  "sosButtonCaption": "Tap to alert  ·  Hold for silent SOS",
+  "sosButtonSemantics": "Send SOS alert. Long-press to send silently.",
+  "sosSending": "Sending…",
+  "tileReportPortals": "Report & portals",
+  "errorNoContacts": "Please add at least one emergency contact first.",
+  "errorNoFlashlight": "This phone has no flashlight.",
+  "errorMicDenied": "Microphone permission denied.",
+  "recordingStarted": "Recording started.",
+  "recordingSaved": "Recording saved to this phone.",
+  "recordingStopped": "Recording stopped.",
+  "sosCountdownTitle": "Sending SOS",
+  "sosCountdownBody": "Your location will be sent to your emergency contacts.",
+  "sosCountdownHint": "Tap Cancel if this was a mistake.",
+  "sosSendNow": "Send now",
+  "settingsSectionGeneral": "General",
+  "settingsSectionSos": "SOS alert",
+  "settingsSectionTriggers": "Hands-free SOS",
+  "settingsSectionAbout": "About",
+  "settingsCountdownTitle": "SOS countdown",
+  "settingsCountdownSubtitle": "How long you have to cancel before the SOS is sent.",
+  "settingsShakeTitle": "Shake to send SOS",
+  "settingsShakeSubtitle": "Shaking the phone starts the SOS countdown.",
+  "settingsPowerTitle": "Power button SOS",
+  "settingsPowerSubtitle": "Pressing the power button 3 times quickly starts the SOS.",
+  "settingsSafetyModeNote": "Safety mode runs in the background so these triggers work even when your phone is locked. You'll see a \"Safety mode active\" notification while it's on.",
+  "settingsMessageTitle": "SOS message",
+  "settingsMessageSubtitle": "Sent to your contacts. Keep {token} where the map link should appear.",
+  "@settingsMessageSubtitle": {
+    "placeholders": {
+      "token": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsMessageHint": "Type your emergency message…",
+  "settingsPrivacyPolicy": "Privacy policy",
+  "settingsPrivacySubtitle": "Your data never leaves this phone",
+  "settingsSupport": "Contact support",
+  "settingsMadeBy": "SafeOne by Tejovan Labs",
+  "homeAddContactsBody": "When you press SOS, they get an SMS with your live location.",
+  "homeLocationTitle": "Allow location access",
+  "homeLocationBody": "So your SOS includes a map link to where you are. Do it now, not during an emergency.",
+  "homeLocationAction": "Allow location",
+  "homeLocationSettings": "Open settings",
+  "homeTools": "Safety tools"
 }

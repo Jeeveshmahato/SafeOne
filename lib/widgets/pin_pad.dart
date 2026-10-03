@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// A self-contained PIN entry widget: a row of dots showing how many digits
 /// have been typed, plus a numeric keypad. It deliberately does NOT use the
@@ -46,13 +47,19 @@ class PinPad extends StatefulWidget {
   State<PinPad> createState() => _PinPadState();
 }
 
-class _PinPadState extends State<PinPad> {
+class _PinPadState extends State<PinPad> with SingleTickerProviderStateMixin {
   final Random _rng = Random.secure();
 
   /// The 10 digit characters in display order. Index 0-8 fill the 3×3 grid,
   /// index 9 sits in the bottom-middle slot (so 0 is shuffled too, not always
   /// in a known place).
   late List<String> _keys = _buildKeys();
+
+  /// Shakes the dots sideways when a new error appears (wrong PIN).
+  late final AnimationController _shake = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+  );
 
   List<String> _buildKeys() {
     if (!widget.scramble) {
@@ -73,54 +80,93 @@ class _PinPadState extends State<PinPad> {
     if (oldWidget.scramble != widget.scramble || newAttempt) {
       setState(() => _keys = _buildKeys());
     }
+    if (widget.errorText != null && widget.errorText != oldWidget.errorText) {
+      HapticFeedback.heavyImpact();
+      _shake.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _shake.dispose();
+    super.dispose();
   }
 
   void _press(String digit) {
     if (widget.value.length >= widget.maxLength) return;
+    HapticFeedback.selectionClick();
     widget.onChanged(widget.value + digit);
   }
 
   void _backspace() {
     if (widget.value.isEmpty) return;
+    HapticFeedback.selectionClick();
     widget.onChanged(widget.value.substring(0, widget.value.length - 1));
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final hasError = widget.errorText != null;
+    final dotColor = hasError ? scheme.error : scheme.primary;
     final canSubmit =
         widget.onSubmit != null && widget.value.length >= widget.minLength;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // The dots.
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < widget.maxLength; i++)
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: i < widget.value.length ? color : Colors.transparent,
-                  border: Border.all(color: color, width: 2),
-                ),
-              ),
-          ],
+        // The dots, which shake on a wrong PIN.
+        AnimatedBuilder(
+          animation: _shake,
+          builder: (context, child) => Transform.translate(
+            offset: Offset(sin(_shake.value * pi * 6) * 10 * (1 - _shake.value), 0),
+            child: child,
+          ),
+          child: Semantics(
+            label: '${widget.value.length} / ${widget.maxLength}',
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                for (var i = 0; i < widget.maxLength; i++)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    curve: Curves.easeOut,
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    width: i < widget.value.length ? 16 : 14,
+                    height: i < widget.value.length ? 16 : 14,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: i < widget.value.length
+                          ? dotColor
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: i < widget.value.length
+                            ? dotColor
+                            : scheme.outline,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         SizedBox(
           height: 24,
-          child: widget.errorText == null
+          child: !hasError
               ? null
-              : Text(
-                  widget.errorText!,
-                  style: const TextStyle(color: Colors.red, fontSize: 14),
+              : Semantics(
+                  liveRegion: true,
+                  child: Text(
+                    widget.errorText!,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium!
+                        .copyWith(color: scheme.error),
+                  ),
                 ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         // The keypad: the 3×3 grid uses the (possibly scrambled) first 9 keys.
         for (var row = 0; row < 3; row++)
           Row(
@@ -136,11 +182,24 @@ class _PinPadState extends State<PinPad> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             canSubmit
-                ? _iconKey(Icons.check_circle, widget.onSubmit!,
-                    color: Colors.green)
-                : const SizedBox(width: 72, height: 72),
+                ? _KeyButton(
+                    onTap: widget.onSubmit!,
+                    background: scheme.primary,
+                    semanticLabel:
+                        MaterialLocalizations.of(context).okButtonLabel,
+                    child: Icon(Icons.arrow_forward_rounded,
+                        size: 30, color: scheme.onPrimary),
+                  )
+                : const SizedBox(width: _KeyButton.size + 16),
             _key(_keys[9], () => _press(_keys[9])),
-            _iconKey(Icons.backspace_outlined, _backspace),
+            _KeyButton(
+              onTap: _backspace,
+              background: Colors.transparent,
+              semanticLabel:
+                  MaterialLocalizations.of(context).deleteButtonTooltip,
+              child: Icon(Icons.backspace_outlined,
+                  size: 26, color: scheme.onSurfaceVariant),
+            ),
           ],
         ),
       ],
@@ -149,31 +208,52 @@ class _PinPadState extends State<PinPad> {
 
   Widget _key(String label, VoidCallback onTap) {
     return _KeyButton(
-        onTap: onTap, child: Text(label, style: const TextStyle(fontSize: 28)));
-  }
-
-  Widget _iconKey(IconData icon, VoidCallback onTap, {Color? color}) {
-    return _KeyButton(onTap: onTap, child: Icon(icon, size: 28, color: color));
+      onTap: onTap,
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.headlineMedium!.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+    );
   }
 }
 
 class _KeyButton extends StatelessWidget {
-  const _KeyButton({required this.onTap, required this.child});
+  const _KeyButton({
+    required this.onTap,
+    required this.child,
+    this.background,
+    this.semanticLabel,
+  });
+
+  static const double size = 76;
 
   final VoidCallback onTap;
   final Widget child;
+  final Color? background;
+  final String? semanticLabel;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.all(6),
-      child: InkResponse(
-        onTap: onTap,
-        radius: 40,
-        child: SizedBox(
-          width: 72,
-          height: 72,
-          child: Center(child: child),
+      padding: const EdgeInsets.all(8),
+      child: Semantics(
+        button: true,
+        label: semanticLabel,
+        child: Material(
+          color: background ?? scheme.surfaceContainerHigh,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onTap,
+            child: SizedBox(
+              width: size,
+              height: size,
+              child: Center(child: child),
+            ),
+          ),
         ),
       ),
     );

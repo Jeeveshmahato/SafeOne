@@ -8,6 +8,8 @@ import '../services/location_service.dart';
 import '../services/sms_service.dart';
 import '../services/sos_service.dart';
 import '../widgets/duration_field.dart';
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
 
 /// Track your journey to a destination. The app monitors your ETA and sends
 /// periodic location updates to your contacts. If time expires without you
@@ -180,12 +182,8 @@ class _JourneySafeScreenState extends State<JourneySafeScreen> {
       _journeyActive = false;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(result.message),
-        backgroundColor: result.success ? Colors.green : Colors.red,
-      ),
-    );
+    showAppSnack(context, result.message,
+        tone: result.success ? Tone.success : Tone.danger);
   }
 
   String _formatTime(int seconds) {
@@ -196,203 +194,154 @@ class _JourneySafeScreenState extends State<JourneySafeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final sc = context.safety;
     final totalSeconds = _eta.inSeconds;
     final remainingSeconds = totalSeconds - _elapsedSeconds;
     final isExpired = remainingSeconds <= 0;
     final progressValue =
-        totalSeconds > 0 ? _elapsedSeconds / totalSeconds : 0.0;
+        totalSeconds > 0 ? (_elapsedSeconds / totalSeconds).clamp(0.0, 1.0) : 0.0;
+    final statusColor = isExpired ? sc.sos : scheme.primary;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Journey Safe'),
-        elevation: 0,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (!_journeyActive) ...[
-              // Input section
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Set your journey details',
-                        style: Theme.of(context).textTheme.titleMedium,
+      appBar: AppBar(title: const Text('Journey')),
+      body: ListView(
+        padding: EdgeInsets.fromLTRB(
+            16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
+        children: [
+          if (!_journeyActive) ...[
+            Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Journey details', style: theme.textTheme.titleMedium),
+                    const SizedBox(height: 16),
+                    TextField(
+                      onChanged: (value) {
+                        setState(() => _destination = value);
+                      },
+                      textCapitalization: TextCapitalization.sentences,
+                      decoration: const InputDecoration(
+                        labelText: 'Destination',
+                        hintText: 'e.g. Home, Work, Station',
+                        prefixIcon: Icon(Icons.place_outlined),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        onChanged: (value) {
-                          setState(() => _destination = value);
-                        },
-                        decoration: InputDecoration(
-                          labelText: 'Destination',
-                          hintText: 'e.g. Home, Work, Station',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          prefixIcon: const Icon(Icons.location_on),
-                        ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text('Expected time to arrive',
+                        style: theme.textTheme.titleSmall),
+                    const SizedBox(height: 8),
+                    DurationField(
+                      initial: _eta,
+                      initialUnit: TimeUnit.minutes,
+                      onChanged: (d) => _eta = d,
+                    ),
+                    const SizedBox(height: 20),
+                    Text('Send location updates every',
+                        style: theme.textTheme.titleSmall),
+                    const SizedBox(height: 8),
+                    DurationField(
+                      initial: _pingInterval,
+                      initialUnit: TimeUnit.minutes,
+                      onChanged: (d) => _pingInterval = d,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: _startJourney,
+                        icon: const Icon(Icons.play_arrow_rounded),
+                        label: const Text('Start journey'),
                       ),
-                      const SizedBox(height: 16),
-                      const Text('Expected time to arrive:'),
-                      const SizedBox(height: 8),
-                      DurationField(
-                        initial: _eta,
-                        initialUnit: TimeUnit.minutes,
-                        onChanged: (d) => _eta = d,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text('Send location updates every:'),
-                      const SizedBox(height: 8),
-                      DurationField(
-                        initial: _pingInterval,
-                        initialUnit: TimeUnit.minutes,
-                        onChanged: (d) => _pingInterval = d,
-                      ),
-                      const SizedBox(height: 16),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: _startJourney,
-                          icon: const Icon(Icons.play_arrow),
-                          label: const Text('Start Journey'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: Colors.blue[400],
-                        size: 32,
+            ),
+            const SizedBox(height: 16),
+            const NoticeCard(
+              tone: Tone.info,
+              title: 'How it works',
+              message: '• Your contacts get location updates at the interval '
+                  'you choose\n'
+                  '• Tap "I arrived" when you reach your destination\n'
+                  '• If time runs out without confirmation, an SOS is sent '
+                  'automatically',
+            ),
+          ] else ...[
+            Card(
+              margin: EdgeInsets.zero,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      _destination.trim().isEmpty
+                          ? 'Journey in progress'
+                          : 'Journey to $_destination',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      isExpired ? 'Time expired' : 'Time remaining',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.labelLarge!
+                          .copyWith(color: statusColor),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatTime(remainingSeconds.clamp(0, totalSeconds)),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.displayMedium!.copyWith(
+                        color: statusColor,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'How it works',
-                        style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 16),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: progressValue,
+                        minHeight: 8,
+                        color: statusColor,
+                        backgroundColor: scheme.surfaceContainerHighest,
                       ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        '• Location updates sent to your contacts every few minutes\n'
-                        '• Tap "I Arrived" when you reach your destination\n'
-                        '• If time runs out without confirmation, SOS is automatically sent\n'
-                        '• Perfect for commutes and travel',
-                        style: TextStyle(fontSize: 13),
-                      ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Elapsed ${_formatTime(_elapsedSeconds)}',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
                 ),
               ),
-            ] else ...[
-              // Active journey section
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      Text(
-                        'Journey to $_destination',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 20),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: LinearProgressIndicator(
-                          value: progressValue,
-                          minHeight: 10,
-                          backgroundColor: Colors.grey[300],
-                          valueColor: AlwaysStoppedAnimation(
-                            isExpired ? Colors.red : Colors.green,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: isExpired
-                              ? Colors.red[50]
-                              : Colors.blue[50],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          children: [
-                            Text(
-                              isExpired ? 'TIME EXPIRED' : 'TIME REMAINING',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall!
-                                  .copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: isExpired
-                                        ? Colors.red[700]
-                                        : Colors.blue[700],
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _formatTime(remainingSeconds.clamp(0, totalSeconds)),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .displaySmall!
-                                  .copyWith(
-                                    color: isExpired ? Colors.red : Colors.green,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Elapsed: ${_formatTime(_elapsedSeconds)}',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: _cancelJourney,
-                              icon: const Icon(Icons.close),
-                              label: const Text('Cancel'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: _markArrived,
-                              icon: const Icon(Icons.check_circle),
-                              label: const Text('I Arrived'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: sc.success,
+                foregroundColor: scheme.surface,
+                minimumSize: const Size.fromHeight(56),
               ),
-            ],
+              onPressed: _markArrived,
+              icon: const Icon(Icons.check_rounded),
+              label: const Text('I arrived'),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _cancelJourney,
+              icon: const Icon(Icons.close_rounded),
+              label: const Text('Cancel journey'),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

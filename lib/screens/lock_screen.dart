@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/app_lock_service.dart';
+import '../widgets/app_ui.dart';
 import '../widgets/pin_pad.dart';
 
 /// The screen shown whenever the app is locked. The user types their PIN (or
@@ -107,25 +108,29 @@ class _LockScreenState extends State<LockScreen> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final lockedOut = _lockoutSeconds > 0;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.shield_outlined, size: 56),
-                const SizedBox(height: 16),
+                const AppLogo(size: 64),
+                const SizedBox(height: 20),
                 Text(
                   t.lockTitle,
-                  style: const TextStyle(
-                      fontSize: 22, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   t.lockSubtitle,
-                  style: const TextStyle(color: Colors.black54),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium!
+                      .copyWith(color: scheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 32),
                 PinPad(
@@ -139,9 +144,9 @@ class _LockScreenState extends State<LockScreen> {
                 ),
                 if (_biometricAvailable) ...[
                   const SizedBox(height: 16),
-                  TextButton.icon(
+                  FilledButton.tonalIcon(
                     onPressed: _authenticateBiometric,
-                    icon: const Icon(Icons.fingerprint),
+                    icon: const Icon(Icons.fingerprint_rounded),
                     label: Text(t.lockUseBiometric),
                   ),
                 ],

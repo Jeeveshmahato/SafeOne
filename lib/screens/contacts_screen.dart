@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/emergency_contact.dart';
 import '../services/contacts_repository.dart';
+import '../widgets/app_ui.dart';
 
 /// Screen where the user adds, views, and deletes emergency contacts.
 ///
@@ -51,17 +52,26 @@ class _ContactsScreenState extends State<ContactsScreen> {
               children: [
                 TextFormField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
+                  autofocus: true,
+                  textCapitalization: TextCapitalization.words,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    prefixIcon: Icon(Icons.person_outline_rounded),
+                  ),
                   validator: (value) =>
                       (value == null || value.trim().isEmpty)
                           ? 'Please enter a name'
                           : null,
                 ),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration:
-                      const InputDecoration(labelText: 'Phone number'),
+                  decoration: const InputDecoration(
+                    labelText: 'Phone number',
+                    prefixIcon: Icon(Icons.call_outlined),
+                  ),
                   validator: (value) =>
                       (value == null || value.trim().isEmpty)
                           ? 'Please enter a phone number'
@@ -75,7 +85,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
               onPressed: () => Navigator.pop(context, false),
               child: const Text('Cancel'),
             ),
-            ElevatedButton(
+            FilledButton(
+              style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
               onPressed: () {
                 // Only close with "true" if the form is valid.
                 if (formKey.currentState!.validate()) {
@@ -100,47 +111,85 @@ class _ContactsScreenState extends State<ContactsScreen> {
   }
 
   Future<void> _deleteContact(int index) async {
+    final removed = _contacts[index];
     setState(() {
       _contacts = [..._contacts]..removeAt(index);
     });
     await _repository.saveContacts(_contacts);
+    if (!mounted) return;
+    // Removing someone from the SOS list must be easy to undo.
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text('${removed.name} removed'),
+        action: SnackBarAction(
+          label: 'Undo',
+          onPressed: () async {
+            final restored = [..._contacts]
+              ..insert(index.clamp(0, _contacts.length), removed);
+            setState(() => _contacts = restored);
+            await _repository.saveContacts(restored);
+          },
+        ),
+      ));
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Emergency contacts')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _showAddDialog,
-        icon: const Icon(Icons.add),
-        label: const Text('Add'),
+        icon: const Icon(Icons.person_add_alt_1_rounded),
+        label: const Text('Add contact'),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _contacts.isEmpty
-              ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text(
-                      'No contacts yet.\nTap "Add" to add someone who should '
-                      'be alerted in an emergency.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16),
-                    ),
+              ? EmptyState(
+                  icon: Icons.group_add_outlined,
+                  title: 'No emergency contacts yet',
+                  message: 'Add the people who should get your SOS alert '
+                      'and live location.',
+                  action: FilledButton.icon(
+                    onPressed: _showAddDialog,
+                    icon: const Icon(Icons.person_add_alt_1_rounded),
+                    label: const Text('Add contact'),
                   ),
                 )
-              : ListView.separated(
+              : ListView.builder(
+                  // Room at the bottom so the FAB never covers a contact.
+                  padding: EdgeInsets.fromLTRB(
+                      16, 8, 16, 96 + MediaQuery.paddingOf(context).bottom),
                   itemCount: _contacts.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final contact = _contacts[index];
-                    return ListTile(
-                      leading: const CircleAvatar(child: Icon(Icons.person)),
-                      title: Text(contact.name),
-                      subtitle: Text(contact.phone),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteContact(index),
+                    final name = contact.name.trim();
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
+                        leading: CircleAvatar(
+                          radius: 22,
+                          backgroundColor: scheme.secondaryContainer,
+                          foregroundColor: scheme.onSecondaryContainer,
+                          child: Text(
+                            name.isEmpty
+                                ? '?'
+                                : name.characters.first.toUpperCase(),
+                            style: theme.textTheme.titleMedium!
+                                .copyWith(color: scheme.onSecondaryContainer),
+                          ),
+                        ),
+                        title: Text(contact.name),
+                        subtitle: Text(contact.phone),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded),
+                          tooltip: 'Remove ${contact.name}',
+                          onPressed: () => _deleteContact(index),
+                        ),
                       ),
                     );
                   },

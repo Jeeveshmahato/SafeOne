@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../theme/app_theme.dart';
+import '../widgets/app_ui.dart';
+
 /// A list of important emergency phone numbers the user can call with one tap.
 ///
 /// Tapping a number opens the phone's normal dialer with the number filled in
@@ -24,15 +27,16 @@ class HelplineScreen extends StatelessWidget {
     (name: 'Cyber Crime', number: '1930', icon: Icons.computer),
   ];
 
-  /// Open the dialer with the chosen number.
+  /// Open the dialer with the chosen number. Launches directly: asking
+  /// `canLaunchUrl` first can wrongly report false on Android 11+.
   Future<void> _dial(BuildContext context, String number) async {
-    final Uri uri = Uri(scheme: 'tel', path: number);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not open dialer for $number')),
-      );
+    var ok = false;
+    try {
+      ok = await launchUrl(Uri(scheme: 'tel', path: number));
+    } catch (_) {}
+    if (!ok && context.mounted) {
+      showAppSnack(context, 'Could not open dialer for $number',
+          tone: Tone.danger);
     }
   }
 
@@ -40,17 +44,31 @@ class HelplineScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Emergency helplines')),
-      body: ListView.separated(
+      body: ListView.builder(
+        padding: EdgeInsets.fromLTRB(
+            16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
         itemCount: _helplines.length,
-        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final line = _helplines[index];
-          return ListTile(
-            leading: CircleAvatar(child: Icon(line.icon)),
-            title: Text(line.name),
-            subtitle: Text(line.number),
-            trailing: const Icon(Icons.call, color: Colors.green),
-            onTap: () => _dial(context, line.number),
+          return Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: ListTile(
+              contentPadding: const EdgeInsets.fromLTRB(16, 6, 12, 6),
+              leading: IconBadge(icon: line.icon),
+              title: Text(line.name),
+              subtitle: Text(
+                line.number,
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+              ),
+              trailing: IconButton.filledTonal(
+                icon: const Icon(Icons.call_rounded),
+                tooltip: 'Call ${line.number}',
+                onPressed: () => _dial(context, line.number),
+              ),
+              onTap: () => _dial(context, line.number),
+            ),
           );
         },
       ),
