@@ -140,11 +140,15 @@ class _ContactsScreenState extends State<ContactsScreen> {
     final scheme = theme.colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Emergency contacts')),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddDialog,
-        icon: const Icon(Icons.person_add_alt_1_rounded),
-        label: const Text('Add contact'),
-      ),
+      // The empty state has its own "Add contact" button; showing the FAB too
+      // would put two identical buttons on screen.
+      floatingActionButton: _loading || _contacts.isEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _showAddDialog,
+              icon: const Icon(Icons.person_add_alt_1_rounded),
+              label: const Text('Add contact'),
+            ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _contacts.isEmpty
