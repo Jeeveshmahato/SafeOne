@@ -35,7 +35,9 @@ class NotificationService {
   static const _checkinChannelId = 'safety_checkin';
   // Channel id is bumped when its settings change (Android locks a channel's
   // config after first creation).
-  static const _callChannelId = 'fake_call_v3';
+  // Old fake-call channel: it played the default *notification* sound, so a
+  // scheduled call chimed once instead of ringing. Deleted on init.
+  static const _legacyCallChannelId = 'fake_call_v3';
   static const _checkinId = 1001;
   static const _callId = 2001;
 
@@ -68,6 +70,10 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             IOSFlutterLocalNotificationsPlugin>()
         ?.requestPermissions(alert: true, badge: true, sound: true);
+
+    try {
+      await _android?.deleteNotificationChannel(_legacyCallChannelId);
+    } catch (_) {/* already gone */}
 
     _initialised = true;
   }
@@ -104,7 +110,8 @@ class NotificationService {
   Future<void> handleLaunch() async {
     final details = await _plugin.getNotificationAppLaunchDetails();
     if (details?.didNotificationLaunchApp ?? false) {
-      _route(details!.notificationResponse?.payload);
+      final response = details!.notificationResponse;
+      _route(response?.payload, notificationId: response?.id);
     }
   }
 
@@ -171,6 +178,7 @@ class NotificationService {
     required int ringIndex,
     required bool shouldRepeat,
     int? autoEndSeconds,
+    String? ringtoneUri,
   }) =>
       jsonEncode({
         'type': 'fake_call',
@@ -179,25 +187,61 @@ class NotificationService {
         'ring': ringIndex,
         'repeat': shouldRepeat,
         'autoEnd': autoEndSeconds,
+        'ringUri': ringtoneUri,
       });
 
-  /// The high-importance, full-screen "incoming call" notification config used
-  /// for both the immediate and the scheduled fake call.
-  NotificationDetails _callDetails() {
-    final vibration =
-        Int64List.fromList(const [0, 1000, 600, 1000, 600, 1000]);
+  /// Android plays the system default ringtone for this URI.
+  static const _defaultRingtoneUri = 'content://settings/system/ringtone';
+
+  /// A short, stable id for a sound, used to give each ring sound its own
+  /// notification channel (a channel's sound can't change once created).
+  static String _soundKey(String value) {
+    var hash = 0x811c9dc5; // FNV-1a, 32-bit
+    for (final unit in value.codeUnits) {
+      hash = ((hash ^ unit) * 0x01000193) & 0xffffffff;
+    }
+    return hash.toRadixString(16);
+  }
+
+  /// The full-screen "incoming call" notification. It rings with the chosen
+  /// sound on the *ringtone* stream and keeps ringing (FLAG_INSISTENT) until
+  /// answered or the 60 s timeout — like a real call, rather than playing a
+  /// one-off notification chime.
+  NotificationDetails _callDetails({
+    required int ringIndex,
+    String? ringtoneUri,
+  }) {
+    final siren = RingSound.values[ringIndex] == RingSound.policeSiren;
+    final AndroidNotificationSound sound;
+    final String channelId;
+    final String channelName;
+    if (siren) {
+      sound = const RawResourceAndroidNotificationSound('police_siren');
+      channelId = 'fake_call_siren_v1';
+      channelName = 'Fake call (police siren)';
+    } else {
+      final uri = ringtoneUri ?? _defaultRingtoneUri;
+      sound = UriAndroidNotificationSound(uri);
+      channelId = 'fake_call_ring_${_soundKey(uri)}';
+      channelName = 'Fake call (ringtone)';
+    }
+    const flagInsistent = 4; // Notification.FLAG_INSISTENT: loop the sound.
     return NotificationDetails(
       android: AndroidNotificationDetails(
-        _callChannelId,
-        'Incoming call',
-        channelDescription: 'Shows the scheduled fake incoming call.',
+        channelId,
+        channelName,
+        channelDescription: 'Rings for a scheduled fake incoming call.',
         importance: Importance.max,
         priority: Priority.high,
         category: AndroidNotificationCategory.call,
         fullScreenIntent: true,
         playSound: true,
+        sound: sound,
+        audioAttributesUsage: AudioAttributesUsage.notificationRingtone,
+        additionalFlags: Int32List.fromList(const [flagInsistent]),
         enableVibration: true,
-        vibrationPattern: vibration,
+        vibrationPattern:
+            Int64List.fromList(const [0, 1000, 600, 1000, 600, 1000]),
         visibility: NotificationVisibility.public,
         // Keep ringing/visible until the user answers or declines.
         ongoing: true,
@@ -225,14 +269,19 @@ class NotificationService {
     required int ringIndex,
     required bool shouldRepeat,
     int? autoEndSeconds,
+    String? ringtoneUri,
   }) async {
     await init();
+    // The OS rejects a time in the past; if it slipped (e.g. a slow prompt),
+    // ring a moment from now instead of not at all.
+    final earliest = DateTime.now().add(const Duration(seconds: 2));
+    final at = when.isAfter(earliest) ? when : earliest;
     await _plugin.zonedSchedule(
       id,
       callerName,
       'Incoming call…',
-      tz.TZDateTime.from(when, tz.local),
-      _callDetails(),
+      tz.TZDateTime.from(at, tz.local),
+      _callDetails(ringIndex: ringIndex, ringtoneUri: ringtoneUri),
       // alarmClock = the most reliable exact mode; fires through Doze and
       // shows up in the system as a user-facing alarm the OS won't defer.
       androidScheduleMode: AndroidScheduleMode.alarmClock,
@@ -244,6 +293,7 @@ class NotificationService {
         ringIndex: ringIndex,
         shouldRepeat: shouldRepeat,
         autoEndSeconds: autoEndSeconds,
+        ringtoneUri: ringtoneUri,
       ),
     );
   }
@@ -255,19 +305,21 @@ class NotificationService {
     required int ringIndex,
     required bool shouldRepeat,
     int? autoEndSeconds,
+    String? ringtoneUri,
   }) async {
     await init();
     await _plugin.show(
       _callId,
       callerName,
       'Incoming call…',
-      _callDetails(),
+      _callDetails(ringIndex: ringIndex, ringtoneUri: ringtoneUri),
       payload: _callPayload(
         callerName: callerName,
         callerPhone: callerPhone,
         ringIndex: ringIndex,
         shouldRepeat: shouldRepeat,
         autoEndSeconds: autoEndSeconds,
+        ringtoneUri: ringtoneUri,
       ),
     );
   }
@@ -281,10 +333,10 @@ class NotificationService {
 
   // Foreground/background tap.
   static void _onResponse(NotificationResponse response) {
-    instance._route(response.payload);
+    instance._route(response.payload, notificationId: response.id);
   }
 
-  void _route(String? payload) {
+  void _route(String? payload, {int? notificationId}) {
     if (payload == null || payload.isEmpty) return;
     Map<String, dynamic> data;
     try {
@@ -293,6 +345,10 @@ class NotificationService {
       return;
     }
     if (data['type'] != 'fake_call') return;
+
+    // The call screen takes over the ringing, so silence the notification's
+    // looping ringtone first (otherwise both would ring at once).
+    if (notificationId != null) _plugin.cancel(notificationId);
 
     final ringIndex = (data['ring'] as int?) ?? 0;
     final autoEnd = data['autoEnd'] as int?;
@@ -307,6 +363,7 @@ class NotificationService {
           shouldRepeat: (data['repeat'] as bool?) ?? false,
           autoEndSeconds: autoEnd,
           ringSound: RingSound.values[ringIndex],
+          ringtoneUri: data['ringUri'] as String?,
         ),
       ));
     }

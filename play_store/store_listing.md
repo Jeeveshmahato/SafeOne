@@ -12,7 +12,7 @@ SafeOne helps you get help fast and keeps the people you trust one tap away, eve
 Whether you're walking home late, travelling alone or taking a cab, SafeOne gives you quick ways to raise an alarm. Your data stays on your phone.
 
 🚨 SOS IN ONE TAP
-• Big SOS button gets an SMS with your live location ready for your emergency contacts
+• Big SOS button texts your live location to every emergency contact, automatically
 • Silent SOS: long-press to alert contacts with no sound or vibration
 • Countdown before sending, so you can cancel a false alarm
 
@@ -69,8 +69,8 @@ App (free), no in-app purchases, no ads.
 - Violence / sexual / profanity / drugs: None.
 - Does the app share user location with other users? → Yes, location can be
   shared with contacts the user selects (answer truthfully — this affects rating).
-- User-generated content / communication: the app composes SMS via the user's
-  own messaging app.
+- User-generated content / communication: the app sends SMS from the user's
+  phone to the user's own emergency contacts (no user-to-user content).
 → Likely rating: Everyone / PEGI 3.
 
 ## Required graphic assets (you must create these)

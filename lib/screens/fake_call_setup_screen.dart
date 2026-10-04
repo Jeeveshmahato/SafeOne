@@ -6,13 +6,16 @@ import '../l10n/app_localizations.dart';
 import '../models/call_scenario.dart';
 import '../models/fake_call_preset.dart';
 import '../models/scheduled_fake_call.dart';
+import '../services/device_ringtone.dart';
 import '../services/fake_caller_repository.dart';
 import '../services/notification_service.dart';
 import '../services/scheduled_call_repository.dart';
+import '../services/settings_repository.dart';
 import 'background_setup_screen.dart';
 import 'fake_call_screen.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_ui.dart';
+import '../widgets/reveal.dart';
 
 /// Enhanced fake call setup screen with preset callers, custom delays, and more.
 ///
@@ -106,7 +109,16 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
   int _autoEndSeconds = 60;
   RingSound _ringSound = RingSound.phoneRing;
 
+  /// Lets the auto-end duration picker scroll into view when it appears.
+  final GlobalKey _autoEndKey = GlobalKey();
+
   final ScheduledCallRepository _scheduleRepo = ScheduledCallRepository();
+  final SettingsRepository _settings = SettingsRepository();
+
+  /// The ringtone for "Phone ringtone" (content URI; null = phone default)
+  /// and its display name.
+  String? _ringtoneUri;
+  String? _ringtoneTitle;
   List<ScheduledFakeCall> _scheduled = [];
   // When non-null, the user is editing this already-scheduled call; pressing
   // "Start" replaces it instead of creating a new one.
@@ -124,6 +136,31 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
     _suggestionController.text = _selectedScenario!.suggestedMessage ?? '';
     _loadCustomCallers();
     _loadScheduled();
+    _loadRingtone();
+  }
+
+  Future<void> _loadRingtone() async {
+    final uri = await _settings.loadFakeCallRingtone();
+    final title = await DeviceRingtone.title(uri);
+    if (!mounted) return;
+    setState(() {
+      _ringtoneUri = uri;
+      _ringtoneTitle = title;
+    });
+  }
+
+  /// Opens the phone's ringtone picker and remembers the choice for future
+  /// fake calls.
+  Future<void> _pickRingtone() async {
+    final picked = await DeviceRingtone.pick(current: _ringtoneUri);
+    if (picked == null || !mounted) return;
+    await _settings.saveFakeCallRingtone(picked.uri);
+    if (!mounted) return;
+    setState(() {
+      _ringtoneUri = picked.uri;
+      _ringtoneTitle = picked.title;
+      _ringSound = RingSound.phoneRing;
+    });
   }
 
   Future<void> _loadScheduled() async {
@@ -315,6 +352,12 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       return;
     }
 
+    // Permission prompts can open system pages and take a while, so ask
+    // BEFORE working out the ring time. (Computing it first meant a short
+    // delay like "5 sec" was already in the past by the time the user tapped
+    // Allow, and the call silently never got scheduled.)
+    await NotificationService.instance.ensureCanRingWhenClosed();
+    if (!mounted) return;
     final when = DateTime.now().add(Duration(seconds: delaySeconds));
 
     // If editing, reuse the same id so the entry is replaced (and its old
@@ -332,22 +375,29 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       ringIndex: _ringSound.index,
       shouldRepeat: _enableRepeat,
       autoEndSeconds: _enableAutoEnd ? _autoEndSeconds : null,
+      ringtoneUri: _ringtoneUri,
     );
 
     // Goes straight to AlarmManager via zonedSchedule, so the OS delivers the
     // full-screen call notification natively even if the app is force-stopped —
-    // no background Dart isolate has to start. Permission prompts may briefly
-    // open a settings page, hence the await first.
-    await NotificationService.instance.ensureCanRingWhenClosed();
-    await NotificationService.instance.scheduleFakeCall(
-      id: call.id,
-      when: call.scheduledAt,
-      callerName: call.callerName,
-      callerPhone: call.callerPhone,
-      ringIndex: call.ringIndex,
-      shouldRepeat: call.shouldRepeat,
-      autoEndSeconds: call.autoEndSeconds,
-    );
+    // no background Dart isolate has to start.
+    try {
+      await NotificationService.instance.scheduleFakeCall(
+        id: call.id,
+        when: call.scheduledAt,
+        callerName: call.callerName,
+        callerPhone: call.callerPhone,
+        ringIndex: call.ringIndex,
+        shouldRepeat: call.shouldRepeat,
+        autoEndSeconds: call.autoEndSeconds,
+        ringtoneUri: call.ringtoneUri,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      showAppSnack(context, "Couldn't schedule the call. Please try again.",
+          tone: Tone.danger);
+      return;
+    }
     await _scheduleRepo.update(call);
 
     if (!mounted) return;
@@ -376,6 +426,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
           shouldRepeat: _enableRepeat,
           autoEndSeconds: _enableAutoEnd ? _autoEndSeconds : null,
           ringSound: _ringSound,
+          ringtoneUri: _ringtoneUri,
         ),
       ),
     );
@@ -411,6 +462,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       );
       _phoneController.text = call.callerPhone;
       _ringSound = RingSound.values[call.ringIndex];
+      if (call.ringtoneUri != null) _ringtoneUri = call.ringtoneUri;
       _enableRepeat = call.shouldRepeat;
       _enableAutoEnd = call.autoEndSeconds != null;
       if (call.autoEndSeconds != null) _autoEndSeconds = call.autoEndSeconds!;
@@ -603,26 +655,24 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
   /// Section for choosing what plays while the call rings.
   Widget _buildRingSoundSection() {
     final t = AppLocalizations.of(context);
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          t.ringSound,
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
+        Text(t.ringSound, style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           children: [
             ChoiceChip(
-              avatar: const Icon(Icons.vibration, size: 18),
+              avatar: const Icon(Icons.ring_volume_outlined, size: 18),
               label: Text(t.ringSoundPhone),
               selected: _ringSound == RingSound.phoneRing,
               onSelected: (_) =>
                   setState(() => _ringSound = RingSound.phoneRing),
             ),
             ChoiceChip(
-              avatar: const Icon(Icons.local_police, size: 18),
+              avatar: const Icon(Icons.local_police_outlined, size: 18),
               label: Text(t.ringSoundSiren),
               selected: _ringSound == RingSound.policeSiren,
               onSelected: (_) =>
@@ -630,9 +680,40 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
             ),
           ],
         ),
+        // Which ringtone plays — the phone's own by default; "Change" opens
+        // the system picker, which also offers "Add ringtone" for a custom
+        // sound file.
+        if (_ringSound == RingSound.phoneRing) ...[
+          const SizedBox(height: 12),
+          Card(
+            margin: EdgeInsets.zero,
+            child: ListTile(
+              contentPadding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+              leading: const Icon(Icons.music_note_outlined),
+              title: Text(t.fakeCallRingtone),
+              subtitle: Text(
+                _ringtoneTitle ??
+                    (_ringtoneUri == null ? t.fakeCallRingtoneDefault : '…'),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: TextButton(
+                onPressed: _pickRingtone,
+                child: Text(t.fakeCallRingtoneChange),
+              ),
+              onTap: _pickRingtone,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
+            child: Text(t.fakeCallRingtoneHint,
+                style: theme.textTheme.bodySmall),
+          ),
+        ],
       ],
     );
   }
+
 
   /// Section for selecting a call scenario.
   Widget _buildScenarioSection() {
@@ -931,7 +1012,16 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
           title: Text(t.autoEndCall),
           subtitle: Text(t.autoEndCallSubtitle),
           value: _enableAutoEnd,
-          onChanged: (value) => setState(() => _enableAutoEnd = value ?? false),
+          onChanged: (value) {
+            setState(() => _enableAutoEnd = value ?? false);
+            // The duration picker appears below; bring it into view.
+            if (_enableAutoEnd) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                final ctx = _autoEndKey.currentContext;
+                if (ctx != null) revealInScrollable(ctx);
+              });
+            }
+          },
           contentPadding: EdgeInsets.zero,
         ),
 
@@ -939,6 +1029,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
         if (_enableAutoEnd) ...[
           const SizedBox(height: 12),
           Padding(
+            key: _autoEndKey,
             padding: const EdgeInsets.only(left: 16),
             child: Row(
               children: [
@@ -954,7 +1045,9 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
                   dropdownMenuEntries: [30, 60, 120, 300, 600]
                       .map((sec) => DropdownMenuEntry(
                             value: sec,
-                            label: '${sec ~/ 60} min ${sec % 60} sec',
+                            label: sec < 60
+                                ? t.secondsShort(sec)
+                                : t.minutesShort(sec ~/ 60),
                           ))
                       .toList(),
                 ),

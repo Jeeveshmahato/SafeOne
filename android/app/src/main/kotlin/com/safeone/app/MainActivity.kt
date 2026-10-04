@@ -1,12 +1,16 @@
 package com.safeone.app
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.media.RingtoneManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
 import android.view.WindowManager
+import androidx.activity.result.contract.ActivityResultContracts
 import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -18,6 +22,33 @@ class MainActivity : FlutterFragmentActivity() {
     private var volumeChannel: MethodChannel? = null
 
     private val monitorChannelName = "women_safety/safety_monitor"
+    private val ringtoneChannelName = "com.safeone.app/ringtone"
+    private val smsChannelName = "com.safeone.app/sms"
+
+    // The system ringtone picker: lists the phone's ringtones and lets the
+    // user add their own sound file, with no storage permission needed.
+    private var pendingPick: MethodChannel.Result? = null
+    private val ringtonePicker =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+            val callback = pendingPick ?: return@registerForActivityResult
+            pendingPick = null
+            if (res.resultCode != Activity.RESULT_OK) {
+                callback.success(null) // cancelled
+                return@registerForActivityResult
+            }
+            @Suppress("DEPRECATION")
+            val uri: Uri? = res.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            if (uri == null) {
+                callback.success(mapOf("uri" to null, "title" to null))
+            } else {
+                callback.success(
+                    mapOf(
+                        "uri" to uri.toString(),
+                        "title" to RingtonePlayer.title(this, uri.toString()),
+                    ),
+                )
+            }
+        }
 
     // Allow the app to appear over the lock screen and wake the screen, so the
     // scheduled fake call's full-screen intent shows like a real incoming call
@@ -147,6 +178,73 @@ class MainActivity : FlutterFragmentActivity() {
                 "cancelCheckin" -> {
                     SosSender.setPrefBool(this, "checkin_active", false)
                     CheckinScheduler.cancel(this)
+                    result.success(true)
+                }
+                else -> result.notImplemented()
+            }
+        }
+
+        // Emergency SMS: one message per contact, straight from the phone
+        // (Google Play "Physical safety / emergency alerts" exception).
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            smsChannelName,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "canSend" -> result.success(DirectSms.canSend(this))
+                "send" -> {
+                    val numbers = call.argument<List<String>>("numbers").orEmpty()
+                    val message = call.argument<String>("message").orEmpty()
+                    if (!DirectSms.canSend(this)) {
+                        result.error("no_permission", "SEND_SMS not granted", null)
+                        return@setMethodCallHandler
+                    }
+                    DirectSms.send(this, numbers, message) { sent, failed ->
+                        result.success(mapOf("sent" to sent, "failed" to failed))
+                    }
+                }
+                else -> result.notImplemented()
+            }
+        }
+
+        // Fake-call ringtone: pick, name and play the phone's ringtones.
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            ringtoneChannelName,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "pick" -> {
+                    if (pendingPick != null) {
+                        result.error("busy", "Picker already open", null)
+                        return@setMethodCallHandler
+                    }
+                    val current = call.argument<String>("current")
+                    val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+                        putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_RINGTONE)
+                        putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+                        putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+                        putExtra(
+                            RingtoneManager.EXTRA_RINGTONE_DEFAULT_URI,
+                            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),
+                        )
+                        putExtra(
+                            RingtoneManager.EXTRA_RINGTONE_EXISTING_URI,
+                            current?.let { Uri.parse(it) }
+                                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),
+                        )
+                    }
+                    try {
+                        pendingPick = result
+                        ringtonePicker.launch(intent)
+                    } catch (e: Exception) {
+                        pendingPick = null
+                        result.error("unavailable", "No ringtone picker", null)
+                    }
+                }
+                "title" -> result.success(RingtonePlayer.title(this, call.argument("uri")))
+                "play" -> result.success(RingtonePlayer.play(this, call.argument("uri")))
+                "stop" -> {
+                    RingtonePlayer.stop()
                     result.success(true)
                 }
                 else -> result.notImplemented()

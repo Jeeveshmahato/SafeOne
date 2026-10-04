@@ -117,17 +117,18 @@ class SosService {
           ? messageTemplate.replaceAll(placeholder, locationText)
           : '$messageTemplate $locationText';
 
-      // Step 5: open Messages addressed to everyone.
+      // Step 5: send it — automatically to each contact when SMS permission
+      // is granted, otherwise (or for any failures) via the Messages app.
       final phoneNumbers = contacts.map((c) => c.phone).toList();
-      final opened = await _smsService.sendSos(
+      final outcome = await _smsService.sendSos(
         phoneNumbers: phoneNumbers,
         message: message,
       );
-      if (!opened) {
+      if (!outcome.delivered) {
         return const SosResult(
           success: false,
-          message: "Couldn't open your Messages app. Call 112 or text your "
-              'contacts directly.',
+          message: "Couldn't send the SMS or open Messages. Call 112 or text "
+              'your contacts directly.',
         );
       }
 
@@ -137,13 +138,24 @@ class SosService {
         Vibration.vibrate(duration: 800);
       }
 
-      return SosResult(
-        success: true,
-        message: position == null
-            ? '$successPrefix ${contacts.length} contact(s), without location '
-                '(turn on GPS for a map link).'
-            : '$successPrefix ${contacts.length} contact(s).',
-      );
+      // Step 7: say exactly what happened — never claim a message went out
+      // when the user still has to tap Send.
+      final total = contacts.length;
+      final sentCount = outcome.sentAutomatically.length;
+      final noLocation = position == null
+          ? ' Turn on GPS to include a map link.'
+          : '';
+      final String text;
+      if (sentCount == total) {
+        text = '$successPrefix $total contact(s).$noLocation';
+      } else if (sentCount > 0) {
+        text = '$successPrefix $sentCount of $total contact(s). Tap Send in '
+            'Messages for the rest.$noLocation';
+      } else {
+        text = 'Messages is open — tap Send to alert $total contact(s).'
+            '$noLocation';
+      }
+      return SosResult(success: true, message: text);
     } catch (error) {
       // Any failure (location off, permission denied, etc.) ends up here with
       // a readable message we can show the user.

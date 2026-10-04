@@ -1,6 +1,6 @@
 # Privacy Policy — SafeOne
 
-**Last updated: 3 October 2026**
+**Last updated: 4 October 2026**
 
 SafeOne ("the app", "we", "us") is a personal safety application published by
 **Tejovan Labs** (Seraikela-Kharsawan, Jharkhand, India). This policy explains what data the app uses, how it is used, and
@@ -12,9 +12,9 @@ your choices. Contact: **safeeonee@gmail.com**.
   share your personal data with us or any third party.
 - All your data (emergency contacts, app-lock PIN, safety log, recordings)
   stays **on your device**.
-- The only time information leaves your device is when **you** send an SOS,
-  check-in, or location message — it goes directly from your own SMS app to the
-  emergency contacts **you** chose.
+- The only time information leaves your device is when an SOS, check-in or
+  location update is sent — as a text message from **your** phone, directly to
+  the emergency contacts **you** chose. Nothing is ever sent to us.
 
 ## Information the app uses (all on-device)
 
@@ -25,12 +25,17 @@ can include your location even when the app is closed or the screen is locked.
 Location is never uploaded to us or any server.
 
 **Emergency contacts.** The names and phone numbers you enter are stored locally
-on your device (in the app's private storage). They are used only to address the
-SMS messages you choose to send. The app does not read your phone's contact list.
+on your device (in the app's private storage). They are used only to address your
+safety messages. The app does not read your phone's contact list.
 
-**SMS messages.** SafeOne does **not** read, receive, or send SMS silently. When
-you trigger an SOS or check-in, the app opens your phone's standard Messages app
-with the text pre-filled, and you tap "send". We never see the message content.
+**SMS messages.** If you allow the SMS permission, SafeOne sends your safety
+messages as text messages **directly from your phone** to each emergency contact
+you added — one message per contact, using your own mobile plan. It sends only
+when you trigger an SOS (including a hands-free trigger), when a safety check-in
+runs out without you confirming you're safe, or while live location sharing that
+you started is on. SafeOne **never reads or receives** your messages, and message
+content is never sent to us. If you don't allow the permission, SafeOne instead
+opens your Messages app with the text filled in for you to send.
 
 **Microphone / audio recordings.** If you use the audio-evidence recording
 feature, recordings are saved as files on your device only. They are not uploaded.
@@ -55,6 +60,8 @@ advertising and no third-party trackers.
 
 ## Permissions and why they are used
 
+- **SMS (send only)** — send your SOS and location updates directly to your
+  emergency contacts.
 - **Location (incl. background)** — include your location in safety messages.
 - **Microphone** — optional audio-evidence recording.
 - **Camera** — optional evidence / QR capture.

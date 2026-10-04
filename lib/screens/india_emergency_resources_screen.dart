@@ -6,6 +6,7 @@ import '../models/india_emergency_resources.dart';
 import '../services/location_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_ui.dart';
+import '../widgets/reveal.dart';
 
 class IndiaEmergencyResourcesScreen extends StatefulWidget {
   /// Which tab to open on: 'emergency' (default), 'fraud' or 'portals'.
@@ -253,7 +254,7 @@ class _IndiaEmergencyResourcesScreenState
     final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ExpansionTile(
+      child: RevealExpansionTile(
         shape: const Border(),
         collapsedShape: const Border(),
         leading: IconBadge(

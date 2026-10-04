@@ -91,7 +91,11 @@ void main() {
     expect(find.text('Start fake call'), findsOneWidget);
     expect(find.text('Ring sound'), findsOneWidget);
     expect(find.text('Police siren'), findsOneWidget);
-    expect(find.text('Phone ring'), findsOneWidget);
+    expect(find.text('Phone ringtone'), findsOneWidget);
+    // The ringtone field is shown for "Phone ringtone" (no plugin in tests,
+    // so it falls back to the default label).
+    expect(find.text('Ringtone'), findsOneWidget);
+    expect(find.text("Phone's default ringtone"), findsOneWidget);
   });
 
   testWidgets('setup screen is fully translated (Hindi)', (tester) async {

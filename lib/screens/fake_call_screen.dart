@@ -6,14 +6,15 @@ import 'package:vibration/vibration.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/call_sound.dart';
+import '../services/device_ringtone.dart';
 import '../services/police_siren_service.dart';
-import '../services/ringtone_service.dart';
 import '../widgets/caller_avatar.dart';
 import 'ongoing_call_screen.dart';
 
 /// Which sound plays while the fake call is ringing.
 enum RingSound {
-  /// A classic phone-ring tone (audible) plus vibration.
+  /// A real phone ringtone (the phone's default, or one the user picked) plus
+  /// vibration.
   phoneRing,
 
   /// A loud police-vehicle siren (wee-woo) to draw attention.
@@ -44,6 +45,9 @@ class FakeCallScreen extends StatefulWidget {
   /// What plays while ringing.
   final RingSound ringSound;
 
+  /// The ringtone for [RingSound.phoneRing]; null = the phone's default.
+  final String? ringtoneUri;
+
   /// Test-only override for the ring sound. When null, the real ringtone or
   /// siren service is used based on [ringSound].
   @visibleForTesting
@@ -56,6 +60,7 @@ class FakeCallScreen extends StatefulWidget {
     this.shouldRepeat = false,
     this.autoEndSeconds,
     this.ringSound = RingSound.phoneRing,
+    this.ringtoneUri,
     this.sound,
   });
 
@@ -69,7 +74,7 @@ class _FakeCallScreenState extends State<FakeCallScreen> {
   late final CallSound _sound = widget.sound ??
       (widget.ringSound == RingSound.policeSiren
           ? PoliceSirenService()
-          : RingtoneService());
+          : DeviceRingtoneSound(widget.ringtoneUri));
   bool _handled = false; // true once accepted/declined
 
   @override

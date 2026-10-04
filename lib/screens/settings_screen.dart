@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../config/features.dart';
@@ -7,8 +8,10 @@ import '../services/app_lock_service.dart';
 import '../services/locale_controller.dart';
 import '../services/safety_monitor_service.dart';
 import '../services/settings_repository.dart';
+import '../services/sms_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_ui.dart';
+import '../widgets/reveal.dart';
 import '../widgets/duration_field.dart';
 import 'pin_setup_screen.dart';
 
@@ -34,6 +37,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _biometricEnabled = false;
   bool _biometricAvailable = false;
   int _graceSeconds = AppLockService.defaultGraceSeconds;
+
+  /// Whether SOS SMS go out automatically (SEND_SMS granted), and whether
+  /// Android will still show the permission prompt.
+  bool _autoSms = false;
+  bool _smsBlocked = false;
+
+  /// The "safety mode" note appears below the triggers when one is turned
+  /// on; it's scrolled into view so the user sees it.
+  final GlobalKey _safetyNoteKey = GlobalKey();
 
   // Controls the text the user types for the SOS message.
   final TextEditingController _messageController = TextEditingController();
@@ -61,8 +73,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final biometricOn = await _lock.isBiometricEnabled();
     final biometricAvailable = await _lock.canUseBiometrics();
     final grace = await _lock.loadGraceSeconds();
+    final autoSms = await SmsService.canSendAutomatically();
+    final smsStatus = await SmsService.permissionStatus();
     if (!mounted) return;
     setState(() {
+      _autoSms = autoSms;
+      _smsBlocked = smsStatus.isPermanentlyDenied;
       _selectedSeconds = seconds;
       _shakeEnabled = shake;
       _messageController.text = message;
@@ -73,6 +89,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _biometricEnabled = biometricOn;
       _biometricAvailable = biometricAvailable;
       _graceSeconds = grace;
+    });
+  }
+
+  Future<void> _allowAutoSms() async {
+    if (_smsBlocked) {
+      await openAppSettings();
+    } else {
+      await SmsService.requestPermission();
+    }
+    final autoSms = await SmsService.canSendAutomatically();
+    final smsStatus = await SmsService.permissionStatus();
+    if (!mounted) return;
+    setState(() {
+      _autoSms = autoSms;
+      _smsBlocked = smsStatus.isPermanentlyDenied;
     });
   }
 
@@ -108,14 +139,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _setVolumeTrigger(bool v) async {
     setState(() => _volumeTrigger = v);
+    if (v) _revealSafetyNote();
     await _settings.saveVolumeTrigger(v);
     await _syncMonitor();
   }
 
   Future<void> _setPowerTrigger(bool v) async {
     setState(() => _powerTrigger = v);
+    if (v) _revealSafetyNote();
     await _settings.savePowerTrigger(v);
     await _syncMonitor();
+  }
+
+  void _revealSafetyNote() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _safetyNoteKey.currentContext;
+      if (ctx != null) revealInScrollable(ctx);
+    });
   }
 
   Future<void> _syncMonitor() {
@@ -138,6 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _setShake(bool enabled) async {
     setState(() => _shakeEnabled = enabled);
+    if (enabled) _revealSafetyNote();
     await _settings.saveShakeEnabled(enabled);
     await _syncMonitor();
   }
@@ -258,6 +299,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 // ---- SOS alert ----
                 SectionLabel(t.settingsSectionSos),
                 _SettingsGroup(children: [
+                  ListTile(
+                    leading: _leading(Icons.sms_outlined),
+                    title: Text(t.settingsAutoSmsTitle),
+                    subtitle: Text(
+                        _autoSms ? t.settingsAutoSmsOn : t.settingsAutoSmsOff),
+                    trailing: _autoSms
+                        ? Icon(Icons.check_circle_rounded,
+                            color: context.safety.success)
+                        : FilledButton.tonal(
+                            style: FilledButton.styleFrom(
+                                minimumSize: const Size(0, 40)),
+                            onPressed: _allowAutoSms,
+                            child: Text(t.settingsAutoSmsAllow),
+                          ),
+                  ),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                     child: Column(
@@ -376,6 +432,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ]),
                   if (_shakeEnabled || _volumeTrigger || _powerTrigger)
                     NoticeCard(
+                      key: _safetyNoteKey,
                       tone: Tone.info,
                       message: t.settingsSafetyModeNote,
                       margin: const EdgeInsets.only(top: 12),

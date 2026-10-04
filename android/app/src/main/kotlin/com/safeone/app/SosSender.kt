@@ -16,16 +16,15 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import org.json.JSONArray
 
-/// Surfaces the emergency SOS when a background trigger (hands-free shake /
-/// volume / power, or the check-in deadline) fires.
+/// Sends the emergency SOS when a background trigger (hands-free shake /
+/// volume / power, or the check-in deadline) fires — even when the app process
+/// is dead or the phone is locked.
 ///
-/// This app deliberately does NOT hold the restricted SEND_SMS permission
-/// (Google Play limits it to default SMS handlers), so it can no longer send
-/// the SMS silently from the background. Instead it posts a high-priority,
-/// full-screen "tap to send SOS" notification that opens the SMS composer with
-/// the message + location pre-filled. The notification fires even when the app
-/// process is dead and shows over the lock screen, so the user can send with a
-/// single tap.
+/// With the SEND_SMS permission (Google Play "Physical safety / emergency
+/// alerts" exception) the SMS goes straight to every contact via [DirectSms]
+/// and a short status notification confirms it. Without the permission — or
+/// for any contact whose message fails — it posts a high-priority, full-screen
+/// "tap to send SOS" notification that opens the SMS composer pre-filled.
 object SosSender {
     private const val TAG = "SosSender"
     private const val PREFS = "FlutterSharedPreferences"
@@ -36,41 +35,118 @@ object SosSender {
     // Live-location updates use their own ID so stopping sharing can remove
     // them without touching a pending SOS prompt.
     private const val FOLLOW_ME_NOTIF_ID = 4101
+    // "SOS sent to N contacts" confirmation, on a quieter channel.
+    private const val STATUS_CHANNEL_ID = "sos_status_v1"
+    private const val STATUS_NOTIF_ID = 4102
 
-    /// Surfaces the SOS to all saved contacts via a full-screen "tap to send"
-    /// notification. Returns true if a notification was posted.
-    fun send(context: Context): Boolean {
+    /// Sends the SOS to all saved contacts: directly by SMS when permitted,
+    /// otherwise via a full-screen "tap to send" notification. Returns false if
+    /// there are no contacts. [onDone] runs once the outcome is known (used by
+    /// [CheckinAlarmReceiver] to keep its process alive until then).
+    fun send(context: Context, onDone: (() -> Unit)? = null): Boolean {
         val contacts = loadContacts(context)
-        if (contacts.isEmpty()) return false
+        if (contacts.isEmpty()) {
+            onDone?.invoke()
+            return false
+        }
+        val message = buildMessage(context)
+        val silent = prefBool(context, "silent_sos")
+        if (DirectSms.canSend(context)) {
+            DirectSms.send(context, contacts, message) { sent, failed ->
+                if (sent.isNotEmpty()) {
+                    if (!silent) {
+                        vibrate(context)
+                        notifyStatus(
+                            context,
+                            "SOS sent to ${sent.size} of ${contacts.size} contact(s)",
+                        )
+                    }
+                }
+                if (failed.isNotEmpty()) promptSos(context, failed, message)
+                onDone?.invoke()
+            }
+            return true
+        }
+        promptSos(context, contacts, message)
+        if (!silent) vibrate(context)
+        onDone?.invoke()
+        return true
+    }
+
+    /// The fallback: a full-screen "tap to send" notification for [recipients].
+    private fun promptSos(context: Context, recipients: List<String>, message: String) {
         notifySos(
             context,
             id = NOTIF_ID,
             title = "Send emergency SOS",
             body = "Tap to send your SOS message to your emergency contacts.",
-            recipients = contacts,
-            message = buildMessage(context),
+            recipients = recipients,
+            message = message,
             fullScreen = true,
         )
-        if (!prefBool(context, "silent_sos")) vibrate(context)
-        return true
     }
 
-    /// Surfaces a live-location ("Follow Me") update for the user to send.
+    /// Sends a live-location ("Follow Me") update: silently by SMS when
+    /// permitted, otherwise a notification the user taps to send.
     fun sendFollowMe(context: Context): Boolean {
         val contacts = loadContacts(context)
         if (contacts.isEmpty()) return false
         val link = lastKnownMapsLink(context) ?: "(location unavailable)"
+        val message = "Following my journey. Live location: $link"
+        if (DirectSms.canSend(context)) {
+            DirectSms.send(context, contacts, message) { _, failed ->
+                if (failed.isNotEmpty()) promptFollowMe(context, failed, message)
+            }
+            return true
+        }
+        promptFollowMe(context, contacts, message)
+        return true
+    }
+
+    private fun promptFollowMe(context: Context, recipients: List<String>, message: String) {
         notifySos(
             context,
             id = FOLLOW_ME_NOTIF_ID,
             title = "Share your live location",
             body = "Tap to send your current location to your contacts.",
-            recipients = contacts,
-            message = "Following my journey. Live location: $link",
+            recipients = recipients,
+            message = message,
             // A routine update must not take over the screen like an SOS.
             fullScreen = false,
         )
-        return true
+    }
+
+    /// A short, non-intrusive confirmation (e.g. "SOS sent to 3 contacts").
+    private fun notifyStatus(context: Context, text: String) {
+        try {
+            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                nm.createNotificationChannel(
+                    NotificationChannel(
+                        STATUS_CHANNEL_ID,
+                        "SOS status",
+                        NotificationManager.IMPORTANCE_DEFAULT,
+                    ).apply { description = "Confirms when your SOS has been sent." },
+                )
+            }
+            val open = context.packageManager.getLaunchIntentForPackage(context.packageName)
+            val pi = open?.let {
+                PendingIntent.getActivity(
+                    context, STATUS_NOTIF_ID, it,
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                )
+            }
+            val n = NotificationCompat.Builder(context, STATUS_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_stat_safeone)
+                .setContentTitle(text)
+                .setContentText("Your contacts have your location.")
+                .setAutoCancel(true)
+                .setContentIntent(pi)
+                .build()
+            nm.notify(STATUS_NOTIF_ID, n)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to post SOS status", e)
+        }
     }
 
     /// Removes the pending live-location prompt (called when sharing stops).

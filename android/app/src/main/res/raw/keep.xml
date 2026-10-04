@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- flutter_local_notifications looks the status-bar icon up by name, so
-     tell the release resource shrinker not to remove it. -->
+<!-- flutter_local_notifications looks these up by name (the status-bar
+     icon and the fake-call siren sound), so tell the release resource
+     shrinker not to remove them. -->
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/ic_stat_safeone" />
+    tools:keep="@drawable/ic_stat_safeone,@raw/police_siren" />

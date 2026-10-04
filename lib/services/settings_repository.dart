@@ -13,6 +13,7 @@ class SettingsRepository {
   static const String _volumeTriggerKey = 'volume_trigger';
   static const String _powerTriggerKey = 'power_trigger';
   static const String _liveSharingActiveKey = 'live_sharing_active';
+  static const String _fakeCallRingtoneKey = 'fake_call_ringtone_uri';
 
   /// The values used if the user has never changed the settings.
   static const int defaultCountdownSeconds = 5;
@@ -124,5 +125,21 @@ class SettingsRepository {
   Future<void> saveLiveSharingActive(bool active) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_liveSharingActiveKey, active);
+  }
+
+  /// The ringtone picked for fake calls (a content URI), or null for the
+  /// phone's own default ringtone.
+  Future<String?> loadFakeCallRingtone() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_fakeCallRingtoneKey);
+  }
+
+  Future<void> saveFakeCallRingtone(String? uri) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (uri == null) {
+      await prefs.remove(_fakeCallRingtoneKey);
+    } else {
+      await prefs.setString(_fakeCallRingtoneKey, uri);
+    }
   }
 }

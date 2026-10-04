@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import '../widgets/app_ui.dart';
+import '../widgets/reveal.dart';
 
 /// A built-in, OFFLINE guide of safety and basic first-aid tips. All the text
 /// is stored inside the app, so it works with no internet and no cost.
@@ -104,7 +105,7 @@ class SafetyTipsScreen extends StatelessWidget {
           for (final tip in _tips)
             Card(
               margin: const EdgeInsets.only(bottom: 12),
-              child: ExpansionTile(
+              child: RevealExpansionTile(
                 shape: const Border(),
                 collapsedShape: const Border(),
                 leading: IconBadge(icon: tip.icon, size: 40),

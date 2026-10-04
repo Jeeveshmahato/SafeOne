@@ -642,18 +642,54 @@ class AppLocalizationsBn extends AppLocalizations {
       'When you press SOS, they get an SMS with your live location.';
 
   @override
-  String get homeLocationTitle => 'Allow location access';
-
-  @override
-  String get homeLocationBody =>
-      'So your SOS includes a map link to where you are. Do it now, not during an emergency.';
-
-  @override
-  String get homeLocationAction => 'Allow location';
-
-  @override
-  String get homeLocationSettings => 'Open settings';
-
-  @override
   String get homeTools => 'Safety tools';
+
+  @override
+  String get fakeCallRingtone => 'Ringtone';
+
+  @override
+  String get fakeCallRingtoneDefault => 'Phone\'s default ringtone';
+
+  @override
+  String get fakeCallRingtoneChange => 'Change';
+
+  @override
+  String get fakeCallRingtoneHint =>
+      'Pick any ringtone, or add your own sound.';
+
+  @override
+  String get homeReadyTitle => 'Get SOS ready';
+
+  @override
+  String get homeReadyIntro =>
+      'Allow these now, so nothing slows you down in an emergency:';
+
+  @override
+  String get homeReadySms => '• Send your SOS automatically to every contact';
+
+  @override
+  String get homeReadyLocation => '• Include a map link to where you are';
+
+  @override
+  String get homeReadyAction => 'Allow';
+
+  @override
+  String get homeReadySettings => 'Open settings';
+
+  @override
+  String get settingsAutoSmsTitle => 'Send SOS automatically';
+
+  @override
+  String get settingsAutoSmsOn =>
+      'On — each contact gets an SMS, no tap needed';
+
+  @override
+  String get settingsAutoSmsOff => 'Off — Messages opens and you tap Send';
+
+  @override
+  String get settingsAutoSmsAllow => 'Allow';
+
+  @override
+  String get homeReadyBgLocation =>
+      '• Include your location even when the phone is locked';
 }

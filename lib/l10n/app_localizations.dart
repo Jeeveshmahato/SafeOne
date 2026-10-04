@@ -285,7 +285,7 @@ abstract class AppLocalizations {
   /// No description provided for @ringSoundPhone.
   ///
   /// In en, this message translates to:
-  /// **'Phone ring'**
+  /// **'Phone ringtone'**
   String get ringSoundPhone;
 
   /// No description provided for @ringSoundSiren.
@@ -1278,35 +1278,101 @@ abstract class AppLocalizations {
   /// **'When you press SOS, they get an SMS with your live location.'**
   String get homeAddContactsBody;
 
-  /// No description provided for @homeLocationTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow location access'**
-  String get homeLocationTitle;
-
-  /// No description provided for @homeLocationBody.
-  ///
-  /// In en, this message translates to:
-  /// **'So your SOS includes a map link to where you are. Do it now, not during an emergency.'**
-  String get homeLocationBody;
-
-  /// No description provided for @homeLocationAction.
-  ///
-  /// In en, this message translates to:
-  /// **'Allow location'**
-  String get homeLocationAction;
-
-  /// No description provided for @homeLocationSettings.
-  ///
-  /// In en, this message translates to:
-  /// **'Open settings'**
-  String get homeLocationSettings;
-
   /// No description provided for @homeTools.
   ///
   /// In en, this message translates to:
   /// **'Safety tools'**
   String get homeTools;
+
+  /// No description provided for @fakeCallRingtone.
+  ///
+  /// In en, this message translates to:
+  /// **'Ringtone'**
+  String get fakeCallRingtone;
+
+  /// No description provided for @fakeCallRingtoneDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone\'s default ringtone'**
+  String get fakeCallRingtoneDefault;
+
+  /// No description provided for @fakeCallRingtoneChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get fakeCallRingtoneChange;
+
+  /// No description provided for @fakeCallRingtoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick any ringtone, or add your own sound.'**
+  String get fakeCallRingtoneHint;
+
+  /// No description provided for @homeReadyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Get SOS ready'**
+  String get homeReadyTitle;
+
+  /// No description provided for @homeReadyIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow these now, so nothing slows you down in an emergency:'**
+  String get homeReadyIntro;
+
+  /// No description provided for @homeReadySms.
+  ///
+  /// In en, this message translates to:
+  /// **'• Send your SOS automatically to every contact'**
+  String get homeReadySms;
+
+  /// No description provided for @homeReadyLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'• Include a map link to where you are'**
+  String get homeReadyLocation;
+
+  /// No description provided for @homeReadyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get homeReadyAction;
+
+  /// No description provided for @homeReadySettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get homeReadySettings;
+
+  /// No description provided for @settingsAutoSmsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send SOS automatically'**
+  String get settingsAutoSmsTitle;
+
+  /// No description provided for @settingsAutoSmsOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On — each contact gets an SMS, no tap needed'**
+  String get settingsAutoSmsOn;
+
+  /// No description provided for @settingsAutoSmsOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off — Messages opens and you tap Send'**
+  String get settingsAutoSmsOff;
+
+  /// No description provided for @settingsAutoSmsAllow.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow'**
+  String get settingsAutoSmsAllow;
+
+  /// No description provided for @homeReadyBgLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'• Include your location even when the phone is locked'**
+  String get homeReadyBgLocation;
 }
 
 class _AppLocalizationsDelegate

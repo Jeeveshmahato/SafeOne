@@ -13,6 +13,9 @@ class ScheduledFakeCall {
   final bool shouldRepeat;
   final int? autoEndSeconds;
 
+  /// The ringtone to ring with (content URI); null = phone's default.
+  final String? ringtoneUri;
+
   const ScheduledFakeCall({
     required this.id,
     required this.callerName,
@@ -21,6 +24,7 @@ class ScheduledFakeCall {
     required this.ringIndex,
     required this.shouldRepeat,
     this.autoEndSeconds,
+    this.ringtoneUri,
   });
 
   ScheduledFakeCall copyWith({
@@ -31,6 +35,7 @@ class ScheduledFakeCall {
     int? ringIndex,
     bool? shouldRepeat,
     int? autoEndSeconds,
+    String? ringtoneUri,
     bool clearAutoEnd = false,
   }) {
     return ScheduledFakeCall(
@@ -42,6 +47,7 @@ class ScheduledFakeCall {
       shouldRepeat: shouldRepeat ?? this.shouldRepeat,
       autoEndSeconds:
           clearAutoEnd ? null : (autoEndSeconds ?? this.autoEndSeconds),
+      ringtoneUri: ringtoneUri ?? this.ringtoneUri,
     );
   }
 
@@ -56,6 +62,7 @@ class ScheduledFakeCall {
         'ringIndex': ringIndex,
         'shouldRepeat': shouldRepeat,
         'autoEndSeconds': autoEndSeconds,
+        'ringtoneUri': ringtoneUri,
       };
 
   factory ScheduledFakeCall.fromJson(Map<String, dynamic> json) =>
@@ -67,5 +74,6 @@ class ScheduledFakeCall {
         ringIndex: json['ringIndex'] as int? ?? 0,
         shouldRepeat: json['shouldRepeat'] as bool? ?? false,
         autoEndSeconds: json['autoEndSeconds'] as int?,
+        ringtoneUri: json['ringtoneUri'] as String?,
       );
 }

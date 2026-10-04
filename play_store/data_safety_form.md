@@ -23,9 +23,12 @@ Play Console → **Policy and programs → App content → Data safety → Manag
 - **Does your app collect or share any of the required user data types?**
   → **No.**
   (All data is processed on-device only and never sent to you or a third party.
-  Location/messages the *user* sends via their own SMS app are not "collected"
-  by your app in Play's definition, because your app has no server and does not
-  transmit them to you.)
+  The SOS SMS (with location) goes from the user's phone straight to the
+  emergency contacts the user added. That is not "collected" (the app has no
+  server and nothing reaches the developer) and not "shared" in Play's
+  definition, because it's a transfer the user initiates (SOS button, trigger,
+  check-in or live sharing they turned on) to recipients they chose and
+  reasonably expect to receive it.)
 
 - **Is all of the user data encrypted in transit?**
   → Not applicable / Yes (no data is transmitted by the app to any server).

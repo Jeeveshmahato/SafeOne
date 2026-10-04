@@ -3,12 +3,16 @@ package com.safeone.app
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import java.util.concurrent.atomic.AtomicBoolean
 
 /// Fires when a safety check-in deadline passes. If the user hasn't tapped
 /// "I'm safe" (which clears the `checkin_active` flag and cancels this alarm),
 /// it sends the SOS NATIVELY via [SosSender] — no Flutter isolate required, so
-/// it works even if the app process is dead or the phone is locked.
+/// it works even if the app process is dead or the phone is locked. goAsync()
+/// keeps the process alive until the SMS "sent" confirmations arrive.
 class CheckinAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         // Only act if a check-in is still active (guards against a race where
@@ -16,6 +20,12 @@ class CheckinAlarmReceiver : BroadcastReceiver() {
         if (!SosSender.prefBool(context, "checkin_active")) return
         SosSender.setPrefBool(context, "checkin_active", false)
         Log.i("CheckinAlarm", "Check-in deadline passed — sending SOS")
-        SosSender.send(context)
+        val pending = goAsync()
+        val done = AtomicBoolean(false)
+        val finish = { if (done.compareAndSet(false, true)) pending.finish() }
+        // A receiver gets ~10 s. The SMS is already handed to the system by
+        // then, so stop waiting for confirmations rather than overrun.
+        Handler(Looper.getMainLooper()).postDelayed({ finish() }, 9_000)
+        SosSender.send(context) { finish() }
     }
 }

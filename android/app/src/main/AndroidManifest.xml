@@ -1,9 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Permissions the safety app needs. The user is still asked to approve
-         location the first time it is used.
-         NOTE: SEND_SMS is intentionally NOT requested — Google Play restricts it
-         to default SMS handler apps. SOS messages open the system SMS composer
-         (sms: intent) for the user to send with one tap instead. -->
+         location the first time it is used. -->
+    <!-- Sends the SOS SMS automatically, one message per emergency contact.
+         Allowed by Google Play's "Physical safety / emergency alerts" exception
+         (declared in Play Console). If the user doesn't grant it, the app falls
+         back to opening the Messages app pre-filled. -->
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <!-- Not required, so the app still installs on tablets / phones without
+         SMS; there it falls back to sharing the alert. -->
+    <uses-feature android:name="android.hardware.telephony" android:required="false"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <!-- Needed so live location / check-in can read location from a background

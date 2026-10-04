@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../config/features.dart';
 import '../l10n/app_localizations.dart';
@@ -66,9 +67,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   bool _sendingSos = false;
 
-  // Location permission state, so we can ask *before* an emergency rather
-  // than interrupting the SOS with a system dialog.
+  // Permission state, so we can ask *before* an emergency rather than
+  // interrupting the SOS: SMS (to send automatically) and location (to include
+  // a map link).
   LocationPermission? _locationPermission;
+  PermissionStatus? _smsStatus;
+
+  // Hands-free SOS can fire with the app closed; Android only shares location
+  // then if it's allowed "All the time".
+  bool _handsFreeOn = false;
+  PermissionStatus? _bgLocationStatus;
   bool _sirenOn = false;
   bool _flashOn = false;
   bool _sosBlinkOn = false;
@@ -84,35 +92,74 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _loadContacts();
     _loadSettings();
-    _checkLocationPermission();
+    _checkReadiness();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // The user may have granted location in system Settings meanwhile.
-    if (state == AppLifecycleState.resumed) _checkLocationPermission();
+    // The user may have granted permissions in system Settings meanwhile.
+    if (state == AppLifecycleState.resumed) _checkReadiness();
   }
 
-  Future<void> _checkLocationPermission() async {
+  /// Re-reads the SMS and location permissions behind the "Get SOS ready"
+  /// card.
+  Future<void> _checkReadiness() async {
+    LocationPermission? location;
+    PermissionStatus? sms;
+    PermissionStatus? bgLocation;
     try {
-      final permission = await Geolocator.checkPermission();
-      if (!mounted) return;
-      setState(() => _locationPermission = permission);
+      location = await Geolocator.checkPermission();
     } catch (_) {/* location unavailable on this device */}
-  }
-
-  Future<void> _requestLocationPermission() async {
-    if (_locationPermission == LocationPermission.deniedForever) {
-      await Geolocator.openAppSettings();
-    } else {
-      await Geolocator.requestPermission();
-    }
-    await _checkLocationPermission();
+    try {
+      // Only phones that can send SMS are asked.
+      sms = await Permission.sms.status;
+      bgLocation = await Permission.locationAlways.status;
+    } catch (_) {/* not applicable */}
+    if (!mounted) return;
+    setState(() {
+      _locationPermission = location;
+      _smsStatus = sms;
+      _bgLocationStatus = bgLocation;
+    });
   }
 
   bool get _needsLocation =>
       _locationPermission == LocationPermission.denied ||
       _locationPermission == LocationPermission.deniedForever;
+
+  bool get _needsSms =>
+      _smsStatus != null &&
+      !_smsStatus!.isGranted &&
+      !_smsStatus!.isRestricted; // e.g. no SIM / tablet: nothing to grant
+
+  bool get _needsBgLocation =>
+      _handsFreeOn &&
+      _bgLocationStatus != null &&
+      !_bgLocationStatus!.isGranted;
+
+  bool get _readinessBlocked =>
+      (_needsSms && _smsStatus!.isPermanentlyDenied) ||
+      _locationPermission == LocationPermission.deniedForever;
+
+  /// Asks for whatever is missing, in one go. If Android won't show the
+  /// prompt any more (permanently denied), opens the app's settings instead.
+  Future<void> _getSosReady() async {
+    if (_readinessBlocked) {
+      await openAppSettings();
+    } else {
+      if (_needsSms) await Permission.sms.request();
+      if (_needsLocation) await Geolocator.requestPermission();
+      // "All the time" can only be asked once regular location is allowed;
+      // Android then shows its settings page for it.
+      final location = await Geolocator.checkPermission();
+      if (_needsBgLocation &&
+          (location == LocationPermission.whileInUse ||
+              location == LocationPermission.always)) {
+        await Permission.locationAlways.request();
+      }
+    }
+    await _checkReadiness();
+  }
 
   @override
   void dispose() {
@@ -148,6 +195,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       _liveUpdates = live;
       // Restore the live-sharing banner if it was left running last session.
       _liveSharing = sharingActive;
+      _handsFreeOn = Features.backgroundTriggers &&
+          (shakeEnabled || volume || power);
     });
 
     // Hands-free triggers are gated behind the backgroundTriggers flag.
@@ -197,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
     if (!mounted) return;
     setState(() => _sendingSos = false);
-    _checkLocationPermission();
+    _checkReadiness();
     _showMessage(result.message, isError: !result.success);
     if (result.success) {
       _eventLog.log(
@@ -383,7 +432,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     Navigator.push(context, MaterialPageRoute(builder: (_) => screen))
         .then((_) {
       _loadContacts();
-      _checkLocationPermission();
+      _checkReadiness();
     });
   }
 
@@ -391,6 +440,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await Navigator.push(context,
         MaterialPageRoute(builder: (_) => const SettingsScreen()));
     await _loadSettings();
+    // Triggers or SMS permission may have changed in Settings.
+    await _checkReadiness();
   }
 
   // Grouped hubs: each gathers related tools behind one tile so the home
@@ -493,22 +544,27 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   onTap: () => _open(_contactsHub(t)),
                 ),
               ),
-            // Ready the location permission once contacts exist.
-            if (_contacts.isNotEmpty && _needsLocation) ...[
+            // Once contacts exist, get the permissions the SOS needs — now,
+            // not mid-emergency.
+            if (_contacts.isNotEmpty &&
+                (_needsSms || _needsLocation || _needsBgLocation)) ...[
               const SizedBox(height: 12),
               NoticeCard(
                 tone: Tone.info,
-                icon: Icons.location_on_outlined,
-                title: t.homeLocationTitle,
-                message: t.homeLocationBody,
+                icon: Icons.task_alt_rounded,
+                title: t.homeReadyTitle,
+                message: [
+                  t.homeReadyIntro,
+                  if (_needsSms) t.homeReadySms,
+                  if (_needsLocation) t.homeReadyLocation,
+                  if (_needsBgLocation) t.homeReadyBgLocation,
+                ].join('\n'),
                 action: FilledButton.tonal(
                   style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
-                  onPressed: _requestLocationPermission,
-                  child: Text(
-                    _locationPermission == LocationPermission.deniedForever
-                        ? t.homeLocationSettings
-                        : t.homeLocationAction,
-                  ),
+                  onPressed: _getSosReady,
+                  child: Text(_readinessBlocked
+                      ? t.homeReadySettings
+                      : t.homeReadyAction),
                 ),
               ),
             ],

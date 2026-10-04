@@ -6,6 +6,41 @@ justification below into the relevant declaration form. Keep the in-app
 
 ---
 
+## 0. SMS — SEND_SMS (Permissions Declaration Form) — REQUIRED before release
+Play Console → **App content → Sensitive app permissions → SMS and Call Log
+permissions → Manage**.
+
+- **Is your app the default SMS handler?** → No
+- **Core functionality / exception:** select **"Physical safety / emergency
+  alerts"** (*Apps that send SMS alerts in emergency situations*).
+- **Permission used:** `SEND_SMS` only (the app does not read or receive SMS).
+
+**Describe the core functionality (paste):**
+"SafeOne is a personal safety app. Its core feature is an emergency SOS that
+alerts the user's chosen emergency contacts by SMS with the user's current
+location. The app sends an SMS only in emergency situations the user starts:
+pressing the SOS button, a hands-free SOS trigger (shake / triple volume /
+triple power press), a safety check-in timer the user set that expires without
+them confirming they are safe, or live location sharing the user turned on
+after an SOS. Each emergency contact receives their own SMS directly from the
+user's phone, so the alert works without mobile data and without the user
+having to tap Send — critical when they cannot safely use the screen. The app
+never reads or receives SMS and never uploads message content. If the
+permission is denied, the app falls back to opening the Messages app with the
+alert pre-filled."
+
+**Demo video (unlisted YouTube link), show in order:**
+1. Adding an emergency contact.
+2. The in-app "Get SOS ready" card explaining why SMS is needed, then the
+   system permission prompt.
+3. Pressing SOS → countdown → the alert arriving at the contact.
+4. A hands-free trigger (e.g. triple volume press) sending the SOS with the
+   phone locked.
+
+**Prominent disclosure:** the "Get SOS ready" card on the home screen
+("Send your SOS automatically to every contact") is shown before the
+permission is requested, and Settings → SOS alert shows the current status.
+
 ## 1. Background location (ACCESS_BACKGROUND_LOCATION) — REQUIRES declaration + video
 **Why the app needs it (paste):**
 "SafeOne is a personal-safety app. When a user triggers a hands-free SOS (shake,
