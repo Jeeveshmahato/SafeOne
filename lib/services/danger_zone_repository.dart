@@ -1,15 +1,16 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../models/danger_zone.dart';
 
-/// Saves and loads the list of danger zones (unsafe areas) on the phone.
+import '../models/danger_zone.dart';
+import 'vault.dart';
+
+/// Saves and loads the list of danger zones (unsafe areas), encrypted in the
+/// [Vault]: places someone marks as unsafe say a lot about where they go.
 class DangerZoneRepository {
   static const String _storageKey = 'danger_zones';
 
   /// Load all saved danger zones.
   Future<List<DangerZone>> loadZones() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? jsonText = prefs.getString(_storageKey);
+    final String? jsonText = await SecureStore.read(_storageKey);
 
     if (jsonText == null || jsonText.isEmpty) {
       return [];
@@ -23,10 +24,9 @@ class DangerZoneRepository {
 
   /// Save all danger zones, replacing whatever was there.
   Future<void> saveZones(List<DangerZone> zones) async {
-    final prefs = await SharedPreferences.getInstance();
     final List<Map<String, dynamic>> rawList =
         zones.map((z) => z.toMap()).toList();
-    await prefs.setString(_storageKey, jsonEncode(rawList));
+    await SecureStore.write(_storageKey, jsonEncode(rawList));
   }
 
   /// Add a single zone and save.

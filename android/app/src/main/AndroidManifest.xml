@@ -36,10 +36,17 @@
          Follow Me background location — declared in Play Console App content. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
 
+    <!-- No backups: the app holds contacts, medical info, PIN hashes and
+         recordings, which must not leave the phone (Android 11 and below use
+         allowBackup; 12+ use the data extraction rules). -->
     <application
         android:label="SafeOne"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:usesCleartextTraffic="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"

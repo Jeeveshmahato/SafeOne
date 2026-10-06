@@ -293,6 +293,9 @@ class _EmergencyIDScreenState extends State<EmergencyIDScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: TextFormField(
+        // Incognito keyboard: private text must not be learned or synced
+        // by the keyboard app.
+        enableIMEPersonalizedLearning: false,
         controller: controller,
         minLines: lines,
         maxLines: lines == 1 ? 1 : lines + 2,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -5,15 +7,36 @@ import '../services/app_lock_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_ui.dart';
 import '../widgets/pin_pad.dart';
+import 'lock_screen.dart' show formatWait;
+import 'pin_reset_screen.dart';
 
-/// Screen for creating a PIN (first run) or changing it (from Settings).
+/// Screen for creating a PIN (first run, or the first time a contact is
+/// added) or changing it (from Settings).
 ///
 /// When [requireCurrent] is true the user must first type their existing PIN
-/// before choosing a new one. On success the screen pops with `true`.
+/// before choosing a new one. On success it calls [onComplete] if given,
+/// otherwise the screen pops with `true`.
 class PinSetupScreen extends StatefulWidget {
-  const PinSetupScreen({super.key, this.requireCurrent = false});
+  const PinSetupScreen({
+    super.key,
+    this.kind = PinKind.app,
+    this.requireCurrent = false,
+    this.onComplete,
+    this.title,
+    this.closeWhenHidden = false,
+  });
 
+  final PinKind kind;
   final bool requireCurrent;
+  final VoidCallback? onComplete;
+
+  /// Override the default title (e.g. "Reset PIN").
+  final String? title;
+
+  /// Leave the screen if the app goes to the background. Used after a PIN
+  /// reset, so a phone left on this screen can't be picked up and given a
+  /// PIN by someone else.
+  final bool closeWhenHidden;
 
   @override
   State<PinSetupScreen> createState() => _PinSetupScreenState();
@@ -28,6 +51,49 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
   String _entry = '';
   String _firstPin = '';
   String? _error;
+  bool _busy = false;
+  Duration _lockout = Duration.zero;
+  Timer? _lockoutTimer;
+  AppLifecycleListener? _lifecycle;
+
+  bool get _isApp => widget.kind == PinKind.app;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.requireCurrent) _loadLockout();
+    if (widget.closeWhenHidden) {
+      _lifecycle = AppLifecycleListener(onHide: () {
+        if (mounted && !AppLockService.systemPromptActive) {
+          Navigator.maybePop(context, false);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _lockoutTimer?.cancel();
+    _lifecycle?.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadLockout() async {
+    final left = await _lock.lockoutRemaining(widget.kind);
+    if (mounted && left > Duration.zero) _startLockout(left);
+  }
+
+  void _startLockout(Duration wait) {
+    _lockoutTimer?.cancel();
+    final until = DateTime.now().add(wait);
+    setState(() => _lockout = wait);
+    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      final left = until.difference(DateTime.now());
+      setState(() => _lockout = left.isNegative ? Duration.zero : left);
+      if (_lockout == Duration.zero) timer.cancel();
+    });
+  }
 
   Future<void> _onChanged(String value) async {
     setState(() {
@@ -37,10 +103,24 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
   }
 
   Future<void> _submit() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await _handleStep();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _handleStep() async {
     final t = AppLocalizations.of(context);
     switch (_step) {
       case _Step.current:
-        if (await _lock.verifyPin(_entry)) {
+        // Throttled like the lock screen, otherwise this step would be a
+        // free way to guess the PIN.
+        final result = await _lock.attempt(_entry, widget.kind);
+        if (!mounted) return;
+        if (result.success) {
           setState(() {
             _step = _Step.create;
             _entry = '';
@@ -50,10 +130,20 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
             _error = t.lockWrongPin;
             _entry = '';
           });
+          if (result.lockedOut) _startLockout(result.lockout);
         }
       case _Step.create:
         if (_entry.length != 6) {
           setState(() => _error = t.pinTooShort);
+          return;
+        }
+        final reuseError = await _reuseError(t);
+        if (!mounted) return;
+        if (reuseError != null) {
+          setState(() {
+            _error = reuseError;
+            _entry = '';
+          });
           return;
         }
         setState(() {
@@ -71,19 +161,57 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
           });
           return;
         }
-        await _lock.setPin(_entry);
+        await _lock.setPin(_entry, widget.kind);
         if (!mounted) return;
         showAppSnack(context, t.pinSaved, tone: Tone.success);
-        Navigator.pop(context, true);
+        if (widget.onComplete != null) {
+          widget.onComplete!();
+        } else {
+          Navigator.pop(context, true);
+        }
     }
   }
 
-  String _title(AppLocalizations t) {
+  /// The two PINs must differ, or the contacts PIN adds no protection. The
+  /// comparison goes through the other PIN's throttle so this screen can't be
+  /// used to guess it.
+  Future<String?> _reuseError(AppLocalizations t) async {
+    final other = _isApp ? PinKind.contacts : PinKind.app;
+    if (!await _lock.isPinSet(other)) return null;
+    final result = await _lock.attempt(_entry, other);
+    if (result.success) return _isApp ? t.pinSameAsContacts : t.pinSameAsApp;
+    if (result.lockedOut) return t.lockTryAgainIn(formatWait(result.lockout));
+    return null;
+  }
+
+  Future<void> _forgot() async {
+    final reset = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => PinResetScreen(kind: widget.kind)),
+    );
+    if (reset != true || !mounted) return;
+    // A new PIN was chosen as part of the reset; nothing left to do here.
+    if (widget.onComplete != null) {
+      widget.onComplete!();
+    } else {
+      Navigator.pop(context, true);
+    }
+  }
+
+  String _stepTitle(AppLocalizations t) {
     return switch (_step) {
       _Step.current => t.pinCurrentStep,
       _Step.create => t.pinCreateStep,
       _Step.confirm => t.pinConfirmStep,
     };
+  }
+
+  String _screenTitle(AppLocalizations t) {
+    if (widget.title != null) return widget.title!;
+    if (_isApp) return widget.requireCurrent ? t.pinChangeTitle : t.pinSetTitle;
+    return widget.requireCurrent
+        ? t.contactsPinChangeTitle
+        : t.contactsPinSetTitle;
   }
 
   @override
@@ -96,11 +224,13 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
         ? const [_Step.current, _Step.create, _Step.confirm]
         : const [_Step.create, _Step.confirm];
     final stepIndex = steps.indexOf(_step);
+    final lockedOut = _step == _Step.current && _lockout > Duration.zero;
+    final disabled = lockedOut || _busy;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.requireCurrent ? t.pinChangeTitle : t.pinSetTitle),
+        title: Text(_screenTitle(t)),
         // On first-run setup there is nothing to go back to.
-        automaticallyImplyLeading: widget.requireCurrent,
+        automaticallyImplyLeading: widget.onComplete == null,
       ),
       body: SafeArea(
         child: Center(
@@ -110,7 +240,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconBadge(
-                  icon: Icons.lock_rounded,
+                  icon: _isApp ? Icons.lock_rounded : Icons.contacts_rounded,
                   color: scheme.primary,
                   background: scheme.secondaryContainer,
                   size: 64,
@@ -136,13 +266,13 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  _title(t),
+                  _stepTitle(t),
                   style: theme.textTheme.headlineSmall,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  t.pinSetSubtitle,
+                  _isApp ? t.pinSetSubtitle : t.contactsPinSetSubtitle,
                   style: theme.textTheme.bodyMedium!
                       .copyWith(color: scheme.onSurfaceVariant),
                   textAlign: TextAlign.center,
@@ -150,11 +280,20 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                 const SizedBox(height: 32),
                 PinPad(
                   value: _entry,
-                  onChanged: _onChanged,
-                  onSubmit: _submit,
-                  errorText: _error,
+                  onChanged: disabled ? (_) {} : _onChanged,
+                  onSubmit: disabled ? null : _submit,
+                  errorText: lockedOut
+                      ? t.lockTryAgainIn(formatWait(_lockout))
+                      : _error,
                   // All PIN steps are fixed at 6 digits (the default).
                 ),
+                if (_step == _Step.current) ...[
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: _forgot,
+                    child: Text(t.lockForgotPin),
+                  ),
+                ],
               ],
             ),
           ),

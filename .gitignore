@@ -51,3 +51,8 @@ android/upload-keystore.jks
 # Personal / legal documents (Udyam certificate etc.) contain contact
 # details and must never be published with the public repo.
 *.pdf
+
+# Personal resume: kept locally only (the repo is public and it contains
+# contact details).
+resume/
+play_store/graphics/sms_demo.mp4

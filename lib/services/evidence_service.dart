@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
+
 import 'recorder_service.dart';
+import 'vault.dart';
 
 /// Captures photos and audio as evidence during an emergency.
 ///
@@ -62,6 +66,11 @@ class EvidenceService {
 
           final image = await _cameraController!.takePicture();
           await image.saveTo(photoPath);
+          // The camera's own temporary copy would stay readable.
+          try {
+            await File(image.path).delete();
+          } catch (_) {/* already gone */}
+          photoPath = await Vault.instance.sealFile(photoPath);
         } catch (e) {
           // Photo capture failed, but continue with audio.
         }

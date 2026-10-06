@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.location.Location
-import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
@@ -43,13 +42,31 @@ object SosSender {
     /// otherwise via a full-screen "tap to send" notification. Returns false if
     /// there are no contacts. [onDone] runs once the outcome is known (used by
     /// [CheckinAlarmReceiver] to keep its process alive until then).
-    fun send(context: Context, onDone: (() -> Unit)? = null): Boolean {
+    ///
+    /// Waits at most [locationWaitMs] for a fresh location fix when the last
+    /// known one is old; the alert is never held back longer than that.
+    fun send(
+        context: Context,
+        locationWaitMs: Long = 10_000,
+        onDone: (() -> Unit)? = null,
+    ): Boolean {
         val contacts = loadContacts(context)
         if (contacts.isEmpty()) {
             onDone?.invoke()
             return false
         }
-        val message = buildMessage(context)
+        SosLocation.get(context, locationWaitMs) { location ->
+            sendNow(context, contacts, buildMessage(context, location), onDone)
+        }
+        return true
+    }
+
+    private fun sendNow(
+        context: Context,
+        contacts: List<String>,
+        message: String,
+        onDone: (() -> Unit)?,
+    ) {
         val silent = prefBool(context, "silent_sos")
         if (DirectSms.canSend(context)) {
             DirectSms.send(context, contacts, message) { sent, failed ->
@@ -65,12 +82,11 @@ object SosSender {
                 if (failed.isNotEmpty()) promptSos(context, failed, message)
                 onDone?.invoke()
             }
-            return true
+            return
         }
         promptSos(context, contacts, message)
         if (!silent) vibrate(context)
         onDone?.invoke()
-        return true
     }
 
     /// The fallback: a full-screen "tap to send" notification for [recipients].
@@ -91,15 +107,16 @@ object SosSender {
     fun sendFollowMe(context: Context): Boolean {
         val contacts = loadContacts(context)
         if (contacts.isEmpty()) return false
-        val link = lastKnownMapsLink(context) ?: "(location unavailable)"
-        val message = "Following my journey. Live location: $link"
-        if (DirectSms.canSend(context)) {
-            DirectSms.send(context, contacts, message) { _, failed ->
-                if (failed.isNotEmpty()) promptFollowMe(context, failed, message)
+        SosLocation.get(context, 5_000) { location ->
+            val message = "Following my journey. Live location: ${SosLocation.describe(location)}"
+            if (DirectSms.canSend(context)) {
+                DirectSms.send(context, contacts, message) { _, failed ->
+                    if (failed.isNotEmpty()) promptFollowMe(context, failed, message)
+                }
+            } else {
+                promptFollowMe(context, contacts, message)
             }
-            return true
         }
-        promptFollowMe(context, contacts, message)
         return true
     }
 
@@ -159,34 +176,16 @@ object SosSender {
         }
     }
 
-    private fun buildMessage(context: Context): String {
+    private fun buildMessage(context: Context, location: Location?): String {
         var template = prefString(context, "sos_message")
         if (template.isNullOrBlank()) {
             template = "EMERGENCY! I need help. My current location: {location}"
         }
-        val link = lastKnownMapsLink(context)
+        val where = SosLocation.describe(location)
         return if (template.contains("{location}")) {
-            template.replace("{location}", link ?: "(location unavailable)")
-        } else if (link != null) {
-            "$template $link"
+            template.replace("{location}", where)
         } else {
-            template
-        }
-    }
-
-    private fun lastKnownMapsLink(context: Context): String? {
-        return try {
-            val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            var best: Location? = null
-            for (p in lm.getProviders(true)) {
-                val loc = lm.getLastKnownLocation(p) ?: continue
-                if (best == null || loc.time > best!!.time) best = loc
-            }
-            best?.let { "https://maps.google.com/?q=${it.latitude},${it.longitude}" }
-        } catch (e: SecurityException) {
-            null
-        } catch (e: Exception) {
-            null
+            "$template $where"
         }
     }
 
@@ -243,6 +242,16 @@ object SosSender {
                 )
                 .setAutoCancel(true)
                 .setContentIntent(contentIntent)
+                // On a locked phone show only the generic title: the message
+                // carries the user's live location link.
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+                .setPublicVersion(
+                    NotificationCompat.Builder(context, CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_stat_safeone)
+                        .setContentTitle(title)
+                        .setContentText("Unlock to send your SOS message.")
+                        .build(),
+                )
             if (fullScreen) builder.setFullScreenIntent(contentIntent, true)
 
             nm.notify(id, builder.build())

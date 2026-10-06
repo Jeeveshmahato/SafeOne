@@ -16,6 +16,8 @@ import 'package:women_safety_app/screens/fake_call_screen.dart';
 import 'package:women_safety_app/screens/fake_call_setup_screen.dart';
 import 'package:women_safety_app/screens/ongoing_call_screen.dart';
 
+import 'pin_helpers.dart';
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -25,15 +27,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Get past the app lock (first run creates a PIN, later runs unlock).
-    for (var round = 0; round < 2; round++) {
-      if (find.byType(HomeScreen).evaluate().isNotEmpty) break;
-      for (var i = 0; i < 4; i++) {
-        await tester.tap(find.text('1'));
-        await tester.pump();
-      }
-      await tester.tap(find.byIcon(Icons.check_circle));
-      await tester.pumpAndSettle();
-    }
+    await unlockApp(tester, HomeScreen);
 
     // Open the Fake Call feature from the home grid.
     final fakeCallTile = find.text('Fake call');

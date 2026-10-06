@@ -54,6 +54,9 @@ class _DangerZonesScreenState extends State<DangerZonesScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     TextFormField(
+                      // Incognito keyboard: private text must not be learned or synced
+                      // by the keyboard app.
+                      enableIMEPersonalizedLearning: false,
                       controller: nameController,
                       decoration: const InputDecoration(labelText: 'Zone name'),
                       validator: (value) =>
@@ -63,6 +66,9 @@ class _DangerZonesScreenState extends State<DangerZonesScreen> {
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
+                      // Incognito keyboard: private text must not be learned or synced
+                      // by the keyboard app.
+                      enableIMEPersonalizedLearning: false,
                       controller: noteController,
                       decoration: const InputDecoration(
                         labelText: 'Note (e.g. reason, time of day)',

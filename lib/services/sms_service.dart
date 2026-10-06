@@ -8,6 +8,7 @@ class SmsOutcome {
     required this.sentAutomatically,
     required this.composerOpened,
     this.failed = const [],
+    this.autoSmsOff = false,
   });
 
   /// Numbers the phone confirmed it sent, with no tap needed.
@@ -19,6 +20,10 @@ class SmsOutcome {
 
   /// Numbers that couldn't be sent automatically.
   final List<String> failed;
+
+  /// True if automatic sending wasn't possible at all (SMS permission not
+  /// granted), as opposed to individual messages failing.
+  final bool autoSmsOff;
 
   /// True if the alert went out or is ready to send in Messages.
   bool get delivered => sentAutomatically.isNotEmpty || composerOpened;
@@ -66,7 +71,8 @@ class SmsService {
 
     var sent = <String>[];
     var failed = List<String>.of(phoneNumbers);
-    if (await canSendAutomatically()) {
+    final auto = await canSendAutomatically();
+    if (auto) {
       try {
         final result = await _channel.invokeMapMethod<String, dynamic>(
           'send',
@@ -85,6 +91,7 @@ class SmsService {
       sentAutomatically: sent,
       composerOpened: composerOpened,
       failed: failed,
+      autoSmsOff: !auto,
     );
   }
 

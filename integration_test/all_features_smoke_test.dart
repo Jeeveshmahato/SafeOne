@@ -20,6 +20,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:women_safety_app/main.dart' as app;
 import 'package:women_safety_app/screens/home_screen.dart';
 
+import 'pin_helpers.dart';
+
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -47,26 +49,7 @@ void main() {
 
   /// Gets past the app lock. On the very first launch this creates a PIN
   /// (enter + confirm); on later launches it just unlocks with the same PIN.
-  Future<void> unlock(WidgetTester tester) async {
-    await settle(tester, const Duration(seconds: 1));
-
-    Future<void> typePin() async {
-      // PINs are now fixed at 6 digits. The keypad is scrambled, but each digit
-      // key still exists exactly once, so tapping '1' six times enters 111111.
-      for (var i = 0; i < 6; i++) {
-        await tester.tap(find.text('1'));
-        await tester.pump();
-      }
-      await tester.tap(find.byIcon(Icons.check_circle));
-      await settle(tester);
-    }
-
-    // Up to two rounds covers create+confirm; a single unlock exits early.
-    for (var round = 0; round < 2; round++) {
-      if (find.byType(HomeScreen).evaluate().isNotEmpty) break;
-      await typePin();
-    }
-  }
+  Future<void> unlock(WidgetTester tester) => unlockApp(tester, HomeScreen);
 
   testWidgets('opens every feature screen without crashing', (tester) async {
     app.main();

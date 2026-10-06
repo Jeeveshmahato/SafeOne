@@ -1,6 +1,7 @@
 package com.safeone.app
 
 import android.app.Activity
+import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
@@ -24,6 +25,8 @@ class MainActivity : FlutterFragmentActivity() {
     private val monitorChannelName = "women_safety/safety_monitor"
     private val ringtoneChannelName = "com.safeone.app/ringtone"
     private val smsChannelName = "com.safeone.app/sms"
+    private val deviceChannelName = "com.safeone.app/device"
+    private val vaultChannelName = "com.safeone.app/vault"
 
     // The system ringtone picker: lists the phone's ringtones and lets the
     // user add their own sound file, with no storage permission needed.
@@ -64,6 +67,16 @@ class MainActivity : FlutterFragmentActivity() {
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON,
             )
+        }
+        // Nothing SafeOne shows (contacts, medical info, PIN entry) may be
+        // captured: no screenshots, no screen recording or casting by other
+        // apps, and a blank recent-apps thumbnail.
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE,
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            setRecentsScreenshotEnabled(false)
         }
         // Robust autostart: if the user has any hands-free trigger enabled (or
         // live-sharing is active), (re)start the monitor service NATIVELY on
@@ -205,6 +218,63 @@ class MainActivity : FlutterFragmentActivity() {
                 }
                 else -> result.notImplemented()
             }
+        }
+
+        // Lets the app lock check whether the phone itself is locked: SafeOne
+        // may be shown over the lock screen (fake call), and must never show
+        // unlocked content there.
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            deviceChannelName,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "isKeyguardLocked" -> {
+                    val km = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+                    result.success(km.isKeyguardLocked)
+                }
+                "securityStatus" -> result.success(
+                    mapOf(
+                        "binding" to HardwareKeys.bindingLevel(),
+                        "rooted" to HardwareKeys.looksRooted(),
+                    ),
+                )
+                else -> result.notImplemented()
+            }
+        }
+
+        // Hardware-backed keys for the PIN and the encrypted data vault.
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            vaultChannelName,
+        ).setMethodCallHandler { call, result ->
+            // Key generation and StrongBox calls can take a while: keep them
+            // off the UI thread and reply on it.
+            Thread {
+                val reply: () -> Unit = try {
+                    val value: Any? = when (call.method) {
+                        "bind" -> HardwareKeys.bind(call.argument<ByteArray>("data")!!)
+                        "ensureRecovery" -> HardwareKeys.ensureRecovery(this)
+                        "recoveryWrap" -> HardwareKeys.recoveryWrap(call.argument<ByteArray>("data")!!)
+                        "recoveryUnwrap" -> HardwareKeys.recoveryUnwrap(call.argument<ByteArray>("data")!!)
+                        "deleteAll" -> {
+                            HardwareKeys.deleteAll()
+                            true
+                        }
+                        else -> null.also {
+                            runOnUiThread { result.notImplemented() }
+                            return@Thread
+                        }
+                    }
+                    { result.success(value) }
+                } catch (e: HardwareKeys.NotAuthenticated) {
+                    { result.error("not_authenticated", "Strong authentication required", null) }
+                } catch (e: HardwareKeys.Invalidated) {
+                    { result.error("invalidated", "Recovery key no longer usable", null) }
+                } catch (e: Exception) {
+                    { result.error("unavailable", e.javaClass.simpleName, null) }
+                }
+                runOnUiThread(reply)
+            }.start()
         }
 
         // Fake-call ringtone: pick, name and play the phone's ringtones.

@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 
+import 'app_lock_service.dart';
+
 import 'call_sound.dart';
 import 'ringtone_service.dart';
 
@@ -26,6 +28,9 @@ class DeviceRingtone {
   /// the user add their own sound file, with no storage permission needed.
   /// Returns null if the user cancels.
   static Future<PickedRingtone?> pick({String? current}) async {
+    // The picker is a system screen opened by SafeOne itself; returning from
+    // it must not count as leaving the app (which would ask for the PIN).
+    AppLockService.systemPromptActive = true;
     try {
       final result = await _channel
           .invokeMapMethod<String, dynamic>('pick', {'current': current});
@@ -36,6 +41,8 @@ class DeviceRingtone {
       return null;
     } on MissingPluginException {
       return null;
+    } finally {
+      AppLockService.systemPromptActive = false;
     }
   }
 

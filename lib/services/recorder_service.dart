@@ -1,6 +1,8 @@
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
+import 'vault.dart';
+
 /// Records audio from the microphone and saves it as a file on the phone.
 ///
 /// Useful for capturing evidence during an emergency. Recordings are stored in
@@ -34,10 +36,21 @@ class RecorderService {
   }
 
   /// Stop recording. Returns the saved file path (or null if nothing recorded).
+  ///
+  /// The recording is encrypted into the [Vault] straight away (this works
+  /// even while the app is locked) and the plain audio file is removed, so it
+  /// can only be played back by someone who can unlock SafeOne.
   Future<String?> stop() async {
     if (!_isRecording) return null;
     _isRecording = false;
-    return _recorder.stop();
+    final path = await _recorder.stop();
+    if (path == null) return null;
+    try {
+      return await Vault.instance.sealFile(path);
+    } catch (_) {
+      // No vault (can't happen once a PIN exists): keep the evidence.
+      return path;
+    }
   }
 
   /// Free up the recorder when no longer needed.

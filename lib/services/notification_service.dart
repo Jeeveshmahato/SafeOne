@@ -327,6 +327,10 @@ class NotificationService {
   /// Cancel a scheduled (or showing) fake call by its notification id.
   Future<void> cancelFakeCall(int id) => _plugin.cancel(id);
 
+  /// Cancel every pending and shown notification (used by "Erase and start
+  /// over", so no scheduled fake call or reminder outlives the data).
+  Future<void> cancelAll() => _plugin.cancelAll();
+
   // ---------------------------------------------------------------------------
   // Routing
   // ---------------------------------------------------------------------------

@@ -95,6 +95,9 @@ class _SafetyEventLogScreenState extends State<SafetyEventLogScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
+              // Incognito keyboard: private text must not be learned or synced
+              // by the keyboard app.
+              enableIMEPersonalizedLearning: false,
               controller: locationCtrl,
               decoration: const InputDecoration(
                 labelText: 'Where',
@@ -103,6 +106,9 @@ class _SafetyEventLogScreenState extends State<SafetyEventLogScreen> {
             ),
             const SizedBox(height: 12),
             TextField(
+              // Incognito keyboard: private text must not be learned or synced
+              // by the keyboard app.
+              enableIMEPersonalizedLearning: false,
               controller: descCtrl,
               minLines: 2,
               maxLines: 4,

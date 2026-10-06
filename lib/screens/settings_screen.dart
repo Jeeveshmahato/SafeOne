@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -36,6 +37,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _powerTrigger = SettingsRepository.defaultPowerTrigger;
   bool _biometricEnabled = false;
   bool _biometricAvailable = false;
+  bool _contactsPinSet = false;
+  // Where the encryption keys live, and whether the phone looks rooted
+  // (Android only; null elsewhere).
+  String? _keyStorage;
+  bool _rooted = false;
   int _graceSeconds = AppLockService.defaultGraceSeconds;
 
   /// Whether SOS SMS go out automatically (SEND_SMS granted), and whether
@@ -73,6 +79,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final biometricOn = await _lock.isBiometricEnabled();
     final biometricAvailable = await _lock.canUseBiometrics();
     final grace = await _lock.loadGraceSeconds();
+    final contactsPinSet = await _lock.isPinSet(PinKind.contacts);
+    Map<Object?, Object?>? security;
+    try {
+      security = await const MethodChannel('com.safeone.app/device')
+          .invokeMethod<Map<Object?, Object?>>('securityStatus');
+    } catch (_) {/* not Android */}
     final autoSms = await SmsService.canSendAutomatically();
     final smsStatus = await SmsService.permissionStatus();
     if (!mounted) return;
@@ -89,6 +101,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _biometricEnabled = biometricOn;
       _biometricAvailable = biometricAvailable;
       _graceSeconds = grace;
+      _contactsPinSet = contactsPinSet;
+      _keyStorage = security?['binding'] as String?;
+      _rooted = security?['rooted'] == true;
     });
   }
 
@@ -114,6 +129,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
         builder: (_) => const PinSetupScreen(requireCurrent: true),
       ),
     );
+  }
+
+  /// Change the contacts PIN, or create it if there isn't one yet.
+  Future<void> _changeContactsPin() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PinSetupScreen(
+          kind: PinKind.contacts,
+          requireCurrent: _contactsPinSet,
+        ),
+      ),
+    );
+    final set = await _lock.isPinSet(PinKind.contacts);
+    if (mounted) setState(() => _contactsPinSet = set);
   }
 
   Future<void> _setBiometric(bool enabled) async {
@@ -276,9 +306,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _SettingsGroup(children: [
                   ListTile(
                     leading: _leading(Icons.pin_rounded),
-                    title: Text(t.securityChangePin),
+                    title: Text(t.securityAppPin),
+                    subtitle: Text(t.securityAppPinSubtitle),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: _changePin,
+                  ),
+                  ListTile(
+                    leading: _leading(Icons.contacts_rounded),
+                    title: Text(t.securityContactsPin),
+                    subtitle: Text(_contactsPinSet
+                        ? t.securityContactsPinOn
+                        : t.securityContactsPinOff),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: _changeContactsPin,
                   ),
                   SwitchListTile(
                     secondary: _leading(Icons.fingerprint_rounded),
@@ -287,6 +327,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     value: _biometricEnabled,
                     onChanged: _biometricAvailable ? _setBiometric : null,
                   ),
+                  if (_keyStorage != null)
+                    ListTile(
+                      leading: _leading(Icons.verified_user_outlined),
+                      title: Text(t.securityProtection),
+                      subtitle: Text(switch (_keyStorage) {
+                        'strongbox' => t.securityProtectionStrongBox,
+                        'tee' => t.securityProtectionTee,
+                        _ => t.securityProtectionSoftware,
+                      }),
+                    ),
+                  if (_rooted)
+                    ListTile(
+                      leading: Icon(Icons.warning_amber_rounded,
+                          color: scheme.error),
+                      title: Text(t.securityRootedTitle),
+                      subtitle: Text(t.securityRootedBody),
+                    ),
                   ListTile(
                     leading: _leading(Icons.lock_clock_rounded),
                     title: Text(t.securityAutoLock),

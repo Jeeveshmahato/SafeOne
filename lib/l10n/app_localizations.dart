@@ -816,6 +816,234 @@ abstract class AppLocalizations {
   /// **'Enter your current PIN'**
   String get pinCurrentStep;
 
+  /// No description provided for @lockForgotPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot PIN?'**
+  String get lockForgotPin;
+
+  /// No description provided for @lockTryAgainIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Try again in {time}.'**
+  String lockTryAgainIn(String time);
+
+  /// No description provided for @pinSameAsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a PIN that\'s different from your app PIN.'**
+  String get pinSameAsApp;
+
+  /// No description provided for @pinSameAsContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a PIN that\'s different from your contacts PIN.'**
+  String get pinSameAsContacts;
+
+  /// No description provided for @contactsPinEnterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter contacts PIN'**
+  String get contactsPinEnterTitle;
+
+  /// No description provided for @contactsPinEnterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your contacts PIN is needed to change your emergency contacts.'**
+  String get contactsPinEnterSubtitle;
+
+  /// No description provided for @contactsPinSetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a contacts PIN'**
+  String get contactsPinSetTitle;
+
+  /// No description provided for @contactsPinSetSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A second PIN, different from your app PIN. It\'s needed to add or remove emergency contacts, so no one can quietly change who gets your SOS.'**
+  String get contactsPinSetSubtitle;
+
+  /// No description provided for @contactsPinChangeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change contacts PIN'**
+  String get contactsPinChangeTitle;
+
+  /// No description provided for @securityAppPin.
+  ///
+  /// In en, this message translates to:
+  /// **'App PIN'**
+  String get securityAppPin;
+
+  /// No description provided for @securityAppPinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change or reset the PIN that unlocks SafeOne'**
+  String get securityAppPinSubtitle;
+
+  /// No description provided for @securityContactsPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Contacts PIN'**
+  String get securityContactsPin;
+
+  /// No description provided for @securityContactsPinOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Needed to add or remove emergency contacts'**
+  String get securityContactsPinOn;
+
+  /// No description provided for @securityContactsPinOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Not set yet. You\'ll create it when you next add a contact.'**
+  String get securityContactsPinOff;
+
+  /// No description provided for @pinResetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset PIN'**
+  String get pinResetTitle;
+
+  /// No description provided for @pinResetIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'SafeOne can\'t recover a forgotten PIN, because it never leaves this phone. Prove this is your phone, then choose a new PIN.'**
+  String get pinResetIntro;
+
+  /// No description provided for @pinResetWithDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your phone\'s screen lock'**
+  String get pinResetWithDevice;
+
+  /// No description provided for @pinResetWithDeviceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone\'s PIN, pattern, password or fingerprint'**
+  String get pinResetWithDeviceSubtitle;
+
+  /// No description provided for @pinResetDeviceReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm it\'s you to reset your SafeOne PIN'**
+  String get pinResetDeviceReason;
+
+  /// No description provided for @pinResetDeviceFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t confirm it\'s you. Try again.'**
+  String get pinResetDeviceFailed;
+
+  /// No description provided for @pinResetNoDeviceLock.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone has no screen lock, so it can\'t be used to prove it\'s yours.'**
+  String get pinResetNoDeviceLock;
+
+  /// No description provided for @pinResetWithAppPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your app PIN'**
+  String get pinResetWithAppPin;
+
+  /// No description provided for @pinResetWithAppPinSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The PIN you use to unlock SafeOne'**
+  String get pinResetWithAppPinSubtitle;
+
+  /// No description provided for @pinResetErase.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase SafeOne and start over'**
+  String get pinResetErase;
+
+  /// No description provided for @pinResetEraseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes all SafeOne data on this phone'**
+  String get pinResetEraseSubtitle;
+
+  /// No description provided for @pinResetEraseConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase all SafeOne data?'**
+  String get pinResetEraseConfirmTitle;
+
+  /// No description provided for @pinResetEraseConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your emergency contacts, medical info, settings, saved recordings and photos, and both PINs. It can\'t be undone.'**
+  String get pinResetEraseConfirmBody;
+
+  /// No description provided for @pinResetEraseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Erase everything'**
+  String get pinResetEraseConfirm;
+
+  /// No description provided for @pinResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN reset.'**
+  String get pinResetDone;
+
+  /// No description provided for @lockBiometricNeedsPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN to open your encrypted data.'**
+  String get lockBiometricNeedsPin;
+
+  /// No description provided for @pinResetNeedsStrongAuth.
+  ///
+  /// In en, this message translates to:
+  /// **'Use your phone\'s PIN, pattern, password or fingerprint. Face unlock isn\'t secure enough to open your data.'**
+  String get pinResetNeedsStrongAuth;
+
+  /// No description provided for @pinResetRecoveryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is locked with your old PIN, and this phone\'s screen lock can\'t open it (it was added later or removed since). Use the old PIN, or erase SafeOne and start over.'**
+  String get pinResetRecoveryUnavailable;
+
+  /// No description provided for @securityProtection.
+  ///
+  /// In en, this message translates to:
+  /// **'Data protection'**
+  String get securityProtection;
+
+  /// No description provided for @securityProtectionStrongBox.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted. Keys are in this phone\'s dedicated security chip.'**
+  String get securityProtectionStrongBox;
+
+  /// No description provided for @securityProtectionTee.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted. Keys are in this phone\'s secure hardware.'**
+  String get securityProtectionTee;
+
+  /// No description provided for @securityProtectionSoftware.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted, but this phone has no secure hardware for the keys.'**
+  String get securityProtectionSoftware;
+
+  /// No description provided for @securityRootedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This phone appears to be rooted'**
+  String get securityRootedTitle;
+
+  /// No description provided for @securityRootedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Apps with root access can see what SafeOne shows while it\'s unlocked. Saved data stays encrypted while SafeOne is locked, so keep auto-lock set to Immediately.'**
+  String get securityRootedBody;
+
   /// No description provided for @securitySection.
   ///
   /// In en, this message translates to:

@@ -13,6 +13,20 @@ class SosResult {
   const SosResult({required this.success, required this.message});
 }
 
+/// The location part of an alert: the maps link, labelled with its age when
+/// it's an old "last known" fix (no fresh fix arrived in time), so contacts
+/// don't go to where the person was hours ago thinking it's live.
+String describeLocation(String? mapsLink, DateTime? fixTime, {DateTime? now}) {
+  if (mapsLink == null) return '(location unavailable)';
+  if (fixTime == null) return mapsLink;
+  final age = (now ?? DateTime.now()).difference(fixTime);
+  if (age < const Duration(minutes: 5)) return mapsLink;
+  final ago = age.inMinutes < 120
+      ? '${age.inMinutes} min ago'
+      : '${age.inHours} h ago';
+  return '$mapsLink (last known location, from $ago)';
+}
+
 /// The "brain" of the SOS feature. It runs all the steps in order:
 ///   1. Check there are contacts to alert.
 ///   2. Get the current location.
@@ -104,12 +118,15 @@ class SosService {
       // Step 3: get the location — best effort. An alert without a location
       // is far better than no alert, so a GPS failure never stops the SOS.
       final position = await _locationService.getBestEffortLocation();
-      final String locationText = position == null
-          ? '(location unavailable)'
-          : _locationService.buildMapsLink(
-              position.latitude,
-              position.longitude,
-            );
+      final String locationText = describeLocation(
+        position == null
+            ? null
+            : _locationService.buildMapsLink(
+                position.latitude,
+                position.longitude,
+              ),
+        position?.timestamp,
+      );
 
       // Step 4: build the message from the template.
       const String placeholder = '{location}';
@@ -145,7 +162,7 @@ class SosService {
       final noLocation = position == null
           ? ' Turn on GPS to include a map link.'
           : '';
-      final String text;
+      var text = '';
       if (sentCount == total) {
         text = '$successPrefix $total contact(s).$noLocation';
       } else if (sentCount > 0) {
@@ -154,6 +171,11 @@ class SosService {
       } else {
         text = 'Messages is open — tap Send to alert $total contact(s).'
             '$noLocation';
+      }
+      // Say why a tap was needed, so it's fixed before the next emergency.
+      if (outcome.autoSmsOff) {
+        text += ' Turn on "Send SOS automatically" in Settings so it sends '
+            'by itself next time.';
       }
       return SosResult(success: true, message: text);
     } catch (error) {

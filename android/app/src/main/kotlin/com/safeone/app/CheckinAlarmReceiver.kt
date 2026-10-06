@@ -23,9 +23,10 @@ class CheckinAlarmReceiver : BroadcastReceiver() {
         val pending = goAsync()
         val done = AtomicBoolean(false)
         val finish = { if (done.compareAndSet(false, true)) pending.finish() }
-        // A receiver gets ~10 s. The SMS is already handed to the system by
-        // then, so stop waiting for confirmations rather than overrun.
+        // A receiver gets ~10 s: wait at most 4 s for a fresh location so the
+        // SMS is handed to the system well before then, and stop waiting for
+        // the "sent" confirmations rather than overrun.
         Handler(Looper.getMainLooper()).postDelayed({ finish() }, 9_000)
-        SosSender.send(context) { finish() }
+        SosSender.send(context, locationWaitMs = 4_000) { finish() }
     }
 }

@@ -381,6 +381,141 @@ class AppLocalizationsBn extends AppLocalizations {
   String get pinCurrentStep => 'Enter your current PIN';
 
   @override
+  String get lockForgotPin => 'Forgot PIN?';
+
+  @override
+  String lockTryAgainIn(String time) {
+    return 'Too many attempts. Try again in $time.';
+  }
+
+  @override
+  String get pinSameAsApp =>
+      'Choose a PIN that\'s different from your app PIN.';
+
+  @override
+  String get pinSameAsContacts =>
+      'Choose a PIN that\'s different from your contacts PIN.';
+
+  @override
+  String get contactsPinEnterTitle => 'Enter contacts PIN';
+
+  @override
+  String get contactsPinEnterSubtitle =>
+      'Your contacts PIN is needed to change your emergency contacts.';
+
+  @override
+  String get contactsPinSetTitle => 'Set a contacts PIN';
+
+  @override
+  String get contactsPinSetSubtitle =>
+      'A second PIN, different from your app PIN. It\'s needed to add or remove emergency contacts, so no one can quietly change who gets your SOS.';
+
+  @override
+  String get contactsPinChangeTitle => 'Change contacts PIN';
+
+  @override
+  String get securityAppPin => 'App PIN';
+
+  @override
+  String get securityAppPinSubtitle =>
+      'Change or reset the PIN that unlocks SafeOne';
+
+  @override
+  String get securityContactsPin => 'Contacts PIN';
+
+  @override
+  String get securityContactsPinOn =>
+      'Needed to add or remove emergency contacts';
+
+  @override
+  String get securityContactsPinOff =>
+      'Not set yet. You\'ll create it when you next add a contact.';
+
+  @override
+  String get pinResetTitle => 'Reset PIN';
+
+  @override
+  String get pinResetIntro =>
+      'SafeOne can\'t recover a forgotten PIN, because it never leaves this phone. Prove this is your phone, then choose a new PIN.';
+
+  @override
+  String get pinResetWithDevice => 'Use your phone\'s screen lock';
+
+  @override
+  String get pinResetWithDeviceSubtitle =>
+      'Your phone\'s PIN, pattern, password or fingerprint';
+
+  @override
+  String get pinResetDeviceReason =>
+      'Confirm it\'s you to reset your SafeOne PIN';
+
+  @override
+  String get pinResetDeviceFailed => 'Couldn\'t confirm it\'s you. Try again.';
+
+  @override
+  String get pinResetNoDeviceLock =>
+      'This phone has no screen lock, so it can\'t be used to prove it\'s yours.';
+
+  @override
+  String get pinResetWithAppPin => 'Use your app PIN';
+
+  @override
+  String get pinResetWithAppPinSubtitle => 'The PIN you use to unlock SafeOne';
+
+  @override
+  String get pinResetErase => 'Erase SafeOne and start over';
+
+  @override
+  String get pinResetEraseSubtitle => 'Deletes all SafeOne data on this phone';
+
+  @override
+  String get pinResetEraseConfirmTitle => 'Erase all SafeOne data?';
+
+  @override
+  String get pinResetEraseConfirmBody =>
+      'This permanently deletes your emergency contacts, medical info, settings, saved recordings and photos, and both PINs. It can\'t be undone.';
+
+  @override
+  String get pinResetEraseConfirm => 'Erase everything';
+
+  @override
+  String get pinResetDone => 'PIN reset.';
+
+  @override
+  String get lockBiometricNeedsPin =>
+      'Enter your PIN to open your encrypted data.';
+
+  @override
+  String get pinResetNeedsStrongAuth =>
+      'Use your phone\'s PIN, pattern, password or fingerprint. Face unlock isn\'t secure enough to open your data.';
+
+  @override
+  String get pinResetRecoveryUnavailable =>
+      'Your data is locked with your old PIN, and this phone\'s screen lock can\'t open it (it was added later or removed since). Use the old PIN, or erase SafeOne and start over.';
+
+  @override
+  String get securityProtection => 'Data protection';
+
+  @override
+  String get securityProtectionStrongBox =>
+      'Encrypted. Keys are in this phone\'s dedicated security chip.';
+
+  @override
+  String get securityProtectionTee =>
+      'Encrypted. Keys are in this phone\'s secure hardware.';
+
+  @override
+  String get securityProtectionSoftware =>
+      'Encrypted, but this phone has no secure hardware for the keys.';
+
+  @override
+  String get securityRootedTitle => 'This phone appears to be rooted';
+
+  @override
+  String get securityRootedBody =>
+      'Apps with root access can see what SafeOne shows while it\'s unlocked. Saved data stays encrypted while SafeOne is locked, so keep auto-lock set to Immediately.';
+
+  @override
   String get securitySection => 'Security';
 
   @override
