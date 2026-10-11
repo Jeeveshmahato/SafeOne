@@ -83,6 +83,9 @@ kotlin {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // Fused location for SOS updates sent from the background service (fast,
+    // works indoors). Same version the geolocator plugin already brings in.
+    implementation("com.google.android.gms:play-services-location:21.2.0")
 }
 
 flutter {

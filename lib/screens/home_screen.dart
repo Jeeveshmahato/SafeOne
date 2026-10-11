@@ -97,8 +97,19 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // The user may have granted permissions in system Settings meanwhile.
-    if (state == AppLifecycleState.resumed) _checkReadiness();
+    // The user may have granted permissions in system Settings meanwhile,
+    // and the background service may have started or ended live sharing (a
+    // shake SOS, a journey).
+    if (state == AppLifecycleState.resumed) {
+      _checkReadiness();
+      _refreshLiveSharing();
+    }
+  }
+
+  Future<void> _refreshLiveSharing() async {
+    final active = await _settingsRepository.loadLiveSharingActive();
+    if (!mounted || active == _liveSharing) return;
+    setState(() => _liveSharing = active);
   }
 
   /// Re-reads the SMS and location permissions behind the "Get SOS ready"
@@ -251,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (result.success) {
       _eventLog.log(
         SafetyEventType.sos,
-        'SOS alert sent to ${_contacts.length} contact(s)',
+        'SOS sent to ${contactsPhrase(_contacts.length)}',
         contacts: _contacts.map((c) => c.name).toList(),
       );
       _maybeStartLiveSharing();
@@ -279,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (result.success) {
       _eventLog.log(
         SafetyEventType.sos,
-        'Silent SOS sent to ${_contacts.length} contact(s)',
+        'Silent SOS sent to ${contactsPhrase(_contacts.length)}',
         contacts: _contacts.map((c) => c.name).toList(),
       );
       _showMessage(t.silentSosSent(_contacts.length));
@@ -290,8 +301,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _maybeStartLiveSharing() async {
-    if (!Features.backgroundLocation) return;
-    if (!_liveUpdates || _liveSharing || _contacts.isEmpty) return;
+    final current = await SafetyMonitorService.liveShareStatus();
+    // An SOS sharing session already running still needs the fix. Follow Me
+    // or a journey is replaced, so updates now say the user needs help.
+    if (current.active && current.mode == LiveShareMode.sos) return;
+    if (!Features.backgroundLocation || !_liveUpdates || _contacts.isEmpty) {
+      // Nothing will send follow-ups: keep no location on the phone.
+      if (!current.active) await LastFix.forget();
+      return;
+    }
+    if (!mounted) return;
     final t = AppLocalizations.of(context);
     // Runs inside the native foreground service, so it keeps sending the
     // location even if the app is closed/swiped or the phone is locked — until
@@ -331,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (result.success) {
       _eventLog.log(
         SafetyEventType.checkIn,
-        'Safe check-in sent to ${_contacts.length} contact(s)',
+        "Told ${contactsPhrase(_contacts.length)} you're safe",
         contacts: _contacts.map((c) => c.name).toList(),
       );
     }
@@ -417,7 +436,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Future<void> _shareLocation() async {
     try {
       await _shareLocationService.shareCurrentLocation();
-      _eventLog.log(SafetyEventType.locationShared, 'Shared current location');
+      _eventLog.log(SafetyEventType.locationShared, 'Shared your location');
     } catch (error) {
       _showMessage(error.toString().replaceFirst('Exception: ', ''),
           isError: true);

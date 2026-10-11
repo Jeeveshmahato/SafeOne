@@ -35,6 +35,10 @@
     <!-- specialUse type required for shake/volume/power SOS triggers and
          Follow Me background location — declared in Play Console App content. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <!-- location type: only while the user shares their live location after
+         an SOS, so updates carry a real location with the app in the
+         background (declared in Play Console > Foreground service permissions). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
 
     <!-- No backups: the app holds contacts, medical info, PIN hashes and
          recordings, which must not leave the phone (Android 11 and below use
@@ -76,20 +80,32 @@
             android:value="2" />
 
         <!-- specialUse foreground service: detects shake/volume/power SOS
-             triggers and runs Follow Me background location sharing. -->
+             triggers; location: shares live location after an SOS, during
+             Follow Me and during a journey. -->
         <service
             android:name=".SafetyMonitorService"
             android:exported="false"
-            android:foregroundServiceType="specialUse">
+            android:foregroundServiceType="specialUse|location">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="SafeOne uses this service to detect emergency triggers (shake, volume, power button) and share live location with trusted contacts during an active SOS — even when the screen is off." />
+                android:value="SafeOne uses this service to detect emergency triggers (shake, volume, power button), share live location with trusted contacts during an active SOS, and alert them if the phone is switched off during an emergency — even when the screen is off." />
         </service>
 
         <!-- Fires the native safety check-in SOS if the deadline passes without
              the user marking themselves safe. -->
         <receiver
             android:name=".CheckinAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Alerts contacts if a journey's arrival time passes without the
+             user tapping "I arrived". -->
+        <receiver
+            android:name=".JourneyAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Wakes the phone for the next live-location update. -->
+        <receiver
+            android:name=".LiveShareAlarmReceiver"
             android:exported="false" />
 
         <!-- Restarts the monitor after reboot if the user had it enabled. -->

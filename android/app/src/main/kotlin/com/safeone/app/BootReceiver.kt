@@ -5,8 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 
-/// Restarts the SafetyMonitorService after a reboot IF the user had it on, so
-/// the hands-free SOS triggers keep working without the user reopening the app.
+/// After a restart (or an app update): sets the check-in and journey
+/// deadlines again, since Android drops alarms on reboot, and restarts the
+/// SafetyMonitorService IF the user had it on, so the hands-free SOS triggers
+/// and any live sharing keep working without the user reopening the app.
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
@@ -15,6 +17,8 @@ class BootReceiver : BroadcastReceiver() {
         ) {
             return
         }
+        CheckinScheduler.restoreAfterBoot(context)
+
         val active = context
             .getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
             .getBoolean("flutter.safety_monitor_active", false)
@@ -23,10 +27,14 @@ class BootReceiver : BroadcastReceiver() {
         val i = Intent(context, SafetyMonitorService::class.java).apply {
             this.action = SafetyMonitorService.ACTION_START
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            context.startForegroundService(i)
-        } else {
-            context.startService(i)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(i)
+            } else {
+                context.startService(i)
+            }
+        } catch (_: Exception) {
+            // Some phones refuse this until the app is opened once.
         }
     }
 }

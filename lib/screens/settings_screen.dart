@@ -38,6 +38,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _biometricEnabled = false;
   bool _biometricAvailable = false;
   bool _contactsPinSet = false;
+  String _shutdownAlert = SettingsRepository.defaultShutdownAlert;
+  String _shutdownScope = SettingsRepository.defaultShutdownAlert;
+  // Location "All the time": without it, an alert sent while SafeOne is in
+  // the background (check-in, switch-off) can't include where you are.
+  bool _bgLocation = true;
+  AppLifecycleListener? _resumeListener;
   // Where the encryption keys live, and whether the phone looks rooted
   // (Android only; null elsewhere).
   String? _keyStorage;
@@ -60,10 +66,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void initState() {
     super.initState();
     _load();
+    // Coming back from the phone's settings: show what was allowed there.
+    _resumeListener = AppLifecycleListener(onResume: _refreshPermissions);
   }
 
   @override
   void dispose() {
+    _resumeListener?.dispose();
     _messageController.dispose();
     super.dispose();
   }
@@ -80,6 +89,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final biometricAvailable = await _lock.canUseBiometrics();
     final grace = await _lock.loadGraceSeconds();
     final contactsPinSet = await _lock.isPinSet(PinKind.contacts);
+    final shutdownAlert = await _settings.loadShutdownAlert();
+    final shutdownScope = await _settings.loadShutdownScope();
+    final bgLocation = await _hasBackgroundLocation();
     Map<Object?, Object?>? security;
     try {
       security = await const MethodChannel('com.safeone.app/device')
@@ -102,9 +114,71 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _biometricAvailable = biometricAvailable;
       _graceSeconds = grace;
       _contactsPinSet = contactsPinSet;
+      _shutdownAlert = shutdownAlert;
+      _shutdownScope = shutdownScope;
+      _bgLocation = bgLocation;
       _keyStorage = security?['binding'] as String?;
       _rooted = security?['rooted'] == true;
     });
+  }
+
+  static Future<bool> _hasBackgroundLocation() async {
+    if (!Features.backgroundLocation) return true; // nothing to ask for
+    try {
+      return await Permission.locationAlways.isGranted;
+    } catch (_) {
+      return true; // not Android
+    }
+  }
+
+  Future<void> _refreshPermissions() async {
+    final autoSms = await SmsService.canSendAutomatically();
+    final smsStatus = await SmsService.permissionStatus();
+    final bgLocation = await _hasBackgroundLocation();
+    if (!mounted) return;
+    setState(() {
+      _autoSms = autoSms;
+      _smsBlocked = smsStatus.isPermanentlyDenied;
+      _bgLocation = bgLocation;
+    });
+  }
+
+  /// Asks for location "All the time", after saying why (Google Play
+  /// requires this disclosure before the system prompt).
+  Future<void> _allowBackgroundLocation() async {
+    final t = AppLocalizations.of(context);
+    final agreed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.location_on_outlined),
+        title: Text(t.bgLocationTitle),
+        content: Text(t.bgLocationBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(t.notNow),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(t.continueLabel),
+          ),
+        ],
+      ),
+    );
+    if (agreed != true) return;
+    // Android only offers "All the time" once "While using the app" is given.
+    if (!await Permission.locationWhenInUse.isGranted) {
+      final status = await Permission.locationWhenInUse.request();
+      if (!status.isGranted) {
+        if (status.isPermanentlyDenied) await openAppSettings();
+        await _refreshPermissions();
+        return;
+      }
+    }
+    final status = await Permission.locationAlways.request();
+    if (status.isPermanentlyDenied) await openAppSettings();
+    await _refreshPermissions();
   }
 
   Future<void> _allowAutoSms() async {
@@ -371,6 +445,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             child: Text(t.settingsAutoSmsAllow),
                           ),
                   ),
+                  ..._shutdownAlertTiles(t, theme),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                     child: Column(
@@ -531,6 +606,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String _graceLabel(AppLocalizations t, int seconds) =>
       seconds == 0 ? t.securityAutoLockImmediate : t.securityAutoLockGrace(seconds);
+
+  /// "Text my location before my phone switches off": an on/off switch,
+  /// then (when on) when it applies, and anything still missing for it to
+  /// work, each with a button to fix it.
+  List<Widget> _shutdownAlertTiles(AppLocalizations t, ThemeData theme) {
+    final on = _shutdownAlert != 'off';
+    final scheme = theme.colorScheme;
+    final small = theme.textTheme.bodySmall!
+        .copyWith(color: scheme.onSurfaceVariant);
+    Widget needs(String text, VoidCallback onAllow) => ListTile(
+          contentPadding: const EdgeInsets.fromLTRB(72, 0, 16, 0),
+          leading: Icon(Icons.error_outline_rounded, color: scheme.error),
+          minLeadingWidth: 0,
+          title: Text(text, style: theme.textTheme.bodyMedium),
+          trailing: FilledButton.tonal(
+            style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
+            onPressed: onAllow,
+            child: Text(t.settingsAutoSmsAllow),
+          ),
+        );
+    return [
+      SwitchListTile(
+        secondary: _leading(Icons.power_settings_new_rounded),
+        title: Text(t.settingsShutdownSwitchTitle),
+        subtitle: Text(t.settingsShutdownSwitchSubtitle),
+        value: on,
+        onChanged: _toggleShutdownAlert,
+      ),
+      if (on) ...[
+        RadioGroup<String>(
+          groupValue: _shutdownAlert,
+          onChanged: (v) {
+            if (v != null) _setShutdownAlert(v);
+          },
+          child: Column(
+            children: [
+              RadioListTile<String>(
+                contentPadding: const EdgeInsets.only(left: 56, right: 16),
+                value: 'active',
+                title: Text(t.settingsShutdownScopeActive),
+                subtitle: Text(t.settingsShutdownScopeActiveHint),
+              ),
+              RadioListTile<String>(
+                contentPadding: const EdgeInsets.only(left: 56, right: 16),
+                value: 'always',
+                title: Text(t.settingsShutdownScopeAlways),
+                subtitle: Text(t.settingsShutdownScopeAlwaysHint),
+              ),
+            ],
+          ),
+        ),
+        if (!_autoSms) needs(t.settingsShutdownNeedsSms, _allowAutoSms),
+        if (!_bgLocation)
+          needs(t.settingsShutdownNeedsLocation, _allowBackgroundLocation),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(72, 4, 20, 12),
+          child: Text(t.settingsShutdownNote, style: small),
+        ),
+      ],
+    ];
+  }
+
+  Future<void> _toggleShutdownAlert(bool on) async {
+    await _setShutdownAlert(on ? _shutdownScope : 'off');
+    if (!on || !mounted) return;
+    // Ask for what it needs right away, while the user is thinking about it.
+    // If they say no, the switch stays on and the missing piece stays listed.
+    if (!_autoSms) await _allowAutoSms();
+    if (mounted && !_bgLocation) await _allowBackgroundLocation();
+  }
+
+  Future<void> _setShutdownAlert(String mode) async {
+    setState(() {
+      _shutdownAlert = mode;
+      if (mode != 'off') _shutdownScope = mode;
+    });
+    await _settings.saveShutdownAlert(mode);
+    // "Every time" needs the safety service running to hear the shutdown;
+    // the native side re-checks what has to run.
+    await SafetyMonitorService.start();
+  }
 
   /// Pick the auto-lock delay in a bottom sheet (standard settings pattern;
   /// an inline dropdown squeezed the title onto two lines).

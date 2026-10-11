@@ -2,18 +2,25 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
 
-import '../models/emergency_contact.dart';
+import '../models/safety_event.dart';
 import '../services/contacts_repository.dart';
 import '../services/location_service.dart';
+import '../services/safety_event_repository.dart';
+import '../services/safety_monitor_service.dart';
 import '../services/sms_service.dart';
 import '../services/sos_service.dart';
 import '../widgets/duration_field.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_ui.dart';
 
-/// Track your journey to a destination. The app monitors your ETA and sends
-/// periodic location updates to your contacts. If time expires without you
-/// tapping "I Arrived", the app sends an automatic SOS alert.
+/// Track your journey to a destination. Your contacts get your location as
+/// often as you choose. If you haven't tapped "I arrived" by the time you set,
+/// they're alerted automatically, and keep getting your location until you
+/// do.
+///
+/// The updates and the deadline run in the native safety service, on alarms,
+/// so they work with the app closed, the screen off or the phone restarted.
+/// This screen only shows what the service is doing.
 class JourneySafeScreen extends StatefulWidget {
   const JourneySafeScreen({super.key});
 
@@ -24,325 +31,395 @@ class JourneySafeScreen extends StatefulWidget {
 class _JourneySafeScreenState extends State<JourneySafeScreen> {
   final ContactsRepository _contactsRepository = ContactsRepository();
   final SosService _sosService = SosService();
-  final SmsService _smsService = SmsService();
   final LocationService _locationService = LocationService();
+  final SafetyEventRepository _eventLog = SafetyEventRepository();
 
   String _destination = '';
   // Both customisable in seconds, minutes or hours.
   Duration _eta = const Duration(minutes: 30);
-  bool _journeyActive = false;
-  int _elapsedSeconds = 0;
   Duration _pingInterval = const Duration(minutes: 5);
-  late Timer _elapsedTimer;
-  late Timer _locationPingTimer;
+
+  LiveShareStatus? _status;
+  bool _busy = false;
+  bool _autoSms = true;
+  // Redraws the countdown; the service keeps the real deadline.
+  Timer? _tick;
+  int _ticks = 0;
+  late final AppLifecycleListener _lifecycle;
+
+  bool get _journeyActive =>
+      _status?.active == true && _status?.mode == LiveShareMode.journey;
+
+  /// Sharing that something else started (an SOS or Follow Me).
+  LiveShareMode? get _otherSession =>
+      _status?.active == true && !_journeyActive ? _status!.mode : null;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle = AppLifecycleListener(onResume: _load);
+    _load();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted) return;
+      setState(() {});
+      // Pick up what the service did in the background now and then.
+      if (++_ticks % 10 == 0) _load();
+    });
+  }
 
   @override
   void dispose() {
-    _elapsedTimer.cancel();
-    _locationPingTimer.cancel();
+    _tick?.cancel();
+    _lifecycle.dispose();
     super.dispose();
+  }
+
+  Future<void> _load() async {
+    final status = await SafetyMonitorService.liveShareStatus();
+    final autoSms = await SmsService.canSendAutomatically();
+    if (!mounted) return;
+    setState(() {
+      _status = status;
+      _autoSms = autoSms;
+    });
+  }
+
+  void _showMessage(String text, {bool isError = false}) {
+    if (!mounted) return;
+    showAppSnack(context, text, tone: isError ? Tone.danger : Tone.success);
   }
 
   /// Start the journey tracking.
   Future<void> _startJourney() async {
-    if (_destination.trim().isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter a destination')),
-        );
-      }
+    if (_busy) return;
+    final destination = _destination.trim();
+    if (destination.isEmpty) {
+      _showMessage('Where are you going? Add a destination first.',
+          isError: true);
       return;
     }
-
+    if (_eta < const Duration(minutes: 1) ||
+        _pingInterval < const Duration(minutes: 1)) {
+      _showMessage('Pick at least 1 minute for both times.', isError: true);
+      return;
+    }
     final contacts = await _contactsRepository.loadContacts();
     if (contacts.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please add emergency contacts first'),
-          ),
-        );
-      }
+      _showMessage('Add an emergency contact first.', isError: true);
       return;
     }
-    if (!mounted) return;
-
-    setState(() {
-      _journeyActive = true;
-      _elapsedSeconds = 0;
-    });
-
-    // Vibrate to confirm start.
-    if (await Vibration.hasVibrator()) {
-      Vibration.vibrate(duration: 200);
+    setState(() => _busy = true);
+    // Ask for location now, while the app is open: the background service
+    // can't ask.
+    final problem = await _locationService.checkReady();
+    if (problem != null) {
+      if (mounted) setState(() => _busy = false);
+      _showMessage(problem, isError: true);
+      return;
     }
 
-    // Timer to tick elapsed time.
-    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _elapsedSeconds++;
-      });
-
-      // Check if ETA has expired.
-      if (_elapsedSeconds >= _eta.inSeconds) {
-        _triggerAutoSos(contacts);
-        timer.cancel();
-      }
-    });
-
-    // Timer to send periodic location updates.
-    _locationPingTimer = Timer.periodic(_pingInterval, (_) {
-      _sendLocationUpdate(contacts);
-    });
-
-    // Send initial location update.
-    _sendLocationUpdate(contacts);
+    final started = await SafetyMonitorService.startLiveShare(
+      interval: _pingInterval,
+      mode: LiveShareMode.journey,
+      destination: destination,
+      deadline: DateTime.now().add(_eta),
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (!started) {
+      _showMessage("Couldn't start the journey. Please try again.",
+          isError: true);
+      return;
+    }
+    _eventLog.log(
+      SafetyEventType.locationShared,
+      'Started a journey to $destination, sharing your location with '
+      '${contactsPhrase(contacts.length)}',
+      contacts: contacts.map((c) => c.name).toList(),
+    );
+    if (await Vibration.hasVibrator()) Vibration.vibrate(duration: 200);
+    _showMessage('Journey started. Your contacts will get your location.');
+    // The service sends the first text straight away.
+    await Future<void>.delayed(const Duration(seconds: 2));
+    await _load();
   }
 
-  /// Cancel the journey.
+  /// Cancel the journey without telling anyone.
   Future<void> _cancelJourney() async {
-    _elapsedTimer.cancel();
-    _locationPingTimer.cancel();
-
-    setState(() {
-      _journeyActive = false;
-      _elapsedSeconds = 0;
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Journey tracking stopped')),
-      );
-    }
+    final destination = _status?.destination ?? '';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel this journey?'),
+        content: const Text(
+          'Your contacts stop getting your location, and no one is alerted '
+          'if you don\'t arrive. To let them know you got there, tap '
+          '"I arrived" instead.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep going'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Cancel journey'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await SafetyMonitorService.stopLiveShare();
+    _eventLog.log(
+      SafetyEventType.locationShared,
+      'Cancelled the journey to $destination',
+    );
+    await _load();
+    _showMessage('Journey cancelled.');
   }
 
   /// Mark as safely arrived.
   Future<void> _markArrived() async {
-    _elapsedTimer.cancel();
-    _locationPingTimer.cancel();
-
+    if (_busy) return;
+    final destination = _status?.destination ?? _destination.trim();
+    setState(() => _busy = true);
+    await SafetyMonitorService.stopLiveShare();
     final contacts = await _contactsRepository.loadContacts();
+    final result = await _sosService.sendCheckIn(contacts, arrivedAt: destination);
+    if (result.success) {
+      _eventLog.log(
+        SafetyEventType.checkIn,
+        'Reached $destination. Told ${contactsPhrase(contacts.length)}',
+        contacts: contacts.map((c) => c.name).toList(),
+      );
+    }
+    await _load();
     if (!mounted) return;
-
-    setState(() {
-      _journeyActive = false;
-      _elapsedSeconds = 0;
-    });
-
-    // Send check-in message.
-    await _sosService.sendCheckIn(contacts);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Arrived safely! Check-in sent.')),
-      );
-    }
-  }
-
-  /// Send location update to all contacts.
-  Future<void> _sendLocationUpdate(List<EmergencyContact> contacts) async {
-    if (contacts.isEmpty) return;
-
-    try {
-      final position = await _locationService.getCurrentLocation();
-      final mapsLink =
-          _locationService.buildMapsLink(position.latitude, position.longitude);
-
-      final message =
-          'Journey to "$_destination": I am on the way. Location: $mapsLink';
-
-      await _smsService.sendSos(
-        phoneNumbers: contacts.map((c) => c.phone).toList(),
-        message: message,
-      );
-
-      // Subtle vibration to indicate ping sent.
-      if (await Vibration.hasVibrator()) {
-        Vibration.vibrate(duration: 100);
-      }
-    } catch (e) {
-      // Location unavailable, but journey continues.
-    }
-  }
-
-  /// Automatically trigger SOS if ETA expires.
-  Future<void> _triggerAutoSos(List<EmergencyContact> contacts) async {
-    _elapsedTimer.cancel();
-    _locationPingTimer.cancel();
-
-    final result = await _sosService.sendSos(
-      contacts,
-      messageTemplate:
-          'EMERGENCY: I did not reach "$_destination" by expected time. My location: {location}',
+    setState(() => _busy = false);
+    _showMessage(
+      result.success
+          ? 'Glad you made it. ${result.message}'
+          : result.message,
+      isError: !result.success,
     );
-
-    if (!mounted) return;
-
-    setState(() {
-      _journeyActive = false;
-    });
-
-    showAppSnack(context, result.message,
-        tone: result.success ? Tone.success : Tone.danger);
   }
 
   String _formatTime(int seconds) {
-    final minutes = seconds ~/ 60;
-    final secs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    final h = seconds ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    final s = seconds % 60;
+    final mm = m.toString().padLeft(2, '0');
+    final ss = s.toString().padLeft(2, '0');
+    return h > 0 ? '$h:$mm:$ss' : '$mm:$ss';
   }
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Journey')),
+      body: _status == null
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: EdgeInsets.fromLTRB(
+                  16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
+              children: _journeyActive ? _buildRunning() : _buildSetup(),
+            ),
+    );
+  }
+
+  List<Widget> _buildSetup() {
+    final theme = Theme.of(context);
+    final other = _otherSession;
+    if (other != null) {
+      return [
+        NoticeCard(
+          tone: Tone.info,
+          message: other == LiveShareMode.followMe
+              ? 'Follow Me is already sharing your location. Stop it first '
+                  'to start a journey.'
+              : 'Your contacts are already getting your location after your '
+                  'SOS. Tap "I\'m safe" on the home screen to stop it.',
+        ),
+      ];
+    }
+    return [
+      Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Journey details', style: theme.textTheme.titleMedium),
+              const SizedBox(height: 16),
+              TextField(
+                onChanged: (value) {
+                  setState(() => _destination = value);
+                },
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Destination',
+                  hintText: 'e.g. Home, Work, Station',
+                  prefixIcon: Icon(Icons.place_outlined),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Expected time to arrive',
+                  style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              DurationField(
+                initial: _eta,
+                initialUnit: TimeUnit.minutes,
+                onChanged: (d) => _eta = d,
+              ),
+              const SizedBox(height: 20),
+              Text('Send location updates every',
+                  style: theme.textTheme.titleSmall),
+              const SizedBox(height: 8),
+              DurationField(
+                initial: _pingInterval,
+                initialUnit: TimeUnit.minutes,
+                onChanged: (d) => _pingInterval = d,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _busy ? null : _startJourney,
+                  icon: _busy
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(Icons.play_arrow_rounded),
+                  label: const Text('Start journey'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 16),
+      const NoticeCard(
+        tone: Tone.info,
+        title: 'How it works',
+        message: '• Your contacts get a text with your location as '
+            'often as you choose\n'
+            '• Tap "I arrived" when you get there\n'
+            "• If you don't by the time you set, they're alerted "
+            'automatically\n'
+            '• It keeps going with SafeOne closed or your screen off',
+      ),
+      if (!_autoSms) ...[
+        const SizedBox(height: 12),
+        const NoticeCard(
+          tone: Tone.warning,
+          message: 'Each update will wait for you to tap Send. To send them '
+              'by themselves, turn on "Send SOS automatically" in Settings.',
+        ),
+      ],
+    ];
+  }
+
+  List<Widget> _buildRunning() {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final sc = context.safety;
-    final totalSeconds = _eta.inSeconds;
-    final remainingSeconds = totalSeconds - _elapsedSeconds;
-    final isExpired = remainingSeconds <= 0;
+    final status = _status!;
+    final deadline = status.deadline ?? DateTime.now();
+    final started = status.startedAt ?? deadline;
+    final totalSeconds =
+        deadline.difference(started).inSeconds.clamp(1, 1 << 31);
+    final remainingSeconds = deadline.difference(DateTime.now()).inSeconds;
+    final isExpired = status.overdue || remainingSeconds <= 0;
     final progressValue =
-        totalSeconds > 0 ? (_elapsedSeconds / totalSeconds).clamp(0.0, 1.0) : 0.0;
+        (1 - remainingSeconds / totalSeconds).clamp(0.0, 1.0);
     final statusColor = isExpired ? sc.sos : scheme.primary;
+    final updates = status.updatesSent;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Journey')),
-      body: ListView(
-        padding: EdgeInsets.fromLTRB(
-            16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom),
-        children: [
-          if (!_journeyActive) ...[
-            Card(
-              margin: EdgeInsets.zero,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Journey details', style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 16),
-                    TextField(
-                      onChanged: (value) {
-                        setState(() => _destination = value);
-                      },
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: const InputDecoration(
-                        labelText: 'Destination',
-                        hintText: 'e.g. Home, Work, Station',
-                        prefixIcon: Icon(Icons.place_outlined),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text('Expected time to arrive',
-                        style: theme.textTheme.titleSmall),
-                    const SizedBox(height: 8),
-                    DurationField(
-                      initial: _eta,
-                      initialUnit: TimeUnit.minutes,
-                      onChanged: (d) => _eta = d,
-                    ),
-                    const SizedBox(height: 20),
-                    Text('Send location updates every',
-                        style: theme.textTheme.titleSmall),
-                    const SizedBox(height: 8),
-                    DurationField(
-                      initial: _pingInterval,
-                      initialUnit: TimeUnit.minutes,
-                      onChanged: (d) => _pingInterval = d,
-                    ),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton.icon(
-                        onPressed: _startJourney,
-                        icon: const Icon(Icons.play_arrow_rounded),
-                        label: const Text('Start journey'),
-                      ),
-                    ),
-                  ],
+    return [
+      Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Journey to ${status.destination ?? ''}',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleLarge,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                isExpired ? "Time's up" : 'Time remaining',
+                textAlign: TextAlign.center,
+                style:
+                    theme.textTheme.labelLarge!.copyWith(color: statusColor),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _formatTime(remainingSeconds.clamp(0, totalSeconds)),
+                textAlign: TextAlign.center,
+                style: theme.textTheme.displayMedium!.copyWith(
+                  color: statusColor,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            const NoticeCard(
-              tone: Tone.info,
-              title: 'How it works',
-              message: '• Your contacts get location updates at the interval '
-                  'you choose\n'
-                  '• Tap "I arrived" when you reach your destination\n'
-                  '• If time runs out without confirmation, an SOS is sent '
-                  'automatically',
-            ),
-          ] else ...[
-            Card(
-              margin: EdgeInsets.zero,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Text(
-                      _destination.trim().isEmpty
-                          ? 'Journey in progress'
-                          : 'Journey to $_destination',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      isExpired ? 'Time expired' : 'Time remaining',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.labelLarge!
-                          .copyWith(color: statusColor),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _formatTime(remainingSeconds.clamp(0, totalSeconds)),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.displayMedium!.copyWith(
-                        color: statusColor,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: progressValue,
-                        minHeight: 8,
-                        color: statusColor,
-                        backgroundColor: scheme.surfaceContainerHighest,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Elapsed ${_formatTime(_elapsedSeconds)}',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ],
+              const SizedBox(height: 16),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  value: progressValue,
+                  minHeight: 8,
+                  color: statusColor,
+                  backgroundColor: scheme.surfaceContainerHighest,
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(
-                backgroundColor: sc.success,
-                foregroundColor: scheme.surface,
-                minimumSize: const Size.fromHeight(56),
+              const SizedBox(height: 8),
+              Text(
+                updates == 0
+                    ? 'Sending your first update…'
+                    : '${updates == 1 ? '1 update' : '$updates updates'} sent',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodySmall,
               ),
-              onPressed: _markArrived,
-              icon: const Icon(Icons.check_rounded),
-              label: const Text('I arrived'),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _cancelJourney,
-              icon: const Icon(Icons.close_rounded),
-              label: const Text('Cancel journey'),
-            ),
-          ],
-        ],
+            ],
+          ),
+        ),
       ),
-    );
+      if (isExpired) ...[
+        const SizedBox(height: 16),
+        NoticeCard(
+          tone: Tone.danger,
+          message: status.overdue
+              ? 'Your contacts were alerted that you haven\'t arrived. They '
+                  'keep getting your location until you tap "I arrived".'
+              : 'Alerting your contacts…',
+        ),
+      ],
+      const SizedBox(height: 20),
+      FilledButton.icon(
+        style: FilledButton.styleFrom(
+          backgroundColor: sc.success,
+          foregroundColor: scheme.surface,
+          minimumSize: const Size.fromHeight(56),
+        ),
+        onPressed: _busy ? null : _markArrived,
+        icon: const Icon(Icons.check_rounded),
+        label: const Text('I arrived'),
+      ),
+      const SizedBox(height: 12),
+      OutlinedButton.icon(
+        onPressed: _busy ? null : _cancelJourney,
+        icon: const Icon(Icons.close_rounded),
+        label: const Text('Cancel journey'),
+      ),
+      const SizedBox(height: 16),
+      const NoticeCard(
+        tone: Tone.info,
+        message: 'You can close SafeOne or lock your phone. It keeps going '
+            'until you tap "I arrived".',
+      ),
+    ];
   }
 }

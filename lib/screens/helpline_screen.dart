@@ -19,7 +19,7 @@ class HelplineScreen extends StatelessWidget {
   static const List<({String name, String number, IconData icon})> _helplines =
       [
     (name: 'Police', number: '100', icon: Icons.local_police),
-    (name: 'Emergency (All-in-one)', number: '112', icon: Icons.emergency),
+    (name: 'Emergency (police, fire, ambulance)', number: '112', icon: Icons.emergency),
     (name: 'Women Helpline', number: '1091', icon: Icons.woman),
     (name: 'Domestic Abuse Helpline', number: '181', icon: Icons.home),
     (name: 'Ambulance', number: '102', icon: Icons.local_hospital),
@@ -35,7 +35,7 @@ class HelplineScreen extends StatelessWidget {
       ok = await launchUrl(Uri(scheme: 'tel', path: number));
     } catch (_) {}
     if (!ok && context.mounted) {
-      showAppSnack(context, 'Could not open dialer for $number',
+      showAppSnack(context, "Couldn't open the dialer. Call $number yourself.",
           tone: Tone.danger);
     }
   }

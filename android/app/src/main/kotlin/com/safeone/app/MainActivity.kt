@@ -103,10 +103,15 @@ class MainActivity : FlutterFragmentActivity() {
     private fun liveSharingActive(): Boolean =
         prefs().getBoolean("flutter.live_sharing_active", false)
 
-    /// The foreground service must run while ANY trigger is on OR live-location
-    /// sharing is active.
+    /// The foreground service must run while ANY trigger is on, live-location
+    /// sharing or a safety check-in is active, or the user wants a shutdown
+    /// alert at all times (only a running service hears the phone shutting
+    /// down).
     private fun syncService() {
-        if (anyTriggerEnabled() || liveSharingActive()) startMonitor() else stopMonitor()
+        val needed = anyTriggerEnabled() || liveSharingActive() ||
+            prefs().getBoolean("flutter.checkin_active", false) ||
+            prefs().getString("flutter.shutdown_alert_mode", null) == "always"
+        if (needed) startMonitor() else stopMonitor()
     }
 
     private fun startMonitor() {
@@ -161,17 +166,52 @@ class MainActivity : FlutterFragmentActivity() {
                 // Live location sharing — runs inside the foreground service so
                 // it survives the app being swiped away (unlike the old
                 // android_alarm_manager background isolate).
+                // mode: "sos" (after an SOS), "follow_me", or "journey" (with
+                // destination + deadlineMillis: contacts are alerted if the
+                // user hasn't tapped "I arrived" by then). Starting a new
+                // session replaces the running one.
                 "startLiveShare" -> {
-                    val interval = (call.argument<Number>("intervalMillis"))?.toLong()
-                        ?: 120_000L
-                    prefs().edit().putLong("live_share_interval_ms", interval).apply()
-                    SosSender.setPrefBool(this, "live_sharing_active", true)
-                    startMonitor() // (re)start → service picks up the live-share loop
+                    val interval = ((call.argument<Number>("intervalMillis"))?.toLong()
+                        ?: 120_000L).coerceAtLeast(60_000L)
+                    val mode = call.argument<String>("mode") ?: "sos"
+                    val destination = call.argument<String>("destination")
+                    val deadline = (call.argument<Number>("deadlineMillis"))?.toLong()
+                    if (mode == "journey" && (destination.isNullOrBlank() || deadline == null)) {
+                        result.error("bad_args", "journey needs destination and deadlineMillis", null)
+                        return@setMethodCallHandler
+                    }
+                    val edit = prefs().edit()
+                        .putLong("live_share_interval_ms", interval)
+                        .putString("flutter.live_share_mode", mode)
+                        .putLong("flutter.live_share_started_ms", System.currentTimeMillis())
+                        .putLong("flutter.live_share_count", 0L)
+                        .remove("flutter.live_share_last_sent_ms")
+                        .remove("live_share_last_sent_ms")
+                        .putBoolean("flutter.live_share_no_fix_sent", false)
+                        .putBoolean("flutter.live_sharing_active", true)
+                        .remove("flutter.journey_overdue")
+                    if (mode == "journey") {
+                        edit.putBoolean("flutter.journey_active", true)
+                            .putString("flutter.journey_destination", destination!!.trim())
+                            .putLong("flutter.journey_deadline_ms", deadline!!)
+                    } else {
+                        edit.remove("flutter.journey_active")
+                            .remove("flutter.journey_destination")
+                            .remove("flutter.journey_deadline_ms")
+                    }
+                    edit.commit()
+                    if (mode == "journey") {
+                        CheckinScheduler.scheduleJourney(this, deadline!!)
+                    } else {
+                        CheckinScheduler.cancelJourney(this)
+                    }
+                    CheckinScheduler.cancelLiveTick(this)
+                    startMonitor() // (re)start → service picks up the session
                     result.success(true)
                 }
                 "stopLiveShare" -> {
-                    SosSender.setPrefBool(this, "live_sharing_active", false)
-                    SosSender.cancelFollowMe(this)
+                    SosSender.endLiveShare(this)
+                    CheckinScheduler.cancelLiveTick(this)
                     syncService() // keep running if a trigger is on, else stop
                     result.success(true)
                 }
@@ -185,12 +225,14 @@ class MainActivity : FlutterFragmentActivity() {
                     } else {
                         SosSender.setPrefBool(this, "checkin_active", true)
                         CheckinScheduler.schedule(this, at)
+                        syncService() // listen for a shutdown during the check-in
                         result.success(true)
                     }
                 }
                 "cancelCheckin" -> {
                     SosSender.setPrefBool(this, "checkin_active", false)
                     CheckinScheduler.cancel(this)
+                    syncService()
                     result.success(true)
                 }
                 else -> result.notImplemented()

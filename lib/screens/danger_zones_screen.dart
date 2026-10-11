@@ -61,7 +61,7 @@ class _DangerZonesScreenState extends State<DangerZonesScreen> {
                       decoration: const InputDecoration(labelText: 'Zone name'),
                       validator: (value) =>
                           (value == null || value.trim().isEmpty)
-                              ? 'Please enter a name'
+                              ? 'Give this place a name'
                               : null,
                     ),
                     const SizedBox(height: 12),
@@ -123,7 +123,7 @@ class _DangerZonesScreenState extends State<DangerZonesScreen> {
                     } else if (capturedLat == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Please capture your location first'),
+                          content: Text("Tap 'Use current location' first"),
                         ),
                       );
                     }

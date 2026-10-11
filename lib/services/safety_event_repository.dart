@@ -13,15 +13,20 @@ import 'vault.dart';
 /// An SOS can happen while the app is locked (e.g. a shake behind the lock
 /// screen). The log can't be read then, so new events are sealed one by one
 /// into a pending list and merged into the log at the next unlock.
+///
+/// The background service (SafetyLog.kt) can't encrypt at all, so it leaves
+/// each event in its own "native_event_*" preference, holding no location.
+/// [importNativeEvents] moves them in as soon as the app runs.
 class SafetyEventRepository {
   static const String _key = 'safety_events';
   static const String _pendingKey = 'safety_events_pending';
+  static const String _nativePrefix = 'native_event_';
   static const int _maxEvents = 500;
 
   /// Throws [VaultLockedException] while the app is locked.
   Future<List<SafetyEvent>> load() async {
     final events = await _loadSaved();
-    final pending = await _takePending();
+    final pending = [...await _takePending(), ...await _takeNative()];
     if (pending.isNotEmpty) {
       events.addAll(pending);
       await _save(events);
@@ -60,6 +65,39 @@ class SafetyEventRepository {
     }
     await prefs.remove(_pendingKey);
     return events;
+  }
+
+  /// Takes the events the background service recorded, removing them.
+  Future<List<SafetyEvent>> _takeNative() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Written by another part of the app since this cache was filled.
+    await prefs.reload();
+    final keys = prefs.getKeys().where((k) => k.startsWith(_nativePrefix));
+    final events = <SafetyEvent>[];
+    for (final key in keys.toList()) {
+      final raw = prefs.getString(key);
+      await prefs.remove(key);
+      if (raw == null) continue;
+      try {
+        events.add(SafetyEvent.fromJson(jsonDecode(raw) as Map<String, dynamic>));
+      } catch (_) {/* skip a damaged entry */}
+    }
+    return events;
+  }
+
+  /// Moves what the background service recorded into the log, so it's in
+  /// Records and encrypted. Works while the app is locked: the events are
+  /// then sealed into the pending list. Best-effort.
+  Future<void> importNativeEvents() async {
+    try {
+      if (!Vault.instance.isOpen && await Vault.instance.exists()) {
+        for (final event in await _takeNative()) {
+          await add(event);
+        }
+      } else {
+        await load(); // merges them
+      }
+    } catch (_) {/* best-effort */}
   }
 
   Future<void> add(SafetyEvent event) async {

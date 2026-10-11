@@ -14,6 +14,11 @@ class SettingsRepository {
   static const String _powerTriggerKey = 'power_trigger';
   static const String _liveSharingActiveKey = 'live_sharing_active';
   static const String _fakeCallRingtoneKey = 'fake_call_ringtone_uri';
+  // Read natively by the safety service ("off" | "active" | "always").
+  static const String _shutdownAlertKey = 'shutdown_alert_mode';
+  static const String defaultShutdownAlert = 'active';
+  // The last "on" choice, so switching off and on again keeps it.
+  static const String _shutdownScopeKey = 'shutdown_alert_scope';
 
   /// The values used if the user has never changed the settings.
   static const int defaultCountdownSeconds = 5;
@@ -25,8 +30,18 @@ class SettingsRepository {
 
   /// The default SOS text. The word {location} is replaced with a live map
   /// link when the alert is sent.
+  /// Keep in sync with SosSender.DEFAULT_SOS (Android).
   static const String defaultSosMessage =
-      'EMERGENCY! I need help. My current location: {location}';
+      'I need help right now. This is where I am: {location}';
+
+  /// What the default SOS says when the phone can't get any location.
+  static const String defaultSosMessageNoLocation =
+      "I need help right now. My phone couldn't find my location, please call me.";
+
+  /// Earlier default texts: anyone who never changed theirs gets the new one.
+  static const Set<String> _oldDefaultSosMessages = {
+    'EMERGENCY! I need help. My current location: {location}',
+  };
 
   /// Read the chosen countdown length (in seconds).
   Future<int> loadCountdownSeconds() async {
@@ -57,7 +72,9 @@ class SettingsRepository {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_messageKey);
     // Fall back to the default if nothing is saved or it was cleared to empty.
-    if (saved == null || saved.trim().isEmpty) {
+    if (saved == null ||
+        saved.trim().isEmpty ||
+        _oldDefaultSosMessages.contains(saved)) {
       return defaultSosMessage;
     }
     return saved;
@@ -119,12 +136,35 @@ class SettingsRepository {
   /// screen still knows (and can stop it) after the app is closed and reopened.
   Future<bool> loadLiveSharingActive() async {
     final prefs = await SharedPreferences.getInstance();
+    // The background service starts and ends sharing too.
+    await prefs.reload();
     return prefs.getBool(_liveSharingActiveKey) ?? false;
   }
 
   Future<void> saveLiveSharingActive(bool active) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_liveSharingActiveKey, active);
+  }
+
+  /// When contacts are told the phone is being switched off: "active" (during
+  /// an SOS with live sharing or a check-in), "always", or "off".
+  Future<String> loadShutdownAlert() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_shutdownAlertKey) ?? defaultShutdownAlert;
+  }
+
+  Future<void> saveShutdownAlert(String mode) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_shutdownAlertKey, mode);
+    if (mode != 'off') await prefs.setString(_shutdownScopeKey, mode);
+  }
+
+  /// What switching the alert back on restores: "active" or "always".
+  Future<String> loadShutdownScope() async {
+    final prefs = await SharedPreferences.getInstance();
+    final mode = prefs.getString(_shutdownAlertKey);
+    if (mode != null && mode != 'off') return mode;
+    return prefs.getString(_shutdownScopeKey) ?? defaultShutdownAlert;
   }
 
   /// The ringtone picked for fake calls (a content URI), or null for the

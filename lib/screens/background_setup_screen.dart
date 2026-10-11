@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/notification_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_ui.dart';
@@ -76,23 +77,16 @@ class _BackgroundSetupScreenState extends State<BackgroundSetupScreen>
     final agreed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Background location'),
-        content: const Text(
-          'SafeOne uses your location in the background to include it in '
-          'emergency SOS and safety check-in alerts when the app is closed or '
-          'your screen is locked.\n\n'
-          'Your location is only added to messages you choose to send to your '
-          'emergency contacts. It is never uploaded to any server.\n\n'
-          'On the next screen, choose "Allow all the time" to enable this.',
-        ),
+        title: Text(AppLocalizations.of(ctx).bgLocationTitle),
+        content: Text(AppLocalizations.of(ctx).bgLocationBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Not now'),
+            child: Text(AppLocalizations.of(ctx).notNow),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Continue'),
+            child: Text(AppLocalizations.of(ctx).continueLabel),
           ),
         ],
       ),

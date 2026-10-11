@@ -394,7 +394,7 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
       );
     } catch (_) {
       if (!mounted) return;
-      showAppSnack(context, "Couldn't schedule the call. Please try again.",
+      showAppSnack(context, "Couldn't schedule the call. Try again.",
           tone: Tone.danger);
       return;
     }
@@ -477,8 +477,8 @@ class _FakeCallSetupScreenState extends State<FakeCallSetupScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Editing call from ${call.callerName} — '
-            'adjust and tap Start to save'),
+        content: Text('Editing the call from ${call.callerName}. '
+            'Make your changes, then tap Save changes.'),
       ),
     );
   }

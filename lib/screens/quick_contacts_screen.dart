@@ -39,7 +39,7 @@ class _QuickContactsScreenState extends State<QuickContactsScreen> {
         if (_favoriteNames.length < 5) {
           _favoriteNames.add(contactName);
         } else {
-          showAppSnack(context, 'You can favourite up to 5 contacts',
+          showAppSnack(context, 'You can star up to 5 contacts',
               tone: Tone.warning);
         }
       }
@@ -57,10 +57,10 @@ class _QuickContactsScreenState extends State<QuickContactsScreen> {
   }
 
   Future<void> _callContact(EmergencyContact contact) =>
-      _launch(Uri.parse('tel:${contact.phone}'), 'Could not start the call');
+      _launch(Uri.parse('tel:${contact.phone}'), "Couldn't start the call");
 
   Future<void> _messageContact(EmergencyContact contact) =>
-      _launch(Uri.parse('sms:${contact.phone}'), 'Could not open messages');
+      _launch(Uri.parse('sms:${contact.phone}'), "Couldn't open Messages");
 
   @override
   Widget build(BuildContext context) {
@@ -89,10 +89,10 @@ class _QuickContactsScreenState extends State<QuickContactsScreen> {
                   icon: Icons.bolt_rounded,
                   title: 'One-tap access',
                   message: 'Star up to 5 contacts to call or message them '
-                      'instantly when every second counts.',
+                      'with one tap.',
                 ),
                 if (favorites.isNotEmpty) ...[
-                  SectionLabel('Favourites (${favorites.length}/5)'),
+                  SectionLabel('Starred (${favorites.length}/5)'),
                   for (final contact in favorites) _buildFavoriteCard(contact),
                 ],
                 if (others.isNotEmpty) ...[
@@ -137,7 +137,7 @@ class _QuickContactsScreenState extends State<QuickContactsScreen> {
               trailing: IconButton(
                 icon: const Icon(Icons.star_rounded),
                 color: s.warning,
-                tooltip: 'Remove from favourites',
+                tooltip: 'Unstar',
                 onPressed: () => _toggleFavorite(contact.name),
               ),
             ),
@@ -199,7 +199,7 @@ class _QuickContactsScreenState extends State<QuickContactsScreen> {
             IconButton(
               icon: const Icon(Icons.star_outline_rounded),
               onPressed: () => _toggleFavorite(contact.name),
-              tooltip: 'Add to favourites',
+              tooltip: 'Star',
             ),
           ],
         ),

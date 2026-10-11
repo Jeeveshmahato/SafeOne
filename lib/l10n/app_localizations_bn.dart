@@ -117,7 +117,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String fakeCallScheduledHint(String time) {
-    return 'The call will ring in $time, even if you lock your phone or close the app. Grant the notification and full-screen permissions if asked.';
+    return 'Your phone will ring in $time, even if it\'s locked or the app is closed. If asked, allow notifications and full-screen alerts.';
   }
 
   @override
@@ -312,38 +312,44 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get homeSilentSosHint =>
-      'Long-press SOS to send silently (no sound or buzz).';
+      'Hold SOS to send it silently, with no sound or vibration.';
 
   @override
   String silentSosSent(int count) {
-    return 'Silent alert sent to $count contact(s).';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Sent to all $count contacts.',
+      one: 'Sent to your contact.',
+    );
+    return '$_temp0';
   }
 
   @override
-  String get sosLiveBannerActive => 'Sharing your live location with contacts';
+  String get sosLiveBannerActive => 'Sharing your location with your contacts';
 
   @override
   String get sosLiveStop => 'Stop sharing';
 
   @override
   String get sosLiveStarted =>
-      'Live location sharing started. Tap \"I\'m safe\" to stop.';
+      'Your contacts will keep getting your location until you tap \"I\'m safe\".';
 
   @override
-  String get sosLiveStopped => 'Live location sharing stopped.';
+  String get sosLiveStopped => 'Stopped sharing your location.';
 
   @override
   String get lockTitle => 'Enter PIN';
 
   @override
-  String get lockSubtitle => 'Enter your PIN to unlock';
+  String get lockSubtitle => 'Enter your PIN to open SafeOne';
 
   @override
   String get lockWrongPin => 'Wrong PIN. Try again.';
 
   @override
   String lockTooManyAttempts(int seconds) {
-    return 'Too many attempts. Wait ${seconds}s.';
+    return 'Too many tries. Wait ${seconds}s.';
   }
 
   @override
@@ -357,19 +363,19 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get pinSetSubtitle =>
-      'This PIN protects your contacts, medical info and records.';
+      'Your PIN keeps your contacts, medical info and records private.';
 
   @override
   String get pinCreateStep => 'Create a 6-digit PIN';
 
   @override
-  String get pinConfirmStep => 'Re-enter your PIN to confirm';
+  String get pinConfirmStep => 'Enter it again to confirm';
 
   @override
-  String get pinMismatch => 'PINs do not match. Start again.';
+  String get pinMismatch => 'Those PINs didn\'t match. Try again.';
 
   @override
-  String get pinTooShort => 'PIN must be 6 digits.';
+  String get pinTooShort => 'Your PIN needs 6 digits.';
 
   @override
   String get pinSaved => 'PIN saved.';
@@ -385,7 +391,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String lockTryAgainIn(String time) {
-    return 'Too many attempts. Try again in $time.';
+    return 'Too many tries. Try again in $time.';
   }
 
   @override
@@ -401,7 +407,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get contactsPinEnterSubtitle =>
-      'Your contacts PIN is needed to change your emergency contacts.';
+      'Enter your contacts PIN to change who gets your SOS.';
 
   @override
   String get contactsPinSetTitle => 'Set a contacts PIN';
@@ -436,7 +442,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get pinResetIntro =>
-      'SafeOne can\'t recover a forgotten PIN, because it never leaves this phone. Prove this is your phone, then choose a new PIN.';
+      'SafeOne can\'t recover a forgotten PIN, because it never leaves this phone. Confirm it\'s your phone, then pick a new one.';
 
   @override
   String get pinResetWithDevice => 'Use your phone\'s screen lock';
@@ -450,11 +456,11 @@ class AppLocalizationsBn extends AppLocalizations {
       'Confirm it\'s you to reset your SafeOne PIN';
 
   @override
-  String get pinResetDeviceFailed => 'Couldn\'t confirm it\'s you. Try again.';
+  String get pinResetDeviceFailed => 'That didn\'t work. Try again.';
 
   @override
   String get pinResetNoDeviceLock =>
-      'This phone has no screen lock, so it can\'t be used to prove it\'s yours.';
+      'This phone has no screen lock, so we can\'t use it to confirm it\'s you.';
 
   @override
   String get pinResetWithAppPin => 'Use your app PIN';
@@ -479,7 +485,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get pinResetEraseConfirm => 'Erase everything';
 
   @override
-  String get pinResetDone => 'PIN reset.';
+  String get pinResetDone => 'Your new PIN is set.';
 
   @override
   String get lockBiometricNeedsPin =>
@@ -498,22 +504,22 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get securityProtectionStrongBox =>
-      'Encrypted. Keys are in this phone\'s dedicated security chip.';
+      'Encrypted. The keys are kept in this phone\'s security chip.';
 
   @override
   String get securityProtectionTee =>
-      'Encrypted. Keys are in this phone\'s secure hardware.';
+      'Encrypted. The keys are kept in this phone\'s secure hardware.';
 
   @override
   String get securityProtectionSoftware =>
-      'Encrypted, but this phone has no secure hardware for the keys.';
+      'Encrypted, but this phone has no secure hardware to keep the keys in.';
 
   @override
-  String get securityRootedTitle => 'This phone appears to be rooted';
+  String get securityRootedTitle => 'This phone looks rooted';
 
   @override
   String get securityRootedBody =>
-      'Apps with root access can see what SafeOne shows while it\'s unlocked. Saved data stays encrypted while SafeOne is locked, so keep auto-lock set to Immediately.';
+      'Apps with root access can see what SafeOne shows while it\'s open. Your saved data stays encrypted while SafeOne is locked, so keep Auto-lock set to Immediately.';
 
   @override
   String get securitySection => 'Security';
@@ -525,8 +531,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get securityBiometric => 'Unlock with fingerprint / face';
 
   @override
-  String get securityBiometricSubtitle =>
-      'Use biometrics instead of typing the PIN.';
+  String get securityBiometricSubtitle => 'Skip typing your PIN.';
 
   @override
   String get securityAutoLock => 'Auto-lock';
@@ -536,7 +541,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String securityAutoLockGrace(int seconds) {
-    return 'After ${seconds}s in background';
+    return 'After ${seconds}s away';
   }
 
   @override
@@ -544,55 +549,56 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get securitySilentSosSubtitle =>
-      'No vibration confirmation when sending SOS.';
+      'Don\'t vibrate when the SOS goes out.';
 
   @override
   String get securityLiveUpdates => 'Repeat location after SOS';
 
   @override
   String get securityLiveUpdatesSubtitle =>
-      'Keep sending your location to contacts until you tap \"I\'m safe\".';
+      'Keep texting your location to contacts until you tap \"I\'m safe\".';
 
   @override
   String get securityVolumeTrigger => 'Triple-press volume to send SOS';
 
   @override
   String get securityVolumeTriggerSubtitle =>
-      'Press a volume button 3 times quickly to start the SOS.';
+      'Press a volume button 3 times quickly to start an SOS.';
 
   @override
   String get checkinScheduleTitle => 'Auto-alert if I don\'t check in';
 
   @override
   String get checkinScheduleSubtitle =>
-      'If you don\'t tap \"I\'m safe\" before the deadline, your contacts are alerted automatically.';
+      'If you don\'t tap \"I\'m safe\" in time, your contacts are alerted automatically.';
 
   @override
   String get checkinSetDeadline => 'Alert my contacts in';
 
   @override
   String checkinActive(String time) {
-    return 'Active — alert at $time';
+    return 'On. Your contacts will be alerted at $time.';
   }
 
   @override
   String get checkinStart => 'Start check-in';
 
   @override
-  String get checkinImSafe => 'I\'m safe — cancel';
+  String get checkinImSafe => 'I\'m safe';
 
   @override
-  String get checkinCancelled => 'Check-in cancelled.';
+  String get checkinCancelled => 'Check-in stopped. Glad you\'re safe.';
 
   @override
-  String get checkinFired => 'You didn\'t check in. Alerting your contacts.';
+  String get checkinFired =>
+      'You didn\'t check in, so your contacts are being alerted.';
 
   @override
-  String get checkinReminderTitle => 'Safety check-in due';
+  String get checkinReminderTitle => 'Are you okay?';
 
   @override
   String get checkinReminderBody =>
-      'Tap \"I\'m safe\" or your contacts will be alerted.';
+      'Tap \"I\'m safe\", or your contacts will be alerted soon.';
 
   @override
   String get tabFollowMe => 'Follow me';
@@ -655,8 +661,8 @@ class AppLocalizationsBn extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count contacts will be alerted',
-      one: '1 contact will be alerted',
+      other: '$count contacts will get your SOS',
+      one: '1 contact will get your SOS',
     );
     return '$_temp0';
   }
@@ -668,7 +674,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get homeAddContactsAction => 'Add contacts';
 
   @override
-  String get sosButtonCaption => 'Tap to alert  ·  Hold for silent SOS';
+  String get sosButtonCaption => 'Tap for SOS  ·  Hold to send silently';
 
   @override
   String get sosButtonSemantics =>
@@ -681,33 +687,33 @@ class AppLocalizationsBn extends AppLocalizations {
   String get tileReportPortals => 'Report & portals';
 
   @override
-  String get errorNoContacts =>
-      'Please add at least one emergency contact first.';
+  String get errorNoContacts => 'Add at least one emergency contact first.';
 
   @override
-  String get errorNoFlashlight => 'This phone has no flashlight.';
+  String get errorNoFlashlight => 'This phone doesn\'t have a flashlight.';
 
   @override
-  String get errorMicDenied => 'Microphone permission denied.';
+  String get errorMicDenied =>
+      'SafeOne needs the microphone to record. You can allow it in Settings.';
 
   @override
   String get recordingStarted => 'Recording started.';
 
   @override
-  String get recordingSaved => 'Recording saved to this phone.';
+  String get recordingSaved => 'Recording saved on this phone.';
 
   @override
   String get recordingStopped => 'Recording stopped.';
 
   @override
-  String get sosCountdownTitle => 'Sending SOS';
+  String get sosCountdownTitle => 'Sending your SOS';
 
   @override
   String get sosCountdownBody =>
-      'Your location will be sent to your emergency contacts.';
+      'Your contacts will get a text with your location.';
 
   @override
-  String get sosCountdownHint => 'Tap Cancel if this was a mistake.';
+  String get sosCountdownHint => 'Pressed it by mistake? Tap Cancel.';
 
   @override
   String get sosSendNow => 'Send now';
@@ -729,42 +735,42 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get settingsCountdownSubtitle =>
-      'How long you have to cancel before the SOS is sent.';
+      'How long you have to cancel before it goes out.';
 
   @override
   String get settingsShakeTitle => 'Shake to send SOS';
 
   @override
   String get settingsShakeSubtitle =>
-      'Shaking the phone starts the SOS countdown.';
+      'Shake your phone hard 3 times to send your SOS, even when it\'s locked. Uses a little more battery while the screen is off.';
 
   @override
   String get settingsPowerTitle => 'Power button SOS';
 
   @override
   String get settingsPowerSubtitle =>
-      'Pressing the power button 3 times quickly starts the SOS.';
+      'Press the power button 3 times quickly to start an SOS.';
 
   @override
   String get settingsSafetyModeNote =>
-      'Safety mode runs in the background so these triggers work even when your phone is locked. You\'ll see a \"Safety mode active\" notification while it\'s on.';
+      'To make these work with the screen locked, SafeOne keeps running in the background. You\'ll see a \"Safety mode is on\" notification while it does.';
 
   @override
   String get settingsMessageTitle => 'SOS message';
 
   @override
   String settingsMessageSubtitle(String token) {
-    return 'Sent to your contacts. Keep $token where the map link should appear.';
+    return 'This is what your contacts get. Keep $token where your map link should go.';
   }
 
   @override
-  String get settingsMessageHint => 'Type your emergency message…';
+  String get settingsMessageHint => 'Write your SOS message…';
 
   @override
   String get settingsPrivacyPolicy => 'Privacy policy';
 
   @override
-  String get settingsPrivacySubtitle => 'Your data never leaves this phone';
+  String get settingsPrivacySubtitle => 'Your data stays on this phone';
 
   @override
   String get settingsSupport => 'Contact support';
@@ -774,7 +780,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get homeAddContactsBody =>
-      'When you press SOS, they get an SMS with your live location.';
+      'When you press SOS, they get a text with your location.';
 
   @override
   String get homeTools => 'Safety tools';
@@ -790,7 +796,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get fakeCallRingtoneHint =>
-      'Pick any ringtone, or add your own sound.';
+      'Pick any ringtone, or use your own sound.';
 
   @override
   String get homeReadyTitle => 'Get SOS ready';
@@ -800,10 +806,10 @@ class AppLocalizationsBn extends AppLocalizations {
       'Allow these now, so nothing slows you down in an emergency:';
 
   @override
-  String get homeReadySms => '• Send your SOS automatically to every contact';
+  String get homeReadySms => '• Text your SOS to every contact by itself';
 
   @override
-  String get homeReadyLocation => '• Include a map link to where you are';
+  String get homeReadyLocation => '• Add a map link to where you are';
 
   @override
   String get homeReadyAction => 'Allow';
@@ -816,15 +822,62 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get settingsAutoSmsOn =>
-      'On — each contact gets an SMS, no tap needed';
+      'On. Your SOS goes out without you tapping Send.';
 
   @override
-  String get settingsAutoSmsOff => 'Off — Messages opens and you tap Send';
+  String get settingsAutoSmsOff => 'Off. Messages opens and you tap Send.';
 
   @override
   String get settingsAutoSmsAllow => 'Allow';
 
   @override
+  String get settingsShutdownNote =>
+      'No app can tell when a phone is forced off (holding the power button for 10+ seconds) or its battery dies or is pulled, so nothing is sent then.';
+
+  @override
   String get homeReadyBgLocation =>
-      '• Include your location even when the phone is locked';
+      '• Add your location even when the phone is locked';
+
+  @override
+  String get settingsShutdownSwitchTitle =>
+      'Text my location before my phone switches off';
+
+  @override
+  String get settingsShutdownSwitchSubtitle =>
+      'When your phone is switched off, restarted or reset, your contacts get your last location.';
+
+  @override
+  String get settingsShutdownScopeActive => 'Only during an SOS or check-in';
+
+  @override
+  String get settingsShutdownScopeActiveHint =>
+      'Recommended. Everyday restarts don\'t text anyone.';
+
+  @override
+  String get settingsShutdownScopeAlways => 'Every time';
+
+  @override
+  String get settingsShutdownScopeAlwaysHint =>
+      'Keeps the \"Safety mode is on\" notification showing.';
+
+  @override
+  String get settingsShutdownNeedsSms =>
+      'Allow SMS so the text can go out by itself.';
+
+  @override
+  String get settingsShutdownNeedsLocation =>
+      'Allow location \"All the time\" so your location is included.';
+
+  @override
+  String get bgLocationTitle => 'Allow location all the time?';
+
+  @override
+  String get bgLocationBody =>
+      'SafeOne uses your location in the background only to add it to texts for your emergency contacts: your SOS, live updates, a missed check-in, or when your phone is switched off. It\'s never uploaded anywhere.\n\nOn the next screen, choose \"Allow all the time\".';
+
+  @override
+  String get notNow => 'Not now';
+
+  @override
+  String get continueLabel => 'Continue';
 }

@@ -10,6 +10,7 @@ import 'services/app_lock_service.dart';
 import 'services/app_reset_service.dart';
 import 'services/locale_controller.dart';
 import 'services/notification_service.dart';
+import 'services/safety_event_repository.dart';
 import 'services/vault.dart';
 import 'theme/app_theme.dart';
 import 'widgets/app_ui.dart';
@@ -27,6 +28,9 @@ Future<void> main() async {
     // If a scheduled fake call launched the app (cold start), open it.
     await NotificationService.instance.handleLaunch();
   } catch (_) {/* notifications unavailable */}
+  // Anything the background service sent while the app was closed (a shake
+  // SOS, a missed check-in) goes into Records.
+  SafetyEventRepository().importNativeEvents();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   runApp(const WomenSafetyApp());
 }
@@ -134,6 +138,9 @@ class _AppGateState extends State<AppGate> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      SafetyEventRepository().importNativeEvents();
+    }
     if (!_pinSet) return;
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {

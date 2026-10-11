@@ -24,7 +24,7 @@ class _EmergencyProtocolScreenState extends State<EmergencyProtocolScreen> {
       ok = await launchUrl(Uri(scheme: 'tel', path: number));
     } catch (_) {}
     if (!ok && mounted) {
-      showAppSnack(context, 'Could not open the dialer. Dial $number manually.',
+      showAppSnack(context, "Couldn't open the dialer. Call $number yourself.",
           tone: Tone.danger);
     }
   }

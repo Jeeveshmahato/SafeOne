@@ -120,7 +120,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
                   ),
                   validator: (value) =>
                       (value == null || value.trim().isEmpty)
-                          ? 'Please enter a name'
+                          ? 'Add a name'
                           : null,
                 ),
                 const SizedBox(height: 12),
@@ -136,12 +136,12 @@ class _ContactsScreenState extends State<ContactsScreen> {
                   ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a phone number';
+                      return 'Add a phone number';
                     }
                     // The SOS SMS goes to this number, so catch typos now
                     // rather than during an emergency.
                     if (!_validPhone.hasMatch(_normalisePhone(value))) {
-                      return 'Enter a valid phone number';
+                      return "That number doesn't look right";
                     }
                     return null;
                   },
@@ -194,10 +194,10 @@ class _ContactsScreenState extends State<ContactsScreen> {
         icon: const Icon(Icons.sms_outlined),
         title: const Text('Send your SOS automatically?'),
         content: const Text(
-          'Allow SMS so SafeOne can text your emergency contacts by itself, '
-          'with no tap needed when every second counts.\n\n'
-          'SafeOne only sends messages when you trigger an SOS, a check-in '
-          'or live location — never anything else.',
+          "Allow SMS and SafeOne will text your contacts for you, so you "
+          "don't have to stop and tap Send in an emergency.\n\n"
+          'It only texts them for an SOS, a check-in or live location. '
+          'Nothing else, ever.',
         ),
         actions: [
           TextButton(
@@ -222,8 +222,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
     // Android shows no prompt once it's blocked (denied twice, or a
     // "restricted setting"): the user has to switch it on in app settings.
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: const Text('SMS is off for SafeOne. Turn it on in app '
-          'settings to send your SOS automatically.'),
+      content: const Text("SafeOne can't send texts yet. Turn on SMS in "
+          'its settings so your SOS goes out by itself.'),
       action: SnackBarAction(label: 'Settings', onPressed: openAppSettings),
     ));
   }
@@ -274,8 +274,8 @@ class _ContactsScreenState extends State<ContactsScreen> {
               ? EmptyState(
                   icon: Icons.group_add_outlined,
                   title: 'No emergency contacts yet',
-                  message: 'Add the people who should get your SOS alert '
-                      'and live location.',
+                  message: 'Add the people you want to hear from you '
+                      'when you need help.',
                   action: FilledButton.icon(
                     onPressed: _showAddDialog,
                     icon: const Icon(Icons.person_add_alt_1_rounded),

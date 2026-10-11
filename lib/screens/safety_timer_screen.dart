@@ -71,7 +71,7 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
     await NotificationService.instance.cancelCheckin();
     if (!mounted) return;
     setState(() => _running = false);
-    showAppSnack(context, 'Glad you are safe! Check-in cancelled.',
+    showAppSnack(context, "Glad you're safe. Timer stopped.",
         tone: Tone.success);
   }
 
@@ -114,8 +114,8 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
             textAlign: TextAlign.center, style: theme.textTheme.headlineSmall),
         const SizedBox(height: 8),
         Text(
-          'If you don\'t tap "I\'m safe" before the timer ends, an SOS with '
-          'your location is sent automatically.',
+          'If you don\'t tap "I\'m safe" before the timer runs out, your '
+          'contacts get an alert with your location.',
           textAlign: TextAlign.center,
           style: theme.textTheme.bodyLarge!
               .copyWith(color: scheme.onSurfaceVariant),
@@ -205,8 +205,8 @@ class _SafetyTimerScreenState extends State<SafetyTimerScreen> {
         const SizedBox(height: 16),
         const NoticeCard(
           tone: Tone.info,
-          message: 'You can lock or close the phone. The alert still works '
-              'in the background.',
+          message: 'You can lock your phone or close the app. The alert '
+              'still goes out.',
         ),
       ],
     );

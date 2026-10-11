@@ -153,7 +153,7 @@ abstract class AppLocalizations {
   /// No description provided for @fakeCallHeader.
   ///
   /// In en, this message translates to:
-  /// **'Create a fake incoming call to help you leave an unsafe situation. The call looks realistic and gives you a reason to step away.'**
+  /// **'Get a fake incoming call so you have an excuse to step away. It looks and rings like a real call.'**
   String get fakeCallHeader;
 
   /// No description provided for @chooseScenario.
@@ -183,7 +183,7 @@ abstract class AppLocalizations {
   /// No description provided for @phoneHelper.
   ///
   /// In en, this message translates to:
-  /// **'Shows on the fake call screen for realism'**
+  /// **'Shown on the call screen, so it looks real'**
   String get phoneHelper;
 
   /// No description provided for @whatToSay.
@@ -201,7 +201,7 @@ abstract class AppLocalizations {
   /// No description provided for @whatToSayHelper.
   ///
   /// In en, this message translates to:
-  /// **'Quick message to say if caller picks up by accident'**
+  /// **'A line to say if someone answers the call by mistake'**
   String get whatToSayHelper;
 
   /// No description provided for @callDelay.
@@ -255,7 +255,7 @@ abstract class AppLocalizations {
   /// No description provided for @repeatCallSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Call keeps \"ringing\" if you decline it'**
+  /// **'Rings again if you decline it'**
   String get repeatCallSubtitle;
 
   /// No description provided for @autoEndCall.
@@ -267,7 +267,7 @@ abstract class AppLocalizations {
   /// No description provided for @autoEndCallSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Call ends automatically after a set time'**
+  /// **'Hangs up by itself after a while'**
   String get autoEndCallSubtitle;
 
   /// No description provided for @endAfter.
@@ -315,7 +315,7 @@ abstract class AppLocalizations {
   /// No description provided for @keepScreenOpen.
   ///
   /// In en, this message translates to:
-  /// **'Keep this screen open. The fake call will appear when the timer ends. You can put the phone to your ear.'**
+  /// **'Keep this screen open. The call will come in when the timer ends, and you can hold the phone to your ear.'**
   String get keepScreenOpen;
 
   /// No description provided for @fakeCallScheduledTitle.
@@ -327,7 +327,7 @@ abstract class AppLocalizations {
   /// No description provided for @fakeCallScheduledHint.
   ///
   /// In en, this message translates to:
-  /// **'The call will ring in {time}, even if you lock your phone or close the app. Grant the notification and full-screen permissions if asked.'**
+  /// **'Your phone will ring in {time}, even if it\'s locked or the app is closed. If asked, allow notifications and full-screen alerts.'**
   String fakeCallScheduledHint(String time);
 
   /// No description provided for @cancel.
@@ -369,7 +369,7 @@ abstract class AppLocalizations {
   /// No description provided for @callWillRepeat.
   ///
   /// In en, this message translates to:
-  /// **'Call will repeat if declined'**
+  /// **'Rings again if you decline'**
   String get callWillRepeat;
 
   /// No description provided for @autoEndsIn.
@@ -429,7 +429,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeNoContacts.
   ///
   /// In en, this message translates to:
-  /// **'Add emergency contacts to get started.'**
+  /// **'Add an emergency contact to get started.'**
   String get homeNoContacts;
 
   /// No description provided for @sos.
@@ -441,7 +441,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeSosHint.
   ///
   /// In en, this message translates to:
-  /// **'Tap SOS to send your location to your contacts.'**
+  /// **'Tap SOS to text your location to your contacts.'**
   String get homeSosHint;
 
   /// No description provided for @tileSiren.
@@ -693,19 +693,19 @@ abstract class AppLocalizations {
   /// No description provided for @homeSilentSosHint.
   ///
   /// In en, this message translates to:
-  /// **'Long-press SOS to send silently (no sound or buzz).'**
+  /// **'Hold SOS to send it silently, with no sound or vibration.'**
   String get homeSilentSosHint;
 
   /// No description provided for @silentSosSent.
   ///
   /// In en, this message translates to:
-  /// **'Silent alert sent to {count} contact(s).'**
+  /// **'{count, plural, =1{Sent to your contact.} other{Sent to all {count} contacts.}}'**
   String silentSosSent(int count);
 
   /// No description provided for @sosLiveBannerActive.
   ///
   /// In en, this message translates to:
-  /// **'Sharing your live location with contacts'**
+  /// **'Sharing your location with your contacts'**
   String get sosLiveBannerActive;
 
   /// No description provided for @sosLiveStop.
@@ -717,13 +717,13 @@ abstract class AppLocalizations {
   /// No description provided for @sosLiveStarted.
   ///
   /// In en, this message translates to:
-  /// **'Live location sharing started. Tap \"I\'m safe\" to stop.'**
+  /// **'Your contacts will keep getting your location until you tap \"I\'m safe\".'**
   String get sosLiveStarted;
 
   /// No description provided for @sosLiveStopped.
   ///
   /// In en, this message translates to:
-  /// **'Live location sharing stopped.'**
+  /// **'Stopped sharing your location.'**
   String get sosLiveStopped;
 
   /// No description provided for @lockTitle.
@@ -735,7 +735,7 @@ abstract class AppLocalizations {
   /// No description provided for @lockSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter your PIN to unlock'**
+  /// **'Enter your PIN to open SafeOne'**
   String get lockSubtitle;
 
   /// No description provided for @lockWrongPin.
@@ -747,7 +747,7 @@ abstract class AppLocalizations {
   /// No description provided for @lockTooManyAttempts.
   ///
   /// In en, this message translates to:
-  /// **'Too many attempts. Wait {seconds}s.'**
+  /// **'Too many tries. Wait {seconds}s.'**
   String lockTooManyAttempts(int seconds);
 
   /// No description provided for @lockUseBiometric.
@@ -771,7 +771,7 @@ abstract class AppLocalizations {
   /// No description provided for @pinSetSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'This PIN protects your contacts, medical info and records.'**
+  /// **'Your PIN keeps your contacts, medical info and records private.'**
   String get pinSetSubtitle;
 
   /// No description provided for @pinCreateStep.
@@ -783,19 +783,19 @@ abstract class AppLocalizations {
   /// No description provided for @pinConfirmStep.
   ///
   /// In en, this message translates to:
-  /// **'Re-enter your PIN to confirm'**
+  /// **'Enter it again to confirm'**
   String get pinConfirmStep;
 
   /// No description provided for @pinMismatch.
   ///
   /// In en, this message translates to:
-  /// **'PINs do not match. Start again.'**
+  /// **'Those PINs didn\'t match. Try again.'**
   String get pinMismatch;
 
   /// No description provided for @pinTooShort.
   ///
   /// In en, this message translates to:
-  /// **'PIN must be 6 digits.'**
+  /// **'Your PIN needs 6 digits.'**
   String get pinTooShort;
 
   /// No description provided for @pinSaved.
@@ -825,7 +825,7 @@ abstract class AppLocalizations {
   /// No description provided for @lockTryAgainIn.
   ///
   /// In en, this message translates to:
-  /// **'Too many attempts. Try again in {time}.'**
+  /// **'Too many tries. Try again in {time}.'**
   String lockTryAgainIn(String time);
 
   /// No description provided for @pinSameAsApp.
@@ -849,7 +849,7 @@ abstract class AppLocalizations {
   /// No description provided for @contactsPinEnterSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Your contacts PIN is needed to change your emergency contacts.'**
+  /// **'Enter your contacts PIN to change who gets your SOS.'**
   String get contactsPinEnterSubtitle;
 
   /// No description provided for @contactsPinSetTitle.
@@ -909,7 +909,7 @@ abstract class AppLocalizations {
   /// No description provided for @pinResetIntro.
   ///
   /// In en, this message translates to:
-  /// **'SafeOne can\'t recover a forgotten PIN, because it never leaves this phone. Prove this is your phone, then choose a new PIN.'**
+  /// **'SafeOne can\'t recover a forgotten PIN, because it never leaves this phone. Confirm it\'s your phone, then pick a new one.'**
   String get pinResetIntro;
 
   /// No description provided for @pinResetWithDevice.
@@ -933,13 +933,13 @@ abstract class AppLocalizations {
   /// No description provided for @pinResetDeviceFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t confirm it\'s you. Try again.'**
+  /// **'That didn\'t work. Try again.'**
   String get pinResetDeviceFailed;
 
   /// No description provided for @pinResetNoDeviceLock.
   ///
   /// In en, this message translates to:
-  /// **'This phone has no screen lock, so it can\'t be used to prove it\'s yours.'**
+  /// **'This phone has no screen lock, so we can\'t use it to confirm it\'s you.'**
   String get pinResetNoDeviceLock;
 
   /// No description provided for @pinResetWithAppPin.
@@ -987,7 +987,7 @@ abstract class AppLocalizations {
   /// No description provided for @pinResetDone.
   ///
   /// In en, this message translates to:
-  /// **'PIN reset.'**
+  /// **'Your new PIN is set.'**
   String get pinResetDone;
 
   /// No description provided for @lockBiometricNeedsPin.
@@ -1017,31 +1017,31 @@ abstract class AppLocalizations {
   /// No description provided for @securityProtectionStrongBox.
   ///
   /// In en, this message translates to:
-  /// **'Encrypted. Keys are in this phone\'s dedicated security chip.'**
+  /// **'Encrypted. The keys are kept in this phone\'s security chip.'**
   String get securityProtectionStrongBox;
 
   /// No description provided for @securityProtectionTee.
   ///
   /// In en, this message translates to:
-  /// **'Encrypted. Keys are in this phone\'s secure hardware.'**
+  /// **'Encrypted. The keys are kept in this phone\'s secure hardware.'**
   String get securityProtectionTee;
 
   /// No description provided for @securityProtectionSoftware.
   ///
   /// In en, this message translates to:
-  /// **'Encrypted, but this phone has no secure hardware for the keys.'**
+  /// **'Encrypted, but this phone has no secure hardware to keep the keys in.'**
   String get securityProtectionSoftware;
 
   /// No description provided for @securityRootedTitle.
   ///
   /// In en, this message translates to:
-  /// **'This phone appears to be rooted'**
+  /// **'This phone looks rooted'**
   String get securityRootedTitle;
 
   /// No description provided for @securityRootedBody.
   ///
   /// In en, this message translates to:
-  /// **'Apps with root access can see what SafeOne shows while it\'s unlocked. Saved data stays encrypted while SafeOne is locked, so keep auto-lock set to Immediately.'**
+  /// **'Apps with root access can see what SafeOne shows while it\'s open. Your saved data stays encrypted while SafeOne is locked, so keep Auto-lock set to Immediately.'**
   String get securityRootedBody;
 
   /// No description provided for @securitySection.
@@ -1065,7 +1065,7 @@ abstract class AppLocalizations {
   /// No description provided for @securityBiometricSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Use biometrics instead of typing the PIN.'**
+  /// **'Skip typing your PIN.'**
   String get securityBiometricSubtitle;
 
   /// No description provided for @securityAutoLock.
@@ -1083,7 +1083,7 @@ abstract class AppLocalizations {
   /// No description provided for @securityAutoLockGrace.
   ///
   /// In en, this message translates to:
-  /// **'After {seconds}s in background'**
+  /// **'After {seconds}s away'**
   String securityAutoLockGrace(int seconds);
 
   /// No description provided for @securitySilentSos.
@@ -1095,7 +1095,7 @@ abstract class AppLocalizations {
   /// No description provided for @securitySilentSosSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'No vibration confirmation when sending SOS.'**
+  /// **'Don\'t vibrate when the SOS goes out.'**
   String get securitySilentSosSubtitle;
 
   /// No description provided for @securityLiveUpdates.
@@ -1107,7 +1107,7 @@ abstract class AppLocalizations {
   /// No description provided for @securityLiveUpdatesSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Keep sending your location to contacts until you tap \"I\'m safe\".'**
+  /// **'Keep texting your location to contacts until you tap \"I\'m safe\".'**
   String get securityLiveUpdatesSubtitle;
 
   /// No description provided for @securityVolumeTrigger.
@@ -1119,7 +1119,7 @@ abstract class AppLocalizations {
   /// No description provided for @securityVolumeTriggerSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Press a volume button 3 times quickly to start the SOS.'**
+  /// **'Press a volume button 3 times quickly to start an SOS.'**
   String get securityVolumeTriggerSubtitle;
 
   /// No description provided for @checkinScheduleTitle.
@@ -1131,7 +1131,7 @@ abstract class AppLocalizations {
   /// No description provided for @checkinScheduleSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'If you don\'t tap \"I\'m safe\" before the deadline, your contacts are alerted automatically.'**
+  /// **'If you don\'t tap \"I\'m safe\" in time, your contacts are alerted automatically.'**
   String get checkinScheduleSubtitle;
 
   /// No description provided for @checkinSetDeadline.
@@ -1143,7 +1143,7 @@ abstract class AppLocalizations {
   /// No description provided for @checkinActive.
   ///
   /// In en, this message translates to:
-  /// **'Active — alert at {time}'**
+  /// **'On. Your contacts will be alerted at {time}.'**
   String checkinActive(String time);
 
   /// No description provided for @checkinStart.
@@ -1155,31 +1155,31 @@ abstract class AppLocalizations {
   /// No description provided for @checkinImSafe.
   ///
   /// In en, this message translates to:
-  /// **'I\'m safe — cancel'**
+  /// **'I\'m safe'**
   String get checkinImSafe;
 
   /// No description provided for @checkinCancelled.
   ///
   /// In en, this message translates to:
-  /// **'Check-in cancelled.'**
+  /// **'Check-in stopped. Glad you\'re safe.'**
   String get checkinCancelled;
 
   /// No description provided for @checkinFired.
   ///
   /// In en, this message translates to:
-  /// **'You didn\'t check in. Alerting your contacts.'**
+  /// **'You didn\'t check in, so your contacts are being alerted.'**
   String get checkinFired;
 
   /// No description provided for @checkinReminderTitle.
   ///
   /// In en, this message translates to:
-  /// **'Safety check-in due'**
+  /// **'Are you okay?'**
   String get checkinReminderTitle;
 
   /// No description provided for @checkinReminderBody.
   ///
   /// In en, this message translates to:
-  /// **'Tap \"I\'m safe\" or your contacts will be alerted.'**
+  /// **'Tap \"I\'m safe\", or your contacts will be alerted soon.'**
   String get checkinReminderBody;
 
   /// No description provided for @tabFollowMe.
@@ -1281,7 +1281,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeContactsSaved.
   ///
   /// In en, this message translates to:
-  /// **'{count} emergency contact(s) saved.'**
+  /// **'{count, plural, =1{1 emergency contact saved.} other{{count} emergency contacts saved.}}'**
   String homeContactsSaved(int count);
 
   /// No description provided for @homeTagline.
@@ -1293,7 +1293,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeContactsReady.
   ///
   /// In en, this message translates to:
-  /// **'{count, plural, =1{1 contact will be alerted} other{{count} contacts will be alerted}}'**
+  /// **'{count, plural, =1{1 contact will get your SOS} other{{count} contacts will get your SOS}}'**
   String homeContactsReady(int count);
 
   /// No description provided for @homeAddContactsTitle.
@@ -1311,7 +1311,7 @@ abstract class AppLocalizations {
   /// No description provided for @sosButtonCaption.
   ///
   /// In en, this message translates to:
-  /// **'Tap to alert  ·  Hold for silent SOS'**
+  /// **'Tap for SOS  ·  Hold to send silently'**
   String get sosButtonCaption;
 
   /// No description provided for @sosButtonSemantics.
@@ -1335,19 +1335,19 @@ abstract class AppLocalizations {
   /// No description provided for @errorNoContacts.
   ///
   /// In en, this message translates to:
-  /// **'Please add at least one emergency contact first.'**
+  /// **'Add at least one emergency contact first.'**
   String get errorNoContacts;
 
   /// No description provided for @errorNoFlashlight.
   ///
   /// In en, this message translates to:
-  /// **'This phone has no flashlight.'**
+  /// **'This phone doesn\'t have a flashlight.'**
   String get errorNoFlashlight;
 
   /// No description provided for @errorMicDenied.
   ///
   /// In en, this message translates to:
-  /// **'Microphone permission denied.'**
+  /// **'SafeOne needs the microphone to record. You can allow it in Settings.'**
   String get errorMicDenied;
 
   /// No description provided for @recordingStarted.
@@ -1359,7 +1359,7 @@ abstract class AppLocalizations {
   /// No description provided for @recordingSaved.
   ///
   /// In en, this message translates to:
-  /// **'Recording saved to this phone.'**
+  /// **'Recording saved on this phone.'**
   String get recordingSaved;
 
   /// No description provided for @recordingStopped.
@@ -1371,19 +1371,19 @@ abstract class AppLocalizations {
   /// No description provided for @sosCountdownTitle.
   ///
   /// In en, this message translates to:
-  /// **'Sending SOS'**
+  /// **'Sending your SOS'**
   String get sosCountdownTitle;
 
   /// No description provided for @sosCountdownBody.
   ///
   /// In en, this message translates to:
-  /// **'Your location will be sent to your emergency contacts.'**
+  /// **'Your contacts will get a text with your location.'**
   String get sosCountdownBody;
 
   /// No description provided for @sosCountdownHint.
   ///
   /// In en, this message translates to:
-  /// **'Tap Cancel if this was a mistake.'**
+  /// **'Pressed it by mistake? Tap Cancel.'**
   String get sosCountdownHint;
 
   /// No description provided for @sosSendNow.
@@ -1425,7 +1425,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsCountdownSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'How long you have to cancel before the SOS is sent.'**
+  /// **'How long you have to cancel before it goes out.'**
   String get settingsCountdownSubtitle;
 
   /// No description provided for @settingsShakeTitle.
@@ -1437,7 +1437,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsShakeSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Shaking the phone starts the SOS countdown.'**
+  /// **'Shake your phone hard 3 times to send your SOS, even when it\'s locked. Uses a little more battery while the screen is off.'**
   String get settingsShakeSubtitle;
 
   /// No description provided for @settingsPowerTitle.
@@ -1449,13 +1449,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPowerSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Pressing the power button 3 times quickly starts the SOS.'**
+  /// **'Press the power button 3 times quickly to start an SOS.'**
   String get settingsPowerSubtitle;
 
   /// No description provided for @settingsSafetyModeNote.
   ///
   /// In en, this message translates to:
-  /// **'Safety mode runs in the background so these triggers work even when your phone is locked. You\'ll see a \"Safety mode active\" notification while it\'s on.'**
+  /// **'To make these work with the screen locked, SafeOne keeps running in the background. You\'ll see a \"Safety mode is on\" notification while it does.'**
   String get settingsSafetyModeNote;
 
   /// No description provided for @settingsMessageTitle.
@@ -1467,13 +1467,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsMessageSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Sent to your contacts. Keep {token} where the map link should appear.'**
+  /// **'This is what your contacts get. Keep {token} where your map link should go.'**
   String settingsMessageSubtitle(String token);
 
   /// No description provided for @settingsMessageHint.
   ///
   /// In en, this message translates to:
-  /// **'Type your emergency message…'**
+  /// **'Write your SOS message…'**
   String get settingsMessageHint;
 
   /// No description provided for @settingsPrivacyPolicy.
@@ -1485,7 +1485,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPrivacySubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Your data never leaves this phone'**
+  /// **'Your data stays on this phone'**
   String get settingsPrivacySubtitle;
 
   /// No description provided for @settingsSupport.
@@ -1503,7 +1503,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeAddContactsBody.
   ///
   /// In en, this message translates to:
-  /// **'When you press SOS, they get an SMS with your live location.'**
+  /// **'When you press SOS, they get a text with your location.'**
   String get homeAddContactsBody;
 
   /// No description provided for @homeTools.
@@ -1533,7 +1533,7 @@ abstract class AppLocalizations {
   /// No description provided for @fakeCallRingtoneHint.
   ///
   /// In en, this message translates to:
-  /// **'Pick any ringtone, or add your own sound.'**
+  /// **'Pick any ringtone, or use your own sound.'**
   String get fakeCallRingtoneHint;
 
   /// No description provided for @homeReadyTitle.
@@ -1551,13 +1551,13 @@ abstract class AppLocalizations {
   /// No description provided for @homeReadySms.
   ///
   /// In en, this message translates to:
-  /// **'• Send your SOS automatically to every contact'**
+  /// **'• Text your SOS to every contact by itself'**
   String get homeReadySms;
 
   /// No description provided for @homeReadyLocation.
   ///
   /// In en, this message translates to:
-  /// **'• Include a map link to where you are'**
+  /// **'• Add a map link to where you are'**
   String get homeReadyLocation;
 
   /// No description provided for @homeReadyAction.
@@ -1581,13 +1581,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAutoSmsOn.
   ///
   /// In en, this message translates to:
-  /// **'On — each contact gets an SMS, no tap needed'**
+  /// **'On. Your SOS goes out without you tapping Send.'**
   String get settingsAutoSmsOn;
 
   /// No description provided for @settingsAutoSmsOff.
   ///
   /// In en, this message translates to:
-  /// **'Off — Messages opens and you tap Send'**
+  /// **'Off. Messages opens and you tap Send.'**
   String get settingsAutoSmsOff;
 
   /// No description provided for @settingsAutoSmsAllow.
@@ -1596,11 +1596,89 @@ abstract class AppLocalizations {
   /// **'Allow'**
   String get settingsAutoSmsAllow;
 
+  /// No description provided for @settingsShutdownNote.
+  ///
+  /// In en, this message translates to:
+  /// **'No app can tell when a phone is forced off (holding the power button for 10+ seconds) or its battery dies or is pulled, so nothing is sent then.'**
+  String get settingsShutdownNote;
+
   /// No description provided for @homeReadyBgLocation.
   ///
   /// In en, this message translates to:
-  /// **'• Include your location even when the phone is locked'**
+  /// **'• Add your location even when the phone is locked'**
   String get homeReadyBgLocation;
+
+  /// No description provided for @settingsShutdownSwitchTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Text my location before my phone switches off'**
+  String get settingsShutdownSwitchTitle;
+
+  /// No description provided for @settingsShutdownSwitchSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'When your phone is switched off, restarted or reset, your contacts get your last location.'**
+  String get settingsShutdownSwitchSubtitle;
+
+  /// No description provided for @settingsShutdownScopeActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Only during an SOS or check-in'**
+  String get settingsShutdownScopeActive;
+
+  /// No description provided for @settingsShutdownScopeActiveHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommended. Everyday restarts don\'t text anyone.'**
+  String get settingsShutdownScopeActiveHint;
+
+  /// No description provided for @settingsShutdownScopeAlways.
+  ///
+  /// In en, this message translates to:
+  /// **'Every time'**
+  String get settingsShutdownScopeAlways;
+
+  /// No description provided for @settingsShutdownScopeAlwaysHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Keeps the \"Safety mode is on\" notification showing.'**
+  String get settingsShutdownScopeAlwaysHint;
+
+  /// No description provided for @settingsShutdownNeedsSms.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow SMS so the text can go out by itself.'**
+  String get settingsShutdownNeedsSms;
+
+  /// No description provided for @settingsShutdownNeedsLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow location \"All the time\" so your location is included.'**
+  String get settingsShutdownNeedsLocation;
+
+  /// No description provided for @bgLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow location all the time?'**
+  String get bgLocationTitle;
+
+  /// No description provided for @bgLocationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'SafeOne uses your location in the background only to add it to texts for your emergency contacts: your SOS, live updates, a missed check-in, or when your phone is switched off. It\'s never uploaded anywhere.\n\nOn the next screen, choose \"Allow all the time\".'**
+  String get bgLocationBody;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
+
+  /// No description provided for @continueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueLabel;
 }
 
 class _AppLocalizationsDelegate

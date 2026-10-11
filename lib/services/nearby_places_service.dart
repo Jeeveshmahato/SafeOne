@@ -38,7 +38,7 @@ class NearbyPlacesService {
     final bool opened =
         await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!opened) {
-      throw Exception('Could not open Google Maps on this phone.');
+      throw Exception("Couldn't open Google Maps on this phone.");
     }
   }
 }

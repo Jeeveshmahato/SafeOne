@@ -66,7 +66,7 @@ void main() {
     await tester.enterText(find.byType(TextFormField).at(1), 'not a number');
     await tester.tap(find.text('Save'));
     await tester.pump();
-    expect(find.text('Enter a valid phone number'), findsOneWidget);
+    expect(find.text("That number doesn't look right"), findsOneWidget);
     await tester.enterText(find.byType(TextFormField).at(1), '+91 98765 43210');
     await tester.tap(find.text('Save'));
     await pumpUntilFound(tester, find.text('+919876543210'));

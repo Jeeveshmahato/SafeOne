@@ -23,13 +23,13 @@ class SafetyTipsScreen extends StatelessWidget {
           '2. Cross the road or change direction to confirm you are followed.\n'
           '3. Call someone and say your location out loud.\n'
           '4. Use the SOS button or Fake Call in this app.\n'
-          '5. Never go home directly — go somewhere public first.',
+          '5. Don\'t go straight home. Go somewhere busy first.',
     ),
     (
       title: 'Severe bleeding',
       icon: Icons.water_drop,
       body: '1. Press firmly on the wound with a clean cloth.\n'
-          '2. Keep pressing — do not keep checking it.\n'
+          '2. Keep pressing. Don\'t stop to check it.\n'
           '3. If possible, raise the injured part above the heart.\n'
           '4. Add more cloth on top if it soaks through (do not remove the '
           'first).\n'
@@ -73,7 +73,7 @@ class SafetyTipsScreen extends StatelessWidget {
           '• Sit near the driver or other women in shared transport.\n'
           '• Note the vehicle number and message it to a friend.\n'
           '• Keep your phone charged and SOS within reach.\n'
-          '• Trust your instincts — if something feels wrong, get out in a '
+          '• Trust your gut. If something feels wrong, get out in a '
           'public place.',
     ),
     (

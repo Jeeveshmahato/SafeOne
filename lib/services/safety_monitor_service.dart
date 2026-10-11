@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Controls the native always-on foreground service (SafetyMonitorService.kt)
 /// that keeps the hands-free SOS triggers — shake, volume, power — working when
@@ -55,18 +56,62 @@ class SafetyMonitorService {
     } catch (_) {/* not on Android / channel missing */}
   }
 
-  /// Start live-location ("Follow Me") sharing: the native foreground service
-  /// sends the location to contacts every [interval] until [stopLiveShare].
-  /// Runs in the foreground service so it survives the app being swiped away —
-  /// unlike the old android_alarm_manager background isolate which OEMs killed.
-  static Future<void> startLiveShare({
+  /// Start sharing the location with contacts every [interval] (at least a
+  /// minute) until [stopLiveShare]. Runs in the native foreground service, on
+  /// alarms, so it carries on with the app closed or the phone asleep.
+  ///
+  /// [mode] sets the wording: [LiveShareMode.sos] after an SOS (the first
+  /// update follows after [interval]), [LiveShareMode.followMe] and
+  /// [LiveShareMode.journey] (both text straight away). A journey also needs
+  /// [destination] and [deadline]: contacts are alerted if the user hasn't
+  /// tapped "I arrived" by then. Starting replaces any running session.
+  static Future<bool> startLiveShare({
     Duration interval = const Duration(minutes: 2),
+    LiveShareMode mode = LiveShareMode.sos,
+    String? destination,
+    DateTime? deadline,
   }) async {
     try {
       await _channel.invokeMethod('startLiveShare', {
         'intervalMillis': interval.inMilliseconds,
+        'mode': mode.key,
+        'destination': destination,
+        'deadlineMillis': deadline?.millisecondsSinceEpoch,
       });
-    } catch (_) {/* not on Android / channel missing */}
+      return true;
+    } catch (_) {
+      return false; // not on Android / channel missing
+    }
+  }
+
+  /// What's being shared right now, as the service last saved it.
+  static Future<LiveShareStatus> liveShareStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    // The service changes these in the background.
+    await prefs.reload();
+    final active = prefs.getBool('live_sharing_active') ?? false;
+    DateTime? time(String key) {
+      final ms = prefs.getInt(key);
+      return ms == null || ms == 0
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(ms);
+    }
+
+    return LiveShareStatus(
+      active: active,
+      mode: !active
+          ? null
+          : LiveShareMode.values.firstWhere(
+              (m) => m.key == prefs.getString('live_share_mode'),
+              orElse: () => LiveShareMode.sos,
+            ),
+      updatesSent: prefs.getInt('live_share_count') ?? 0,
+      lastSentAt: time('live_share_last_sent_ms'),
+      startedAt: time('live_share_started_ms'),
+      destination: prefs.getString('journey_destination'),
+      deadline: time('journey_deadline_ms'),
+      overdue: prefs.getBool('journey_overdue') ?? false,
+    );
   }
 
   static Future<void> stopLiveShare() async {
@@ -74,4 +119,40 @@ class SafetyMonitorService {
       await _channel.invokeMethod('stopLiveShare');
     } catch (_) {/* not on Android / channel missing */}
   }
+}
+
+/// What started the live sharing; it decides how the texts are worded.
+enum LiveShareMode {
+  sos('sos'),
+  followMe('follow_me'),
+  journey('journey');
+
+  const LiveShareMode(this.key);
+
+  /// The value the native service stores.
+  final String key;
+}
+
+class LiveShareStatus {
+  final bool active;
+  final LiveShareMode? mode;
+  final int updatesSent;
+  final DateTime? lastSentAt;
+  final DateTime? startedAt;
+  final String? destination;
+  final DateTime? deadline;
+
+  /// A journey whose arrival time passed: contacts were alerted.
+  final bool overdue;
+
+  const LiveShareStatus({
+    required this.active,
+    required this.mode,
+    required this.updatesSent,
+    required this.lastSentAt,
+    required this.startedAt,
+    required this.destination,
+    required this.deadline,
+    required this.overdue,
+  });
 }

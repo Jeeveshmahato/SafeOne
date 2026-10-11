@@ -34,12 +34,12 @@ class _IndiaEmergencyResourcesScreenState
       final link = _locationService.buildMapsLink(pos.latitude, pos.longitude);
       await Clipboard.setData(ClipboardData(text: link));
       if (!mounted) return;
-      showAppSnack(context, 'Location link copied — paste it into the form.',
+      showAppSnack(context, 'Location link copied. Paste it into the form.',
           tone: Tone.success);
     } catch (e) {
       if (!mounted) return;
       showAppSnack(context,
-          "Couldn't get location: ${e.toString().replaceFirst('Exception: ', '')}",
+          e.toString().replaceFirst('Exception: ', ''),
           tone: Tone.danger);
     } finally {
       if (mounted) setState(() => _copyingLocation = false);

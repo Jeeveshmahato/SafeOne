@@ -26,15 +26,15 @@ class SafetyEvent {
   String get typeLabel {
     switch (type) {
       case SafetyEventType.sos:
-        return 'SOS Alert';
+        return 'SOS';
       case SafetyEventType.checkIn:
         return 'Check-in';
       case SafetyEventType.fakeCall:
-        return 'Fake Call Used';
+        return 'Fake call';
       case SafetyEventType.incidentLogged:
-        return 'Incident Logged';
+        return 'Incident';
       case SafetyEventType.locationShared:
-        return 'Location Shared';
+        return 'Location shared';
     }
   }
 

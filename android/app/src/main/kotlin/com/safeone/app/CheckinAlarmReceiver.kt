@@ -19,6 +19,7 @@ class CheckinAlarmReceiver : BroadcastReceiver() {
         // the user marked safe just as the alarm fired).
         if (!SosSender.prefBool(context, "checkin_active")) return
         SosSender.setPrefBool(context, "checkin_active", false)
+        CheckinScheduler.cancel(context) // clears the saved deadline
         Log.i("CheckinAlarm", "Check-in deadline passed — sending SOS")
         val pending = goAsync()
         val done = AtomicBoolean(false)
@@ -27,6 +28,6 @@ class CheckinAlarmReceiver : BroadcastReceiver() {
         // SMS is handed to the system well before then, and stop waiting for
         // the "sent" confirmations rather than overrun.
         Handler(Looper.getMainLooper()).postDelayed({ finish() }, 9_000)
-        SosSender.send(context, locationWaitMs = 4_000) { finish() }
+        SosSender.send(context, SosSender.Alert.MissedCheckin, locationWaitMs = 4_000) { finish() }
     }
 }
