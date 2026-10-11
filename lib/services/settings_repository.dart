@@ -182,4 +182,22 @@ class SettingsRepository {
       await prefs.setString(_fakeCallRingtoneKey, uri);
     }
   }
+
+  /// The time the user last picked for a timer ([TimerPreset]), so the next
+  /// one starts from it. [fallback] if never set.
+  Future<Duration> loadTimerPreset(TimerPreset preset, Duration fallback) async {
+    final prefs = await SharedPreferences.getInstance();
+    final seconds = prefs.getInt('timer_preset_${preset.name}');
+    return seconds == null || seconds <= 0
+        ? fallback
+        : Duration(seconds: seconds);
+  }
+
+  Future<void> saveTimerPreset(TimerPreset preset, Duration value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('timer_preset_${preset.name}', value.inSeconds);
+  }
 }
+
+/// Timers whose last-picked length is remembered.
+enum TimerPreset { checkin, followMeInterval, journeyEta, journeyInterval }

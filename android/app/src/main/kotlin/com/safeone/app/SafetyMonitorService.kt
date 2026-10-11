@@ -97,6 +97,12 @@ class SafetyMonitorService : Service(), SensorEventListener {
             instance?.refreshNotification() ?: start(context)
         }
 
+        /// Re-show the notification if the service is running, without
+        /// starting it (a check-in that just ended needs no service).
+        fun refreshIfRunning() {
+            instance?.refreshNotification()
+        }
+
         private fun start(context: Context) {
             try {
                 val i = Intent(context, SafetyMonitorService::class.java).setAction(ACTION_START)
@@ -513,6 +519,8 @@ class SafetyMonitorService : Service(), SensorEventListener {
     private fun prefString(key: String): String? =
         getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(P + key, null)
 
+    private fun prefLong(key: String): Long = SosSender.prefLong(this, key)
+
     // --- Foreground notification ---
 
     private fun buildNotification(): Notification {
@@ -551,6 +559,13 @@ class SafetyMonitorService : Service(), SensorEventListener {
 
     private fun notificationText(): Pair<String, String> {
         if (!prefBool("live_sharing_active")) {
+            val checkinAt = prefLong("checkin_deadline_ms")
+            if (prefBool("checkin_active") && checkinAt > 0) {
+                val at = java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT)
+                    .format(java.util.Date(checkinAt))
+                return "Check-in timer is on" to
+                    "Your contacts get an alert at $at unless you tap \"I'm safe\" in SafeOne."
+            }
             return "Safety mode is on" to "Ready to alert your contacts, even with the screen locked."
         }
         return when (prefString("live_share_mode")) {

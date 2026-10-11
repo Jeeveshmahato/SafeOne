@@ -7,6 +7,7 @@ import '../services/contacts_repository.dart';
 import '../services/location_service.dart';
 import '../services/safety_event_repository.dart';
 import '../services/safety_monitor_service.dart';
+import '../services/settings_repository.dart';
 import '../services/sms_service.dart';
 import '../services/sos_service.dart';
 import '../widgets/duration_field.dart';
@@ -31,9 +32,13 @@ class _FollowMeScreenState extends State<FollowMeScreen> {
   final ContactsRepository _contactsRepository = ContactsRepository();
   final LocationService _locationService = LocationService();
   final SafetyEventRepository _eventLog = SafetyEventRepository();
+  final SettingsRepository _settings = SettingsRepository();
 
-  // How often to send an update. Customisable in seconds, minutes or hours.
-  Duration _interval = const Duration(minutes: 5);
+  static const _defaultInterval = Duration(minutes: 5);
+
+  // How often to send an update, in minutes or hours. Starts from the last
+  // one used.
+  Duration _interval = _defaultInterval;
 
   LiveShareStatus? _status;
   bool _busy = false;
@@ -65,6 +70,11 @@ class _FollowMeScreenState extends State<FollowMeScreen> {
   }
 
   Future<void> _load() async {
+    // The field reads this once, when it first shows.
+    if (_status == null) {
+      _interval = await _settings.loadTimerPreset(
+          TimerPreset.followMeInterval, _defaultInterval);
+    }
     final status = await SafetyMonitorService.liveShareStatus();
     final autoSms = await SmsService.canSendAutomatically();
     if (!mounted) return;
@@ -92,6 +102,7 @@ class _FollowMeScreenState extends State<FollowMeScreen> {
       return;
     }
     setState(() => _busy = true);
+    await _settings.saveTimerPreset(TimerPreset.followMeInterval, _interval);
     // Ask for location now, while the app is open: the background service
     // can't ask, and without it contacts would only get "can't find my
     // location".
@@ -201,7 +212,9 @@ class _FollowMeScreenState extends State<FollowMeScreen> {
                   const SizedBox(height: 12),
                   DurationField(
                     initial: _interval,
-                    initialUnit: TimeUnit.minutes,
+                    units: TimeUnit.minutesAndHours,
+                    initialUnit:
+                        TimeUnit.bestFor(_interval, TimeUnit.minutesAndHours),
                     onChanged: (d) => _interval = d,
                   ),
                 ],

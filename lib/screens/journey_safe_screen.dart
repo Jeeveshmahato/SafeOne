@@ -7,6 +7,7 @@ import '../services/contacts_repository.dart';
 import '../services/location_service.dart';
 import '../services/safety_event_repository.dart';
 import '../services/safety_monitor_service.dart';
+import '../services/settings_repository.dart';
 import '../services/sms_service.dart';
 import '../services/sos_service.dart';
 import '../widgets/duration_field.dart';
@@ -34,10 +35,15 @@ class _JourneySafeScreenState extends State<JourneySafeScreen> {
   final LocationService _locationService = LocationService();
   final SafetyEventRepository _eventLog = SafetyEventRepository();
 
+  final SettingsRepository _settings = SettingsRepository();
+
+  static const _defaultEta = Duration(minutes: 30);
+  static const _defaultInterval = Duration(minutes: 5);
+
   String _destination = '';
-  // Both customisable in seconds, minutes or hours.
-  Duration _eta = const Duration(minutes: 30);
-  Duration _pingInterval = const Duration(minutes: 5);
+  // Both in minutes or hours, starting from the last ones used.
+  Duration _eta = _defaultEta;
+  Duration _pingInterval = _defaultInterval;
 
   LiveShareStatus? _status;
   bool _busy = false;
@@ -75,6 +81,12 @@ class _JourneySafeScreenState extends State<JourneySafeScreen> {
   }
 
   Future<void> _load() async {
+    // The fields read these once, when they first show.
+    if (_status == null) {
+      _eta = await _settings.loadTimerPreset(TimerPreset.journeyEta, _defaultEta);
+      _pingInterval = await _settings.loadTimerPreset(
+          TimerPreset.journeyInterval, _defaultInterval);
+    }
     final status = await SafetyMonitorService.liveShareStatus();
     final autoSms = await SmsService.canSendAutomatically();
     if (!mounted) return;
@@ -109,6 +121,8 @@ class _JourneySafeScreenState extends State<JourneySafeScreen> {
       return;
     }
     setState(() => _busy = true);
+    await _settings.saveTimerPreset(TimerPreset.journeyEta, _eta);
+    await _settings.saveTimerPreset(TimerPreset.journeyInterval, _pingInterval);
     // Ask for location now, while the app is open: the background service
     // can't ask.
     final problem = await _locationService.checkReady();
@@ -269,7 +283,9 @@ class _JourneySafeScreenState extends State<JourneySafeScreen> {
               const SizedBox(height: 8),
               DurationField(
                 initial: _eta,
-                initialUnit: TimeUnit.minutes,
+                units: TimeUnit.minutesAndHours,
+                initialUnit:
+                    TimeUnit.bestFor(_eta, TimeUnit.minutesAndHours),
                 onChanged: (d) => _eta = d,
               ),
               const SizedBox(height: 20),
@@ -278,7 +294,9 @@ class _JourneySafeScreenState extends State<JourneySafeScreen> {
               const SizedBox(height: 8),
               DurationField(
                 initial: _pingInterval,
-                initialUnit: TimeUnit.minutes,
+                units: TimeUnit.minutesAndHours,
+                initialUnit:
+                    TimeUnit.bestFor(_pingInterval, TimeUnit.minutesAndHours),
                 onChanged: (d) => _pingInterval = d,
               ),
               const SizedBox(height: 24),

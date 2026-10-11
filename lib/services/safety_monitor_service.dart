@@ -56,6 +56,28 @@ class SafetyMonitorService {
     } catch (_) {/* not on Android / channel missing */}
   }
 
+  /// The running check-in, as the native side saved it, or null if none is
+  /// running. Lets the timer screen pick up where it was after the app was
+  /// closed.
+  static Future<CheckinStatus?> checkinStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    // The alarm receiver ends the check-in in the background.
+    await prefs.reload();
+    final deadline = prefs.getInt('checkin_deadline_ms') ?? 0;
+    if (!(prefs.getBool('checkin_active') ?? false) || deadline <= 0) {
+      return null;
+    }
+    final started = prefs.getInt('checkin_started_ms') ?? 0;
+    final end = DateTime.fromMillisecondsSinceEpoch(deadline);
+    return CheckinStatus(
+      // Check-ins started before the start time was saved: count from now.
+      startedAt: started > 0
+          ? DateTime.fromMillisecondsSinceEpoch(started)
+          : DateTime.now(),
+      deadline: end,
+    );
+  }
+
   /// Start sharing the location with contacts every [interval] (at least a
   /// minute) until [stopLiveShare]. Runs in the native foreground service, on
   /// alarms, so it carries on with the app closed or the phone asleep.
@@ -155,4 +177,12 @@ class LiveShareStatus {
     required this.deadline,
     required this.overdue,
   });
+}
+
+/// A running safety check-in.
+class CheckinStatus {
+  final DateTime startedAt;
+  final DateTime deadline;
+
+  const CheckinStatus({required this.startedAt, required this.deadline});
 }

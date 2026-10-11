@@ -224,6 +224,9 @@ class MainActivity : FlutterFragmentActivity() {
                         result.error("bad_args", "epochMillis required", null)
                     } else {
                         SosSender.setPrefBool(this, "checkin_active", true)
+                        // When it started, so the app can show the timer's
+                        // progress after being closed and reopened.
+                        SosSender.setPrefLong(this, "checkin_started_ms", System.currentTimeMillis())
                         CheckinScheduler.schedule(this, at)
                         syncService() // listen for a shutdown during the check-in
                         result.success(true)

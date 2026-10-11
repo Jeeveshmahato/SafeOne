@@ -335,6 +335,27 @@ class AppLocalizationsPa extends AppLocalizations {
   String get sosLiveStop => 'Stop sharing';
 
   @override
+  String get homeFollowMeActive => 'Follow Me is sharing your location';
+
+  @override
+  String homeJourneyActive(String destination) {
+    return 'On your way to $destination';
+  }
+
+  @override
+  String homeJourneyOverdue(String destination) {
+    return 'You haven\'t reached $destination. Your contacts were alerted';
+  }
+
+  @override
+  String homeCheckinActive(String time) {
+    return 'Check-in timer is on. Alert at $time unless you\'re safe';
+  }
+
+  @override
+  String get homeOpen => 'Open';
+
+  @override
   String get sosLiveStarted =>
       'Your contacts will keep getting your location until you tap \"I\'m safe\".';
 

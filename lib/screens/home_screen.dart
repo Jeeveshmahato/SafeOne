@@ -85,6 +85,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   // "Live location sharing" that keeps running (via the OS, even if the app is
   // closed) after an SOS until the user marks themselves safe.
   bool _liveSharing = false;
+  // What it's for (an SOS, Follow Me or a journey), as the service saved it.
+  LiveShareStatus? _liveStatus;
+  // A running check-in timer, so it can be found again from here.
+  CheckinStatus? _checkin;
 
   @override
   void initState() {
@@ -93,6 +97,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _loadContacts();
     _loadSettings();
     _checkReadiness();
+    _refreshLiveSharing();
   }
 
   @override
@@ -106,10 +111,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
   }
 
+  /// Re-reads what's running in the background (sharing, a journey, a
+  /// check-in), so its banner shows even after the app was closed.
   Future<void> _refreshLiveSharing() async {
-    final active = await _settingsRepository.loadLiveSharingActive();
-    if (!mounted || active == _liveSharing) return;
-    setState(() => _liveSharing = active);
+    final status = await SafetyMonitorService.liveShareStatus();
+    final checkin = await SafetyMonitorService.checkinStatus();
+    if (!mounted) return;
+    setState(() {
+      _liveStatus = status;
+      _liveSharing = status.active;
+      _checkin = checkin;
+    });
   }
 
   /// Re-reads the SMS and location permissions behind the "Get SOS ready"
@@ -318,7 +330,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await _settingsRepository.saveLiveSharingActive(true);
     await SafetyMonitorService.startLiveShare();
     if (!mounted) return;
-    setState(() => _liveSharing = true);
+    await _refreshLiveSharing();
     _showMessage(t.sosLiveStarted);
   }
 
@@ -329,8 +341,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await SafetyMonitorService.stopLiveShare();
     if (!mounted) return;
     final t = AppLocalizations.of(context);
-    setState(() => _liveSharing = false);
     _showMessage(t.sosLiveStopped);
+    await _refreshLiveSharing();
   }
 
   Future<void> _checkIn() async {
@@ -452,8 +464,44 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         .then((_) {
       _loadContacts();
       _checkReadiness();
+      // A timer or sharing may have been started or stopped there.
+      _refreshLiveSharing();
     });
   }
+
+  Widget _activeSharingBanner(AppLocalizations t) {
+    final status = _liveStatus;
+    final destination = status?.destination ?? '';
+    return switch (status?.mode) {
+      LiveShareMode.followMe => _ActiveBanner(
+          icon: Icons.my_location_rounded,
+          label: t.homeFollowMeActive,
+          actionLabel: t.homeOpen,
+          onAction: () => _open(_liveTrackingHub(t)),
+        ),
+      LiveShareMode.journey => _ActiveBanner(
+          icon: Icons.directions_run_rounded,
+          label: status!.overdue
+              ? t.homeJourneyOverdue(destination)
+              : t.homeJourneyActive(destination),
+          urgent: status.overdue,
+          actionLabel: t.homeOpen,
+          onAction: () => _open(_liveTrackingHub(t, initialIndex: 1)),
+        ),
+      // After an SOS: stopping is the "I'm safe" step.
+      _ => _ActiveBanner(
+          icon: Icons.location_on_rounded,
+          label: t.sosLiveBannerActive,
+          urgent: true,
+          actionLabel: t.sosLiveStop,
+          onAction: _stopLiveSharing,
+        ),
+    };
+  }
+
+  String _clock(DateTime time) => MaterialLocalizations.of(context)
+      .formatTimeOfDay(TimeOfDay.fromDateTime(time),
+          alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context));
 
   Future<void> _openSettings() async {
     await Navigator.push(context,
@@ -471,7 +519,9 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         HubTab(icon: Icons.local_police, label: t.tabPolice, screen: const PoliceSosScreen()),
       ]);
 
-  Widget _liveTrackingHub(AppLocalizations t) => TabbedHub(tabs: [
+  /// [initialIndex] 0 opens Follow Me, 1 the journey.
+  Widget _liveTrackingHub(AppLocalizations t, {int initialIndex = 0}) =>
+      TabbedHub(initialIndex: initialIndex, tabs: [
         HubTab(icon: Icons.my_location, label: t.tabFollowMe, screen: const FollowMeScreen()),
         HubTab(icon: Icons.directions_run, label: t.tabJourney, screen: const JourneySafeScreen()),
       ]);
@@ -608,13 +658,20 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             ),
             const SizedBox(height: 8),
 
-            // Live location sharing banner (only while active).
+            // What's running in the background, so it can always be found
+            // and ended from here: sharing after an SOS, Follow Me, a
+            // journey, a check-in timer.
             if (Features.backgroundLocation && _liveSharing) ...[
               const SizedBox(height: 16),
-              _LiveSharingBanner(
-                label: t.sosLiveBannerActive,
-                stopLabel: t.sosLiveStop,
-                onStop: _stopLiveSharing,
+              _activeSharingBanner(t),
+            ],
+            if (Features.safetyCheckin && _checkin != null) ...[
+              const SizedBox(height: 16),
+              _ActiveBanner(
+                icon: Icons.timer_rounded,
+                label: t.homeCheckinActive(_clock(_checkin!.deadline)),
+                actionLabel: t.homeOpen,
+                onAction: () => _open(const SafetyTimerScreen()),
               ),
             ],
 
@@ -901,49 +958,64 @@ class _ContactsPill extends StatelessWidget {
 }
 
 /// Shown while location is being shared live after an SOS.
-class _LiveSharingBanner extends StatelessWidget {
-  const _LiveSharingBanner({
+/// Something running in the background, with the one button that leads to
+/// it. [urgent] (an SOS, a missed arrival) shows in the SOS colours.
+class _ActiveBanner extends StatelessWidget {
+  const _ActiveBanner({
+    required this.icon,
     required this.label,
-    required this.stopLabel,
-    required this.onStop,
+    required this.actionLabel,
+    required this.onAction,
+    this.urgent = false,
   });
 
+  final IconData icon;
   final String label;
-  final String stopLabel;
-  final VoidCallback onStop;
+  final String actionLabel;
+  final VoidCallback onAction;
+  final bool urgent;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final s = context.safety;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
-      decoration: BoxDecoration(
-        color: s.sosContainer,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.location_on_rounded, color: s.sos),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: theme.textTheme.titleSmall!
-                  .copyWith(color: s.onSosContainer),
-            ),
+    final background = urgent ? s.sosContainer : scheme.primaryContainer;
+    final foreground = urgent ? s.onSosContainer : scheme.onPrimaryContainer;
+    final accent = urgent ? s.sos : scheme.primary;
+    final onAccent = urgent ? s.onSos : scheme.onPrimary;
+    return Material(
+      color: background,
+      borderRadius: BorderRadius.circular(12),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onAction,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+          child: Row(
+            children: [
+              Icon(icon, color: accent),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style:
+                      theme.textTheme.titleSmall!.copyWith(color: foreground),
+                ),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: accent,
+                  foregroundColor: onAccent,
+                  minimumSize: const Size(0, 40),
+                ),
+                onPressed: onAction,
+                child: Text(actionLabel),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: s.sos,
-              foregroundColor: s.onSos,
-              minimumSize: const Size(0, 40),
-            ),
-            onPressed: onStop,
-            child: Text(stopLabel),
-          ),
-        ],
+        ),
       ),
     );
   }

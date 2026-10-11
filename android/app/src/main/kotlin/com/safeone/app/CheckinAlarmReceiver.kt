@@ -20,6 +20,7 @@ class CheckinAlarmReceiver : BroadcastReceiver() {
         if (!SosSender.prefBool(context, "checkin_active")) return
         SosSender.setPrefBool(context, "checkin_active", false)
         CheckinScheduler.cancel(context) // clears the saved deadline
+        SafetyMonitorService.refreshIfRunning() // drop the check-in from the notification
         Log.i("CheckinAlarm", "Check-in deadline passed — sending SOS")
         val pending = goAsync()
         val done = AtomicBoolean(false)

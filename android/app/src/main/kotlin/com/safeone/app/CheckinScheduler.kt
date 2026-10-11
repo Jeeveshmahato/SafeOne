@@ -33,7 +33,10 @@ object CheckinScheduler {
     }
 
     fun cancel(context: Context) {
-        prefs(context).edit().remove(P + "checkin_deadline_ms").apply()
+        prefs(context).edit()
+            .remove(P + "checkin_deadline_ms")
+            .remove(P + "checkin_started_ms")
+            .apply()
         alarmManager(context).cancel(operation(context, CheckinAlarmReceiver::class.java, CHECKIN_CODE))
     }
 

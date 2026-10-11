@@ -18,13 +18,26 @@ enum TimeUnit {
         TimeUnit.minutes => Duration(minutes: value),
         TimeUnit.hours => Duration(hours: value),
       };
+
+  /// Minutes and hours only, for timers that can't be shorter than a minute.
+  static const minutesAndHours = [TimeUnit.minutes, TimeUnit.hours];
+
+  /// The largest of [units] that shows [d] as a whole number, so a saved
+  /// "2 hours" comes back as 2 Hours rather than 120 Minutes.
+  static TimeUnit bestFor(Duration d, List<TimeUnit> units) {
+    for (final unit in units.reversed) {
+      final size = unit.toDuration(1).inSeconds;
+      if (d.inSeconds >= size && d.inSeconds % size == 0) return unit;
+    }
+    return units.first;
+  }
 }
 
 /// A reusable control to pick a duration as a number + unit
 /// (seconds / minutes / hours). Reports the chosen [Duration] via [onChanged].
 ///
-/// Used everywhere the app lets the user set a time, so every timer is fully
-/// customisable in seconds, minutes, or hours.
+/// Used everywhere the app lets the user set a time. [units] limits the
+/// choice: timers that need at least a minute don't offer seconds.
 class DurationField extends StatefulWidget {
   /// Starting duration.
   final Duration initial;
@@ -35,11 +48,15 @@ class DurationField extends StatefulWidget {
   /// Called whenever a valid duration is entered.
   final ValueChanged<Duration> onChanged;
 
+  /// The units offered, smallest first.
+  final List<TimeUnit> units;
+
   const DurationField({
     super.key,
     required this.initial,
     required this.onChanged,
     this.initialUnit = TimeUnit.minutes,
+    this.units = TimeUnit.values,
   });
 
   @override
@@ -53,7 +70,9 @@ class _DurationFieldState extends State<DurationField> {
   @override
   void initState() {
     super.initState();
-    _unit = widget.initialUnit;
+    _unit = widget.units.contains(widget.initialUnit)
+        ? widget.initialUnit
+        : widget.units.first;
     _controller = TextEditingController(text: '${_valueForUnit(_unit)}');
   }
 
@@ -106,7 +125,7 @@ class _DurationFieldState extends State<DurationField> {
             setState(() => _unit = unit);
             _emit();
           },
-          dropdownMenuEntries: TimeUnit.values
+          dropdownMenuEntries: widget.units
               .map((u) => DropdownMenuEntry(value: u, label: u.label))
               .toList(),
         ),

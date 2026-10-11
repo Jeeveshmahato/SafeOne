@@ -714,6 +714,36 @@ abstract class AppLocalizations {
   /// **'Stop sharing'**
   String get sosLiveStop;
 
+  /// No description provided for @homeFollowMeActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow Me is sharing your location'**
+  String get homeFollowMeActive;
+
+  /// No description provided for @homeJourneyActive.
+  ///
+  /// In en, this message translates to:
+  /// **'On your way to {destination}'**
+  String homeJourneyActive(String destination);
+
+  /// No description provided for @homeJourneyOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'You haven\'t reached {destination}. Your contacts were alerted'**
+  String homeJourneyOverdue(String destination);
+
+  /// No description provided for @homeCheckinActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Check-in timer is on. Alert at {time} unless you\'re safe'**
+  String homeCheckinActive(String time);
+
+  /// No description provided for @homeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get homeOpen;
+
   /// No description provided for @sosLiveStarted.
   ///
   /// In en, this message translates to:
