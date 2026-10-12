@@ -7,12 +7,14 @@ SafeOne: SOS & Personal Safety
 Shake-to-SOS, live location, fake call & safety timer. No ads, no sign-up.
 
 ## Full description (max 4000 chars)
-SafeOne helps you get help fast and keeps the people you trust one tap away, even when you can't unlock your phone.
+⚠️ SafeOne is a personal safety tool, not an emergency service. It does not contact the police or ambulance for you. In immediate danger, call 112.
 
-Whether you're walking home late, travelling alone or taking a cab, SafeOne gives you quick ways to raise an alarm. Your data stays on your phone.
+SafeOne helps you quickly alert the people you trust, with hands-free triggers that can work even while your screen is locked.
+
+Whether you're walking home late, travelling alone or taking a cab, SafeOne gives you quick ways to alert your contacts. Your data stays on your phone.
 
 🚨 SOS IN ONE TAP
-• Big SOS button texts your live location to every emergency contact, automatically
+• Big SOS button texts your location to your emergency contacts (needs SMS permission, mobile network and SMS balance)
 • Silent SOS: long-press to alert contacts with no sound or vibration
 • Countdown before sending, so you can cancel a false alarm
 
@@ -33,12 +35,12 @@ Going somewhere unfamiliar? Set a timer. If you don't check in before it runs ou
 Need a way out of an uncomfortable situation? Schedule a realistic incoming call with a caller name of your choice. It rings even when the app is closed.
 
 🔦 QUICK ACTIONS
-• Loud siren to draw attention
+• Loud siren to draw attention (plays on your phone only; does not call the police)
 • Flashlight with SOS Morse blink
 • Audio recording to keep evidence on your device
 
 🏥 HELP NEARBY
-• Find nearby police stations and hospitals
+• Open Google Maps to find nearby police stations and hospitals
 • Indian emergency helplines in one place: 112, police, ambulance, women's helpline, child helpline, cyber crime and more
 • Emergency ID and medical card with a QR code for first responders
 • Safety tips and emergency guides
@@ -53,9 +55,9 @@ English, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Kannada, Malayalam, P
 • App lock with PIN and fingerprint
 • Uninstall the app and all of its data is deleted
 
-SafeOne is a personal safety tool and doesn't replace official emergency services. In immediate danger, call 112.
+SafeOne is a personal safety tool and doesn't replace official emergency services. Alerts depend on your phone, network and settings and may be delayed or fail, so test the app with your contacts. Not affiliated with the police or any government body. By using SafeOne you agree to our Terms of Use and Privacy Policy.
 
-Stay prepared. Stay safe. Download SafeOne.
+Stay prepared. Download SafeOne.
 
 ## App category
 Lifestyle only
@@ -81,4 +83,6 @@ App (free), no in-app purchases, no ads.
 
 ## Contact details
 - Email: safeeonee@gmail.com
-- Privacy policy URL: <host privacy_policy.html and paste URL>
+- Privacy policy URL: https://jeeveshmahato.github.io/SafeOne/privacy.html
+- Terms of use URL: https://jeeveshmahato.github.io/SafeOne/terms.html
+- Countries / regions: India only (Play Console → Production → Countries/regions)
