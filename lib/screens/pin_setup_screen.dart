@@ -280,6 +280,8 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                 const SizedBox(height: 32),
                 PinPad(
                   value: _entry,
+                  // Shuffled like the contacts PIN's lock screen.
+                  scramble: !_isApp,
                   onChanged: disabled ? (_) {} : _onChanged,
                   onSubmit: disabled ? null : _submit,
                   errorText: lockedOut

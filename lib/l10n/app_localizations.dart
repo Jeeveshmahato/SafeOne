@@ -954,6 +954,12 @@ abstract class AppLocalizations {
   /// **'Your phone\'s PIN, pattern, password or fingerprint'**
   String get pinResetWithDeviceSubtitle;
 
+  /// No description provided for @pinResetWithDeviceCredentialSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone\'s PIN, pattern or password'**
+  String get pinResetWithDeviceCredentialSubtitle;
+
   /// No description provided for @pinResetDeviceReason.
   ///
   /// In en, this message translates to:

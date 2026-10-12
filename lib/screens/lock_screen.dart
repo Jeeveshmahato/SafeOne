@@ -14,6 +14,10 @@ import 'pin_reset_screen.dart';
 /// Used for the app lock ([PinKind.app]) and, pushed as its own page, for the
 /// contacts PIN ([PinKind.contacts]) before the contact list can be changed.
 ///
+/// The app PIN uses the normal keypad and can be skipped with a fingerprint.
+/// The contacts PIN guards who gets the SOS, so it is stricter: the keys are
+/// shuffled for every attempt and only the PIN itself opens it.
+///
 /// Wrong PINs are throttled by [AppLockService] with an escalating delay that
 /// is stored on the phone, so it survives closing and reopening the app.
 class LockScreen extends StatefulWidget {
@@ -52,11 +56,18 @@ class _LockScreenState extends State<LockScreen> {
   // Guards against stacking biometric prompts (e.g. the auto-prompt and a
   // button tap, or rapid rebuilds).
   bool _authInProgress = false;
-  AppLifecycleListener? _resumeListener;
+  // Set when the app really left the screen (not when the fingerprint prompt
+  // covered it), so coming back asks for the fingerprint again.
+  bool _wasAway = false;
+  late final AppLifecycleListener _lifecycle;
 
   @override
   void initState() {
     super.initState();
+    _lifecycle = AppLifecycleListener(
+      onHide: _onHide,
+      onResume: _onResume,
+    );
     _loadLockout();
     _maybePromptBiometric();
   }
@@ -64,7 +75,7 @@ class _LockScreenState extends State<LockScreen> {
   @override
   void dispose() {
     _lockoutTimer?.cancel();
-    _resumeListener?.dispose();
+    _lifecycle.dispose();
     super.dispose();
   }
 
@@ -73,23 +84,36 @@ class _LockScreenState extends State<LockScreen> {
     if (mounted && left > Duration.zero) _startLockout(left);
   }
 
+  /// Opens the fingerprint / face prompt by itself, so the user only has to
+  /// touch the sensor. The button stays as a way back to it after cancelling.
   Future<void> _maybePromptBiometric() async {
+    if (widget.kind != PinKind.app) return;
     final enabled = await _lock.isBiometricEnabled();
     final available = enabled && await _lock.canUseBiometrics();
     if (!mounted) return;
     setState(() => _biometricAvailable = available);
-    if (!available) return;
-    // The lock can be put up while the app is going to the background; only
-    // show the system prompt once the app is actually on screen.
-    if (WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+    // The lock can be put up while the app is going to the background; then
+    // the prompt is shown when the app is back on screen (see [_onResume]).
+    if (available &&
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
       _authenticateBiometric();
-    } else {
-      _resumeListener = AppLifecycleListener(onResume: () {
-        _resumeListener?.dispose();
-        _resumeListener = null;
-        if (mounted) _authenticateBiometric();
-      });
+    } else if (available) {
+      _wasAway = true;
     }
+  }
+
+  void _onHide() {
+    // The system prompt itself hides the app on some phones: that isn't
+    // leaving, and re-prompting for it would loop after a cancel.
+    if (!AppLockService.systemPromptActive && !_authInProgress) {
+      _wasAway = true;
+    }
+  }
+
+  void _onResume() {
+    if (!_wasAway) return;
+    _wasAway = false;
+    if (_biometricAvailable) _authenticateBiometric();
   }
 
   Future<void> _authenticateBiometric() async {
@@ -207,6 +231,7 @@ class _LockScreenState extends State<LockScreen> {
                 const SizedBox(height: 32),
                 PinPad(
                   value: _entry,
+                  scramble: !isApp,
                   onChanged: lockedOut || _checking ? (_) {} : _onChanged,
                   onSubmit: lockedOut || _checking ? null : _submit,
                   errorText: lockedOut

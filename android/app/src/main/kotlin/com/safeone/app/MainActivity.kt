@@ -4,10 +4,13 @@ import android.app.Activity
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
+import android.hardware.biometrics.BiometricManager
+import android.hardware.biometrics.BiometricPrompt
 import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.CancellationSignal
 import android.util.Log
 import android.view.KeyEvent
 import android.view.WindowManager
@@ -52,6 +55,65 @@ class MainActivity : FlutterFragmentActivity() {
                 )
             }
         }
+
+    // The phone's own PIN, pattern or password, never a fingerprint or face:
+    // proves it's the owner before the contacts PIN is reset, which a
+    // fingerprint must not be able to do.
+    private var pendingCredential: MethodChannel.Result? = null
+    private val credentialPrompt =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+            pendingCredential?.success(res.resultCode == Activity.RESULT_OK)
+            pendingCredential = null
+        }
+
+    private fun confirmDeviceCredential(
+        title: String,
+        subtitle: String,
+        result: MethodChannel.Result,
+    ) {
+        val km = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        if (!km.isDeviceSecure) {
+            result.success(false)
+            return
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val prompt = BiometricPrompt.Builder(this)
+                .setTitle(title)
+                .setSubtitle(subtitle)
+                .setAllowedAuthenticators(BiometricManager.Authenticators.DEVICE_CREDENTIAL)
+                .build()
+            var replied = false
+            prompt.authenticate(
+                CancellationSignal(),
+                mainExecutor,
+                object : BiometricPrompt.AuthenticationCallback() {
+                    override fun onAuthenticationSucceeded(
+                        res: BiometricPrompt.AuthenticationResult?,
+                    ) {
+                        if (!replied) result.success(true)
+                        replied = true
+                    }
+
+                    override fun onAuthenticationError(code: Int, msg: CharSequence?) {
+                        if (!replied) result.success(false)
+                        replied = true
+                    }
+                },
+            )
+        } else {
+            // Before Android 11 the prompt can't be limited to the screen
+            // lock; the older confirm-credential screen is.
+            @Suppress("DEPRECATION")
+            val intent = km.createConfirmDeviceCredentialIntent(title, subtitle)
+            if (intent == null) {
+                result.success(false)
+                return
+            }
+            pendingCredential?.success(false)
+            pendingCredential = result
+            credentialPrompt.launch(intent)
+        }
+    }
 
     // Allow the app to appear over the lock screen and wake the screen, so the
     // scheduled fake call's full-screen intent shows like a real incoming call
@@ -277,6 +339,11 @@ class MainActivity : FlutterFragmentActivity() {
                     val km = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
                     result.success(km.isKeyguardLocked)
                 }
+                "confirmCredential" -> confirmDeviceCredential(
+                    call.argument<String>("title") ?: "",
+                    call.argument<String>("subtitle") ?: "",
+                    result,
+                )
                 "securityStatus" -> result.success(
                     mapOf(
                         "binding" to HardwareKeys.bindingLevel(),

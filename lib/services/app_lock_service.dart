@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -54,6 +55,7 @@ class AppLockService {
   final FlutterSecureStorage _storage;
   final LocalAuthentication _localAuth;
 
+  static const _deviceChannel = MethodChannel('com.safeone.app/device');
   static const _biometricKey = 'lock_biometric_enabled';
   static const _graceKey = 'lock_grace_seconds';
 
@@ -340,8 +342,10 @@ class AppLockService {
     }
   }
 
+  /// On unless the user turned it off in Settings, so a phone with a
+  /// fingerprint or face set up unlocks SafeOne with it straight away.
   Future<bool> isBiometricEnabled() async {
-    return (await _read(_biometricKey)) == 'true';
+    return (await _read(_biometricKey)) != 'false';
   }
 
   Future<void> setBiometricEnabled(bool enabled) async {
@@ -367,6 +371,23 @@ class AppLockService {
   /// forgotten SafeOne PIN without a server.
   Future<bool> authenticateDevice(String reason) {
     return _authenticate(reason, biometricOnly: false);
+  }
+
+  /// Ask for the phone's PIN, pattern or password only, not a fingerprint or
+  /// face. Used to reset the contacts PIN, which biometrics must not open.
+  Future<bool> authenticateDeviceCredential(String title, String reason) async {
+    systemPromptActive = true;
+    try {
+      return await _deviceChannel.invokeMethod<bool>(
+            'confirmCredential',
+            {'title': title, 'subtitle': reason},
+          ) ??
+          false;
+    } catch (_) {
+      return false; // not Android
+    } finally {
+      systemPromptActive = false;
+    }
   }
 
   Future<bool> _authenticate(String reason, {required bool biometricOnly}) async {

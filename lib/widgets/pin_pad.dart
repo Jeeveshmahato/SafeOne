@@ -7,11 +7,9 @@ import 'package:flutter/services.dart';
 /// have been typed, plus a numeric keypad. It deliberately does NOT use the
 /// system keyboard, so the PIN is never exposed to autofill/clipboard.
 ///
-/// Security: by default the keypad is **scrambled** — the digit positions are
-/// randomised (with a cryptographically-secure RNG) and re-shuffled at the
-/// start of every entry attempt. This defeats shoulder-surfing and "smudge"
-/// attacks, where someone learns the PIN from the finger path or fingerprints
-/// left on the glass, because the layout is different each time.
+/// The keys are in the usual phone order (1-9, then 0), like the phone's own
+/// lock screen, so the PIN can be typed from muscle memory. [scramble] can
+/// still randomise the positions for each attempt where that matters more.
 ///
 /// The parent owns the entered value via [value] and reacts through
 /// [onChanged]; the scramble order is the widget's own state.
@@ -26,7 +24,7 @@ class PinPad extends StatefulWidget {
     this.minLength = 6,
     this.onSubmit,
     this.errorText,
-    this.scramble = true,
+    this.scramble = false,
   });
 
   final String value;
@@ -39,8 +37,9 @@ class PinPad extends StatefulWidget {
   final VoidCallback? onSubmit;
   final String? errorText;
 
-  /// Randomise the key positions for each attempt (security). Turn off only
-  /// where layout predictability matters more than shoulder-surf resistance.
+  /// Randomise the key positions for each attempt (with a secure RNG), against
+  /// shoulder-surfing and smudge marks. Off by default: a layout that moves
+  /// every time is slow and frustrating to type on.
   final bool scramble;
 
   @override

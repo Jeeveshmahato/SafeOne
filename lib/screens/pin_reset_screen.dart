@@ -13,7 +13,9 @@ import 'pin_setup_screen.dart';
 ///
 /// SafeOne never stores the PIN, so it can't be recovered, only replaced, and
 /// only after the person proves it's their phone:
-///   * Any PIN: with the phone's own screen lock (PIN, pattern, fingerprint…).
+///   * App PIN: with the phone's own screen lock (PIN, pattern, fingerprint…).
+///   * Contacts PIN: with the phone's PIN, pattern or password only, as the
+///     contacts PIN never opens with a fingerprint.
 ///   * Contacts PIN, if the phone has no screen lock: with the app PIN.
 ///   * App PIN, as a last resort: erase all SafeOne data and start over, so
 ///     a stranger can't reset the PIN and read what was there.
@@ -48,7 +50,12 @@ class _PinResetScreenState extends State<PinResetScreen> {
   Future<void> _verifyWithDevice() async {
     final t = AppLocalizations.of(context);
     setState(() => _busy = true);
-    final ok = await _lock.authenticateDevice(t.pinResetDeviceReason);
+    // The contacts PIN never opens with a fingerprint, so its reset can't
+    // either: only the phone's own PIN, pattern or password.
+    final ok = widget.kind == PinKind.app
+        ? await _lock.authenticateDevice(t.pinResetDeviceReason)
+        : await _lock.authenticateDeviceCredential(
+            t.pinResetTitle, t.pinResetDeviceReason);
     if (!mounted) return;
     setState(() => _busy = false);
     if (!ok) {
@@ -185,7 +192,9 @@ class _PinResetScreenState extends State<PinResetScreen> {
                     child: ListTile(
                       leading: const Icon(Icons.phonelink_lock_rounded),
                       title: Text(t.pinResetWithDevice),
-                      subtitle: Text(t.pinResetWithDeviceSubtitle),
+                      subtitle: Text(isApp
+                          ? t.pinResetWithDeviceSubtitle
+                          : t.pinResetWithDeviceCredentialSubtitle),
                       trailing: const Icon(Icons.chevron_right_rounded),
                       onTap: _verifyWithDevice,
                     ),

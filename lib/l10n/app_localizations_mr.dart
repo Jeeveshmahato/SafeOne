@@ -474,6 +474,10 @@ class AppLocalizationsMr extends AppLocalizations {
       'Your phone\'s PIN, pattern, password or fingerprint';
 
   @override
+  String get pinResetWithDeviceCredentialSubtitle =>
+      'Your phone\'s PIN, pattern or password';
+
+  @override
   String get pinResetDeviceReason =>
       'Confirm it\'s you to reset your SafeOne PIN';
 

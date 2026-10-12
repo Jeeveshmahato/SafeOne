@@ -265,4 +265,15 @@ void main() {
           containsAll(['first', 'while locked']));
     });
   });
+
+  group('Fingerprint unlock', () {
+    test('is on by default and stays off once turned off', () async {
+      final lock = AppLockService();
+      expect(await lock.isBiometricEnabled(), isTrue);
+      await lock.setBiometricEnabled(false);
+      expect(await AppLockService().isBiometricEnabled(), isFalse);
+      await lock.setBiometricEnabled(true);
+      expect(await AppLockService().isBiometricEnabled(), isTrue);
+    });
+  });
 }

@@ -398,7 +398,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     secondary: _leading(Icons.fingerprint_rounded),
                     title: Text(t.securityBiometric),
                     subtitle: Text(t.securityBiometricSubtitle),
-                    value: _biometricEnabled,
+                    value: _biometricEnabled && _biometricAvailable,
                     onChanged: _biometricAvailable ? _setBiometric : null,
                   ),
                   if (_keyStorage != null)

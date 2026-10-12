@@ -215,6 +215,7 @@
   "pinResetIntro": "SafeOne can't recover a forgotten PIN, because it never leaves this phone. Confirm it's your phone, then pick a new one.",
   "pinResetWithDevice": "Use your phone's screen lock",
   "pinResetWithDeviceSubtitle": "Your phone's PIN, pattern, password or fingerprint",
+  "pinResetWithDeviceCredentialSubtitle": "Your phone's PIN, pattern or password",
   "pinResetDeviceReason": "Confirm it's you to reset your SafeOne PIN",
   "pinResetDeviceFailed": "That didn't work. Try again.",
   "pinResetNoDeviceLock": "This phone has no screen lock, so we can't use it to confirm it's you.",
