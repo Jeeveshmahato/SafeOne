@@ -58,8 +58,11 @@ someone only with their permission.</p>
 your safety messages as text messages <strong>directly from your phone</strong>
 to each emergency contact you added — one message per contact, using your own
 mobile plan. It sends only when you trigger an SOS (including a hands-free
-trigger), when a safety check-in runs out without you confirming you're safe, or
-while live location sharing that you started is on. SafeOne
+trigger), when a safety check-in runs out without you confirming you're safe
+(including the timer one of your routines starts, for example after office), or
+while live location sharing that you started is on. Routine messages, such as
+"I've left office", are never sent automatically: SafeOne opens your Messages
+app with the text filled in, and you decide whether to send it. SafeOne
 <strong>never reads or receives</strong> your messages, and message content is
 never sent to us. If you don't allow the permission, SafeOne instead opens your
 Messages app with the text filled in for you to send.</p>
@@ -70,7 +73,20 @@ to the app or person you pick, and is then outside our control. You are
 responsible for recording and sharing lawfully and respecting others'
 privacy.</p>
 <p><strong>Camera.</strong> Used only for features you initiate; captured media
-stays on your device.</p>
+stays on your device. If you turn on <em>Photo after SOS</em>, the camera opens
+after your SOS has been sent so you can take a photo. That photo is kept only
+temporarily on your phone and deleted when you close that screen. It leaves
+your phone only if you choose to share it, through an app you pick (such as
+WhatsApp or Messages), under that app's own policy.</p>
+
+<p><strong>Routines.</strong> The routines you set (names, days, times, where
+you're going and which contacts to alert) are stored only on your device.</p>
+
+<p><strong>Saved and recent trips.</strong> So you can start them again in one
+tap, SafeOne remembers the settings of the journeys, Follow Me sessions and
+check-in timers you start (for example the destination you typed, how long the
+trip takes and how often to share your location). They stay until you delete them. They are encrypted on your device, never include your
+location, and you can delete them or tap <em>Clear recent</em> at any time.</p>
 <p><strong>App-lock PIN and biometrics.</strong> Your PIN is stored only as a
 salted, hashed value in the device's secure storage — never plain text, never
 transmitted. Fingerprint verification is handled entirely by Android; the app
@@ -89,10 +105,11 @@ aggregated, non-identifying statistics from Google Play.</p>
 <li><strong>SMS (send only)</strong> — send your SOS and location updates directly to your emergency contacts.</li>
 <li><strong>Location (incl. background)</strong> — include your location in safety messages.</li>
 <li><strong>Microphone</strong> — optional audio-evidence recording.</li>
-<li><strong>Camera</strong> — optional evidence / QR capture.</li>
+<li><strong>Camera</strong> — optional photo after an SOS, evidence / QR capture.</li>
 <li><strong>Foreground service</strong> — keep hands-free SOS triggers active when locked.</li>
 <li><strong>Exact alarm / full-screen intent / notifications</strong> — deliver the
-scheduled fake call and safety check-in alerts on time, even when the app is closed.</li>
+scheduled fake call, safety check-in and routine timer alerts on time, even when
+the app is closed.</li>
 <li><strong>Biometric</strong> — unlock the app lock.</li>
 <li><strong>Boot completed</strong> — restart safety monitoring after a reboot if you enabled it.</li>
 </ul>
