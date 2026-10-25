@@ -28,10 +28,12 @@ Technology Act, 2000 and the Digital Personal Data Protection Act, 2023.</p>
 
 <h2>Summary</h2>
 <ul>
-<li>SafeOne does <strong>not</strong> have a server. We (Tejovan Labs) do
-<strong>not</strong> collect, receive, store, sell or share your personal data.</li>
+<li>SafeOne works without an account. Unless you choose to sign in, we (Tejovan
+Labs) do <strong>not</strong> collect, receive or store any of your personal data,
+and we never sell or share it.</li>
 <li>All your data (emergency contacts, app-lock PIN, safety log, recordings)
-stays <strong>on your device</strong>.</li>
+stays <strong>on your device</strong>, except what you choose to sync if you sign
+in (see <a href="#sync">Optional account and cloud sync</a>).</li>
 <li>The only time information leaves your device is when an SOS, check-in or
 location update is sent — as a text message from <strong>your</strong> phone,
 directly to the emergency contacts <strong>you</strong> chose (and, if you use
@@ -53,7 +55,9 @@ receives that information under
 <a href="https://policies.google.com/privacy">Google's privacy policy</a>.</p>
 <p><strong>Emergency contacts.</strong> Names/phone numbers you enter are stored
 locally and used only to address your safety messages. The app does not read
-your phone's contact list. Because these are other people's details, please add
+your phone's contact list: if you tap <em>From phone contacts</em>,
+Android's own picker opens and shares with SafeOne only the one name and number
+you pick. Because these are other people's details, please add
 someone only with their permission.</p>
 <p><strong>SMS messages.</strong> If you allow the SMS permission, SafeOne sends
 your safety messages as text messages <strong>directly from your phone</strong>
@@ -111,10 +115,41 @@ transmitted. Fingerprint verification is handled entirely by Android; the app
 never receives your fingerprint data.</p>
 <p><strong>Safety log.</strong> Stored locally; you can export or clear it anytime.</p>
 
+<h2 id="sync">Optional account and cloud sync</h2>
+<p>You can sign in with your Google account (<em>Settings → Account and sync</em>)
+to keep the same data on every phone you sign in on. It is entirely optional:
+every feature, the SOS above all, works the same without it.</p>
+<ul>
+<li><strong>What is stored when you sign in:</strong> your Google account's name,
+email address and an account ID (to sign you in); your <strong>emergency
+contacts</strong> (names and numbers, and which one is called after an SOS); your
+<strong>routines</strong> (names, places as you typed them, days, times and the
+contacts they alert); your <strong>saved trips</strong> (name, destination as you
+typed it and timer lengths); your <strong>SOS settings</strong> (countdown, SOS
+message, silent SOS, live updates, photos with SOS, call after SOS, last-used
+timer lengths); and a random ID for each phone signed in, with the time it was
+signed in.</li>
+<li><strong>What is never stored:</strong> your PINs, recordings, photos and
+evidence, medical information, safety log (Records), and your location. Your
+location only ever leaves your phone in the SOS texts you send to your
+contacts.</li>
+<li><strong>Where:</strong> in Google Cloud Firestore and Firebase Authentication,
+services of Google LLC that we use as our processor, in a database in India
+(Mumbai, asia-south1). Data is encrypted in transit and at rest. Security rules
+allow only your own signed-in account to read or change your data.</li>
+<li><strong>Why:</strong> only to keep your data the same on your phones. We do
+not read, analyse, sell or share it, and it is never used for advertising.</li>
+<li><strong>How long:</strong> until you delete it. Signing out stops syncing on
+that phone; deleting the account (below) removes everything from the cloud.</li>
+<li><strong>Your other phones:</strong> a phone signed in to your account can see
+this data. SafeOne tells you when your account is signed in on a new phone and
+when another phone changes your SOS contacts.</li>
+</ul>
+
 <h2>Information we do NOT collect</h2>
-<p>SafeOne contains no analytics, advertising identifiers, crash reporting,
-account system, ads or third-party trackers, and we have no servers holding your
-data. Separately, Google Play and Android may collect information about app
+<p>SafeOne contains no analytics, advertising identifiers, crash reporting, ads or
+third-party trackers. If you don't sign in, we have no copy of any of your data;
+if you do, we hold only what is listed above. Separately, Google Play and Android may collect information about app
 installs, performance and crashes under Google's own policies; we may see only
 aggregated, non-identifying statistics from Google Play.</p>
 
@@ -123,6 +158,7 @@ aggregated, non-identifying statistics from Google Play.</p>
 <li><strong>SMS (send only)</strong> — send your SOS and location updates directly to your emergency contacts.</li>
 <li><strong>Location (incl. background)</strong> — include your location in safety messages.</li>
 <li><strong>Phone (make calls)</strong> — call your priority contact after an SOS, if you choose one.</li>
+<li><strong>Internet</strong> — only for the optional sign-in and cloud sync. The SOS itself is sent by SMS and never needs the internet.</li>
 <li><strong>Microphone</strong> — optional audio-evidence recording.</li>
 <li><strong>Camera</strong> — optional photos with an SOS, evidence / QR capture.</li>
 <li><strong>Foreground service</strong> — keep hands-free SOS triggers active when locked, and keep discreet recording going with the screen off.</li>
@@ -135,8 +171,8 @@ the app is closed.</li>
 
 <h2>Children</h2>
 <p>SafeOne is meant for people aged 18 or older. A person under 18 may use it only
-with the consent and supervision of a parent or legal guardian. We do not collect
-data from anyone, including children.</p>
+with the consent and supervision of a parent or legal guardian. Signing in to sync
+is meant for users aged 18 or older.</p>
 
 <h2>Security</h2>
 <p>Your data is protected by your phone's own security and, if you set it, the app
@@ -146,13 +182,18 @@ responsible for access to your data through a lost, stolen, shared or compromise
 phone.</p>
 
 <h2>Requests from authorities</h2>
-<p>Because we do not hold your data, we generally have nothing to give if asked.
-Your data can only be obtained from your phone itself.</p>
+<p>If you have not signed in, we hold none of your data and have nothing to give if
+asked. If you have, the synced data listed above is held in Google's cloud on our
+behalf, and we would only disclose it where Indian law requires us to.</p>
 
 <h2 id="deletion">Deleting your data</h2>
-<p>Because all data lives only on your device, you are in full control of it and
-we hold no copy. You can delete it at any time:</p>
+<p>You can delete your data at any time:</p>
 <ul>
+<li><strong>Cloud account and synced data</strong> — in the app, <em>Settings →
+Account and sync → Delete account and cloud data</em>. This deletes your account
+and everything synced, from the cloud, at once and for good; your phones keep
+their own copy. Without the app, see <a href="delete-account.html">how to delete
+your account</a>.</li>
 <li><strong>Safety log</strong> — open the safety log in the app and tap <em>Clear all</em>.</li>
 <li><strong>Everything</strong> — go to Android <em>Settings → Apps → SafeOne → Storage →
 Clear storage</em>, or simply uninstall SafeOne. This permanently removes your
