@@ -17,7 +17,7 @@
 <body>
 <p class="back"><a href="./">← Tejovan Labs</a></p>
 <h1>Privacy Policy — SafeOne</h1>
-<p><strong>Last updated: 28 October 2026</strong></p>
+<p><strong>Last updated: 30 October 2026</strong></p>
 <p>SafeOne ("the app") is a personal safety application published by
 <strong>Jeevesh Mahato</strong>, an individual, under the name
 <strong>Tejovan Labs</strong> ("we", "us"; Seraikela-Kharsawan, Jharkhand, India).
@@ -30,18 +30,20 @@ Technology Act, 2000 and the Digital Personal Data Protection Act, 2023.</p>
 
 <h2>Summary</h2>
 <ul>
-<li>SafeOne works without an account. Unless you choose to sign in, we (Tejovan
-Labs) do <strong>not</strong> collect, receive or store any of your personal data,
-and we never sell or share it.</li>
+<li>SafeOne works without an account. We (Tejovan Labs) do <strong>not</strong>
+collect, receive or store any of your personal data, except what you choose to
+sync if you sign in and, if you use photos with an SOS, those photos for 7 days so
+your contacts can open them (see <a href="#photos">SOS photo links</a>). We never
+sell or share it.</li>
 <li>All your data (emergency contacts, app-lock PIN, safety log, recordings)
 stays <strong>on your device</strong>, except what you choose to sync if you sign
 in (see <a href="#sync">Optional account and cloud sync</a>).</li>
 <li>The only time information leaves your device is when an SOS, check-in or
 location update is sent — as a text message from <strong>your</strong> phone,
 directly to the emergency contacts <strong>you</strong> chose (and, if you use
-them, photos by MMS and a phone call to the contact you chose), or when you open
-a link or service outside the app (such as Google Maps or a phone call). Nothing is
-ever sent to us.</li>
+them, a link to your SOS photos and a phone call to the contact you chose), or
+when you open a link or service outside the app (such as Google Maps or a phone
+call). Apart from SOS photos and what you sync, nothing is sent to us.</li>
 <li>You can delete all of your data at any time (see
 <a href="#deletion">Deleting your data</a>).</li>
 </ul>
@@ -96,13 +98,14 @@ privacy.</p>
 <p><strong>Camera.</strong> Used only for features you initiate. If you turn on
 <em>Photos with SOS</em>, or press the Message or Call button beside the SOS,
 SafeOne takes a photo with the back camera and then the front camera once your
-SOS text has gone out (only while the app is open), and sends them to your
-emergency contacts by MMS, one message per contact, from your phone and on your
-mobile plan. If MMS can't be sent, your phone's share sheet opens so you can
+SOS text has gone out (only while the app is open). It uploads them and texts
+your emergency contacts a link to them, from your phone and on your mobile plan
+(see <a href="#photos">SOS photo links</a>). If they can't be uploaded, or
+SafeOne can't send texts by itself, your phone's share sheet opens so you can
 send them through an app you pick (such as WhatsApp or Messages), under that
-app's own policy. The photos are deleted from your phone once sent. Video and
-photos from discreet recording are saved as encrypted files on your device
-only.</p>
+app's own policy. The photos are deleted from your phone once uploaded or
+shared. Video and photos from discreet recording are saved as encrypted files on
+your device only and are never uploaded.</p>
 <p><strong>Emergency helplines.</strong> To show the numbers for the country
 you're in, SafeOne asks your phone which mobile network (or SIM) it's using.
 This happens on the device; nothing is sent anywhere.</p>
@@ -135,8 +138,9 @@ typed it and timer lengths); your <strong>SOS settings</strong> (countdown, SOS
 message, silent SOS, live updates, photos with SOS, call after SOS, last-used
 timer lengths); and a random ID for each phone signed in, with the time it was
 signed in.</li>
-<li><strong>What is never stored:</strong> your PINs, recordings, photos and
-evidence, medical information, safety log (Records), and your location. Your
+<li><strong>What is never stored:</strong> your PINs, recordings, evidence,
+medical information, safety log (Records), and your location. (SOS photos are
+kept apart, for 7 days only: see <a href="#photos">SOS photo links</a>.) Your
 location only ever leaves your phone in the SOS texts you send to your
 contacts.</li>
 <li><strong>Where:</strong> in Google Cloud Firestore and Firebase Authentication,
@@ -152,10 +156,37 @@ this data. SafeOne tells you when your account is signed in on a new phone and
 when another phone changes your SOS contacts.</li>
 </ul>
 
+<h2 id="photos">SOS photo links</h2>
+<p>If you use photos with an SOS (above), your contacts get them as a link in a
+text message, which opens them in any web browser, so they don't depend on MMS
+or on an app.</p>
+<ul>
+<li><strong>What is stored:</strong> the photos (back camera, then front),
+made smaller and with their hidden details (EXIF, such as GPS position and phone
+model) removed; when they were taken; when the link stops working; and the
+Firebase account ID that uploaded them. If you haven't signed in to sync, that ID
+belongs to an anonymous Firebase account SafeOne creates once on your phone,
+with no name, email or number. Your name, phone number, contacts and location
+are never stored with the photos.</li>
+<li><strong>Who can see them:</strong> anyone who has the link. It contains a
+random code that can't be guessed, the photos can't be listed or searched, and
+security rules allow nothing else. A contact can forward the link, as they could
+forward a photo. We do not look at the photos.</li>
+<li><strong>Where:</strong> in Google Cloud Firestore, a service of Google LLC
+that we use as our processor, in the same database in India (Mumbai,
+asia-south1). They are encrypted in transit and at rest. The page that shows
+them is on GitHub Pages; the code in the link is after a "#", which browsers
+never send to GitHub or anyone else.</li>
+<li><strong>How long:</strong> 7 days from when they were taken. Then the link
+stops working, and the photos are deleted within a day. If your phone has no internet, the
+photos stay on it until it is online, and are never uploaded more than 12 hours
+after they were taken.</li>
+</ul>
+
 <h2>Information we do NOT collect</h2>
 <p>SafeOne contains no analytics, advertising identifiers, crash reporting, ads or
-third-party trackers. If you don't sign in, we have no copy of any of your data;
-if you do, we hold only what is listed above. Separately, Google Play and Android may collect information about app
+third-party trackers. If you don't sign in and don't use photos with an SOS, we
+have no copy of any of your data; otherwise we hold only what is listed above. Separately, Google Play and Android may collect information about app
 installs, performance and crashes under Google's own policies; we may see only
 aggregated, non-identifying statistics from Google Play.</p>
 
@@ -164,7 +195,7 @@ aggregated, non-identifying statistics from Google Play.</p>
 <li><strong>SMS (send only)</strong> — send your SOS and location updates directly to your emergency contacts.</li>
 <li><strong>Location (incl. background)</strong> — include your location in safety messages.</li>
 <li><strong>Phone (make calls)</strong> — call your priority contact after an SOS or a missed check-in, journey or routine alert, if you choose one.</li>
-<li><strong>Internet</strong> — only for the optional sign-in and cloud sync. The SOS itself is sent by SMS and never needs the internet.</li>
+<li><strong>Internet</strong> — only for the optional sign-in and cloud sync, and to upload SOS photos for their link. The SOS itself is sent by SMS and never needs the internet.</li>
 <li><strong>Microphone</strong> — optional audio-evidence recording.</li>
 <li><strong>Camera</strong> — optional photos with an SOS, evidence / QR capture.</li>
 <li><strong>Foreground service</strong> — keep hands-free SOS triggers active when locked, and keep discreet recording going with the screen off.</li>
@@ -188,9 +219,10 @@ responsible for access to your data through a lost, stolen, shared or compromise
 phone.</p>
 
 <h2>Requests from authorities</h2>
-<p>If you have not signed in, we hold none of your data and have nothing to give if
-asked. If you have, the synced data listed above is held in Google's cloud on our
-behalf, and we would only disclose it where Indian law requires us to.</p>
+<p>If you have not signed in and have no SOS photos from the last 7 days, we hold
+none of your data and have nothing to give if asked. Otherwise, the data listed
+above is held in Google's cloud on our behalf, and we would only disclose it
+where Indian law requires us to.</p>
 
 <h2 id="deletion">Deleting your data</h2>
 <p>You can delete your data at any time:</p>
@@ -200,6 +232,9 @@ Account and sync → Delete account and cloud data</em>. This deletes your accou
 and everything synced, from the cloud, at once and for good; your phones keep
 their own copy. Without the app, see <a href="delete-account.html">how to delete
 your account</a>.</li>
+<li><strong>SOS photos</strong> — deleted by themselves 7 to 8 days after they
+were taken. Deleting your cloud account also deletes, at once, those uploaded while you
+were signed in. To have others removed sooner, email us the link.</li>
 <li><strong>Safety log</strong> — open the safety log in the app and tap <em>Clear all</em>.</li>
 <li><strong>Everything</strong> — go to Android <em>Settings → Apps → SafeOne → Storage →
 Clear storage</em>, or simply uninstall SafeOne. This permanently removes your
